@@ -38,8 +38,27 @@ export interface UpdatePluginData {
   config?: Record<string, unknown>
 }
 
-export async function fetchPlugins(userId?: string): Promise<Plugin[]> {
-  const endpoint = userId ? `/v2/plugins?userId=${userId}` : '/v2/plugins'
+export interface Plugin {
+  id: string
+  name: string
+  description?: string
+  version: string
+  author?: string
+  icon?: string
+  isEnabled: boolean
+  isInstalled?: boolean  // 添加isInstalled字段
+  visibility: 'public' | 'role' | 'private'
+  allowedRoles?: string[]
+  config?: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+}
+
+export async function fetchPlugins(userId?: string, includeUninstalled?: boolean): Promise<Plugin[]> {
+  let endpoint = userId ? `/v2/plugins?userId=${userId}` : '/v2/plugins'
+  if (includeUninstalled) {
+    endpoint += endpoint.includes('?') ? '&includeUninstalled=true' : '?includeUninstalled=true'
+  }
   const response = await requestWithCache<{ success: boolean; data: Plugin[] }>(endpoint, { requireAuth: true })
   return response.data || []
 }
@@ -74,6 +93,16 @@ export async function updatePlugin(id: string, data: UpdatePluginData): Promise<
 export async function deletePlugin(id: string): Promise<void> {
   await request(`/v2/plugins/${id}`, {
     method: 'DELETE',
+    requireAuth: true,
+  })
+  invalidateCache('/v2/plugins')
+  invalidateCache(`/v2/plugins/${id}`)
+}
+
+// 安装插件（支持重新安装已卸载的插件）
+export async function installPlugin(id: string): Promise<void> {
+  await request(`/v2/plugins/${id}/install`, {
+    method: 'POST',
     requireAuth: true,
   })
   invalidateCache('/v2/plugins')

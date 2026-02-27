@@ -50,22 +50,26 @@ function canAccessPlugin(plugin: any, user: any): boolean {
   return false
 }
 
-// 获取插件列表
-router.get('/', authMiddleware, (req: Request, res: Response) => {
+// 获取插件列表 - 公开接口，无需认证
+router.get('/', (req: Request, res: Response) => {
   try {
-    const user = (req as any).user
+    const { includeUninstalled, all } = req.query
     
-    // 查询所有已启用的插件
-    const plugins = queryAll(
-      'SELECT * FROM plugins WHERE isEnabled = 1 ORDER BY orderIndex ASC, createdAt DESC'
-    )
+    let plugins
+    // 如果请求包含includeUninstalled或all参数，返回所有插件（包括已卸载的）
+    // 注意：这需要前端在管理员界面中传递这些参数
+    if (all === 'true' || includeUninstalled === 'true') {
+      plugins = queryAll(
+        'SELECT * FROM plugins ORDER BY isInstalled DESC, orderIndex ASC, createdAt DESC'
+      )
+    } else {
+      // 普通用户或游客只查看已启用的插件
+      plugins = queryAll(
+        'SELECT * FROM plugins WHERE isEnabled = 1 ORDER BY orderIndex ASC, createdAt DESC'
+      )
+    }
     
-    // 根据用户权限过滤插件
-    const accessiblePlugins = plugins
-      .map(parsePlugin)
-      .filter(plugin => canAccessPlugin(plugin, user))
-    
-    return successResponse(res, accessiblePlugins)
+    return successResponse(res, plugins.map(parsePlugin))
   } catch (error) {
     console.error('获取插件列表失败:', error)
     return errorResponse(res, '获取插件列表失败')
@@ -189,7 +193,7 @@ router.put('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response
   }
 })
 
-// 删除插件（管理员）
+// 删除插件（管理员）- 改为卸载，不真正删除
 router.delete('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   try {
     const { id } = req.params
@@ -199,16 +203,20 @@ router.delete('/:id', authMiddleware, adminMiddleware, (req: Request, res: Respo
       return errorResponse(res, '插件不存在', 404)
     }
     
-    run('DELETE FROM plugins WHERE id = ?', [id])
+    // 卸载插件：标记为未安装并禁用
+    run('UPDATE plugins SET isInstalled = 0, isEnabled = 0, updatedAt = ? WHERE id = ?', [
+      new Date().toISOString(),
+      id,
+    ])
     
-    return successResponse(res, { deleted: true, id })
+    return successResponse(res, { uninstalled: true, id })
   } catch (error) {
-    console.error('删除插件失败:', error)
-    return errorResponse(res, '删除插件失败')
+    console.error('卸载插件失败:', error)
+    return errorResponse(res, '卸载插件失败')
   }
 })
 
-// 安装插件
+// 安装插件（支持重新安装已卸载的插件）
 router.post('/:id/install', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   try {
     const { id } = req.params
@@ -218,7 +226,8 @@ router.post('/:id/install', authMiddleware, adminMiddleware, (req: Request, res:
       return errorResponse(res, '插件不存在', 404)
     }
     
-    run('UPDATE plugins SET isInstalled = 1, updatedAt = ? WHERE id = ?', [
+    // 安装插件：标记为已安装并启用
+    run('UPDATE plugins SET isInstalled = 1, isEnabled = 1, updatedAt = ? WHERE id = ?', [
       new Date().toISOString(),
       id,
     ])

@@ -18,7 +18,7 @@ export async function adminLogin(
   })
 
   if (response.success && response.token) {
-    localStorage.setItem('admin_token', response.token)
+    localStorage.setItem('token', response.token)
     localStorage.setItem('admin_user', JSON.stringify(response.user))
     localStorage.setItem('admin_role', response.user.role)
   }
@@ -37,7 +37,7 @@ export async function adminLogout(): Promise<void> {
     method: 'POST',
     requireAuth: true,
   })
-  localStorage.removeItem('admin_token')
+  localStorage.removeItem('token')
   localStorage.removeItem('admin_user')
   localStorage.removeItem('admin_role')
   invalidateCache()
@@ -59,7 +59,7 @@ export async function checkAuthStatus(): Promise<AuthStatus> {
 }
 
 export function clearAuthStatus(): void {
-  localStorage.removeItem('admin_token')
+  localStorage.removeItem('token')
   localStorage.removeItem('admin_user')
   localStorage.removeItem('admin_role')
   invalidateCache()
@@ -75,7 +75,7 @@ export async function userRegister(
   })
 
   if (response.success && response.token) {
-    localStorage.setItem('admin_token', response.token)
+    localStorage.setItem('token', response.token)
     localStorage.setItem('admin_user', JSON.stringify(response.user))
     localStorage.setItem('admin_role', response.user.role)
   }
@@ -94,7 +94,7 @@ export async function userLogin(
   })
 
   if (response.success && response.token) {
-    localStorage.setItem('admin_token', response.token)
+    localStorage.setItem('token', response.token)
     localStorage.setItem('admin_user', JSON.stringify(response.user))
     localStorage.setItem('admin_role', response.user.role)
   }
@@ -107,7 +107,7 @@ export async function userLogout(): Promise<void> {
     method: 'POST',
     requireAuth: true,
   })
-  localStorage.removeItem('admin_token')
+  localStorage.removeItem('token')
   localStorage.removeItem('admin_user')
   localStorage.removeItem('admin_role')
   invalidateCache()

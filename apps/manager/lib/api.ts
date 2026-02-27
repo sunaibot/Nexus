@@ -1,6 +1,6 @@
 // API 基础地址 - 使用环境变量验证
 import { getApiBase } from './env'
-const API_BASE = getApiBase()
+export const API_BASE = getApiBase()
 
 import type { Bookmark, Category } from '../types/bookmark'
 import { ApiError, NetworkError, getHttpErrorMessage } from './error-handling'
@@ -106,7 +106,7 @@ interface RequestOptions extends RequestInit {
 
 // 获取存储的 Token
 function getToken(): string | null {
-  return localStorage.getItem('admin_token')
+  return localStorage.getItem('token')
 }
 
 // 获取 CSRF Token（从内存）
@@ -216,7 +216,7 @@ async function request<T>(
       if (res.status === 401) {
         localStorage.removeItem('admin_authenticated')
         localStorage.removeItem('admin_login_time')
-        localStorage.removeItem('admin_token')
+        localStorage.removeItem('token')
         localStorage.removeItem('admin_username')
         localStorage.removeItem('admin_require_password_change')
       }
@@ -441,7 +441,7 @@ async function requestRaw<T>(
       if (res.status === 401) {
         localStorage.removeItem('admin_authenticated')
         localStorage.removeItem('admin_login_time')
-        localStorage.removeItem('admin_token')
+        localStorage.removeItem('token')
         localStorage.removeItem('admin_username')
         localStorage.removeItem('admin_require_password_change')
       }
@@ -481,7 +481,7 @@ export async function adminLogin(username: string, password: string): Promise<Lo
   if (data.success && data.token) {
     localStorage.setItem('admin_authenticated', 'true')
     localStorage.setItem('admin_login_time', Date.now().toString())
-    localStorage.setItem('admin_token', data.token)
+    localStorage.setItem('token', data.token)
     localStorage.setItem('admin_username', data.user.username)
     localStorage.setItem('admin_role', data.user.role || 'user')
     // 保存是否需要修改密码的状态（演示模式下跳过强制改密）
@@ -494,10 +494,12 @@ export async function adminLogin(username: string, password: string): Promise<Lo
     // 同时设置 Cookie，用于前后台共享登录状态
     // 设置 Cookie 有效期为 24 小时
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()
-    document.cookie = `admin_authenticated=true; expires=${expires}; path=/; SameSite=Lax`
-    document.cookie = `admin_username=${encodeURIComponent(data.user.username)}; expires=${expires}; path=/; SameSite=Lax`
-    document.cookie = `admin_token=${encodeURIComponent(data.token)}; expires=${expires}; path=/; SameSite=Lax`
-    document.cookie = `admin_login_time=${Date.now()}; expires=${expires}; path=/; SameSite=Lax`
+    // 设置 domain 为 localhost 以支持跨端口共享
+    const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
+    document.cookie = `admin_authenticated=true; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+    document.cookie = `admin_username=${encodeURIComponent(data.user.username)}; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+    document.cookie = `token=${encodeURIComponent(data.token)}; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+    document.cookie = `admin_login_time=${Date.now()}; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
   }
   
   return data
@@ -565,16 +567,18 @@ export function clearAuthStatus(): void {
   // 清除 localStorage
   localStorage.removeItem('admin_authenticated')
   localStorage.removeItem('admin_login_time')
-  localStorage.removeItem('admin_token')
+  localStorage.removeItem('token')
   localStorage.removeItem('admin_username')
   localStorage.removeItem('admin_require_password_change')
   
   // 同时清除 Cookie（用于前后台共享登录状态）
   const expires = 'Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = `admin_authenticated=; expires=${expires}; path=/; SameSite=Lax`
-  document.cookie = `admin_username=; expires=${expires}; path=/; SameSite=Lax`
-  document.cookie = `admin_token=; expires=${expires}; path=/; SameSite=Lax`
-  document.cookie = `admin_login_time=; expires=${expires}; path=/; SameSite=Lax`
+  // 设置 domain 为 localhost 以支持跨端口清除
+  const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
+  document.cookie = `admin_authenticated=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+  document.cookie = `admin_username=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+  document.cookie = `token=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+  document.cookie = `admin_login_time=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
 }
 
 // 清除密码变更标志
@@ -622,6 +626,12 @@ export interface ThemeColors {
   buttonSecondaryText?: string  // 次按钮文字
 }
 
+export interface NetworkEnvConfig {
+  internalSuffixes: string[]  // 内网域名后缀
+  internalIPs: string[]       // 内网IP段
+  localhostNames: string[]    // localhost别名
+}
+
 export interface SiteSettings {
   siteTitle?: string
   siteDescription?: string  // 站点描述
@@ -639,6 +649,8 @@ export interface SiteSettings {
   themeId?: string         // 当前主题ID
   themeMode?: 'light' | 'dark' | 'auto'  // 主题模式
   themeColors?: ThemeColors  // 主题颜色配置
+  // 网络环境配置
+  networkEnv?: NetworkEnvConfig
   // 前端展示用字段映射
   liteMode?: boolean       // 精简模式（映射到 enableLiteMode）
   showWeather?: boolean    // 显示天气（映射到 enableWeather）
@@ -727,8 +739,9 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
 
 export async function fetchSettings(): Promise<SiteSettings> {
   // 获取站点设置（站点级别，所有用户共享）
-  const res = await request<{ success: boolean; data: Record<string, any> }>('/api/v2/settings/site', { requireAuth: false })
-  return parseSettings(res.data || {})
+  // request 函数会自动提取 data 字段
+  const res = await request<Record<string, any>>('/api/v2/settings/site', { requireAuth: false })
+  return parseSettings(res || {})
 }
 
 export async function updateSettings(settings: SiteSettings): Promise<SiteSettings> {
@@ -748,12 +761,13 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     wallpaper: settings.wallpaper ? JSON.stringify(settings.wallpaper) : undefined,
   }
   // 使用站点设置API（需要管理员权限）
-  const res = await request<{ success: boolean; data: Record<string, string> }>('/api/v2/settings/site', {
+  // 后端返回的是整个设置对象，字段可能是对象或字符串
+  const res = await request<Record<string, any>>('/api/v2/settings/site', {
     method: 'PUT',
     body: JSON.stringify(payload),
     requireAuth: true,
   })
-  return parseSettings(res.data || {})
+  return parseSettings(res || {})
 }
 
 // ========== API 导出对象 (便于统一使用) ==========

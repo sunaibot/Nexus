@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import * as api from '../lib/api'
-import { STORAGE_KEYS } from '../lib/storage-keys'
-
-// 自定义图标本地存储 Key
-const CUSTOM_ICONS_KEY = STORAGE_KEYS.CUSTOM.ICONS
+import * as customIconsApi from '../lib/api-client/custom-icons'
 
 export function useBookmarkStore() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
@@ -19,23 +16,17 @@ export function useBookmarkStore() {
   bookmarksRef.current = bookmarks
 
   // 加载自定义图标
-  const loadCustomIcons = useCallback(() => {
+  const loadCustomIcons = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(CUSTOM_ICONS_KEY)
-      if (stored) {
-        setCustomIcons(JSON.parse(stored))
-      }
+      const icons = await customIconsApi.fetchCustomIcons()
+      setCustomIcons(icons.map(icon => ({
+        id: icon.id,
+        name: icon.name,
+        url: icon.url,
+        createdAt: new Date(icon.createdAt).getTime(),
+      })))
     } catch (err) {
       console.error('加载自定义图标失败:', err)
-    }
-  }, [])
-
-  // 保存自定义图标到本地存储
-  const saveCustomIcons = useCallback((icons: CustomIcon[]) => {
-    try {
-      localStorage.setItem(CUSTOM_ICONS_KEY, JSON.stringify(icons))
-    } catch (err) {
-      console.error('保存自定义图标失败:', err)
     }
   }, [])
 
@@ -243,24 +234,37 @@ export function useBookmarkStore() {
   }, [])
 
   // 添加自定义图标
-  const addCustomIcon = useCallback((icon: Omit<CustomIcon, 'id' | 'createdAt'>) => {
-    const newIcon: CustomIcon = {
-      ...icon,
-      id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      createdAt: Date.now(),
+  const addCustomIcon = useCallback(async (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => {
+    try {
+      const newIcon = await customIconsApi.createCustomIcon({
+        name: icon.name,
+        url: icon.url,
+        isPublic: false,
+      })
+      const customIcon: CustomIcon = {
+        id: newIcon.id,
+        name: newIcon.name,
+        url: newIcon.url,
+        createdAt: new Date(newIcon.createdAt).getTime(),
+      }
+      setCustomIcons(prev => [...prev, customIcon])
+      return customIcon
+    } catch (err) {
+      console.error('添加自定义图标失败:', err)
+      throw err
     }
-    const updated = [...customIcons, newIcon]
-    setCustomIcons(updated)
-    saveCustomIcons(updated)
-    return newIcon
-  }, [customIcons, saveCustomIcons])
+  }, [])
 
   // 删除自定义图标
-  const deleteCustomIcon = useCallback((id: string) => {
-    const updated = customIcons.filter(i => i.id !== id)
-    setCustomIcons(updated)
-    saveCustomIcons(updated)
-  }, [customIcons, saveCustomIcons])
+  const deleteCustomIcon = useCallback(async (id: string) => {
+    try {
+      await customIconsApi.deleteCustomIcon(id)
+      setCustomIcons(prev => prev.filter(i => i.id !== id))
+    } catch (err) {
+      console.error('删除自定义图标失败:', err)
+      throw err
+    }
+  }, [])
 
   return {
     bookmarks,

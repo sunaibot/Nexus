@@ -83,31 +83,39 @@ export const themeSettingsApi = {
  * 壁纸设置 API
  */
 export const wallpaperSettingsApi = {
-  // 获取壁纸设置
+  // 获取壁纸设置（通过站点设置接口）
   async get(): Promise<WallpaperSettings> {
-    return request<WallpaperSettings>(`${API_BASE}/settings/wallpaper`, {
-      requireAuth: true,
+    const response = await request<{ success: boolean; data: { wallpaper: WallpaperSettings } }>(`${API_BASE}/settings/site`, {
+      requireAuth: false,
     })
+    return response.data.wallpaper
   },
 
-  // 更新壁纸设置
+  // 更新壁纸设置（通过站点设置接口）
   async update(settings: Partial<WallpaperSettings>): Promise<WallpaperSettings> {
-    return request<WallpaperSettings>(`${API_BASE}/settings/wallpaper`, {
+    const response = await request<{ success: boolean; data: { wallpaper?: WallpaperSettings } & WallpaperSettings }>(`${API_BASE}/settings/site`, {
       method: 'PUT',
-      body: JSON.stringify(settings),
+      body: JSON.stringify({ wallpaper: settings }),
       requireAuth: true,
     })
+    // 后端返回的是整个设置对象，需要提取 wallpaper 字段
+    return response.data.wallpaper || response.data
   },
 
-  // 上传壁纸图片
+  // 上传壁纸图片（前端直接转 base64，不经过后端上传接口）
   async upload(file: File): Promise<{ url: string }> {
-    const formData = new FormData()
-    formData.append('file', file)
-    
-    return request<{ url: string }>(`${API_BASE}/settings/wallpaper/upload`, {
-      method: 'POST',
-      body: formData,
-      requireAuth: true,
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result as string
+        if (result) {
+          resolve({ url: result })
+        } else {
+          reject(new Error('读取文件失败'))
+        }
+      }
+      reader.onerror = () => reject(new Error('读取文件失败'))
+      reader.readAsDataURL(file)
     })
   },
 }
@@ -172,7 +180,7 @@ export const dataManagementApi = {
     const response = await fetch(`${API_BASE}/data/export`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
     })
     

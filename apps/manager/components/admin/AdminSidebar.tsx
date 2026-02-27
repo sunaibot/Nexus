@@ -14,6 +14,7 @@ import {
   Puzzle,
   Users,
   Layout,
+  LayoutGrid,
   BookMarked,
   Folder,
   ClipboardList,
@@ -29,7 +30,7 @@ import { MobileFloatingDock } from '../ui/mobile-floating-dock'
 import { fetchAdminMenus, fetchMenuStats, type AdminMenu, type MenuStats } from '../../lib/api-client'
 import request, { getAuthToken } from '../../lib/api-client/client'
 
-type TabType = 'bookmarks' | 'categories' | 'analytics' | 'plugins' | 'menus' | 'users' | 'security' | 'settings' | 'theme' | 'wallpaper' | 'dock' | 'settings-tabs' | 'nav-items'
+type TabType = 'bookmarks' | 'categories' | 'analytics' | 'plugins' | 'menus' | 'users' | 'security' | 'settings' | 'theme' | 'wallpaper' | 'dock' | 'settings-tabs' | 'nav-items' | 'bookmark-card-styles'
 
 interface AdminSidebarProps {
   activeTab: TabType
@@ -48,6 +49,7 @@ const iconMap: Record<string, LucideIcon> = {
   Puzzle,
   Users,
   Layout,
+  LayoutGrid,
   ClipboardList,
   Shield,
   Palette: PaletteIcon,
@@ -493,7 +495,7 @@ export function AdminSidebar({
           </div>
         </div>
 
-        <nav className="relative flex-1 p-4 space-y-1">
+        <nav className="relative flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />

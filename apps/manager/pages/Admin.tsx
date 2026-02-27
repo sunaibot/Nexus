@@ -26,6 +26,7 @@ import CategoriesPage from '../modules/categories/pages/CategoriesPage'
 import SettingsPage from '../modules/settings/pages/SettingsPage'
 import ThemePage from '../modules/theme/pages/ThemePage'
 import { WallpaperPage } from '../modules/wallpaper'
+import BookmarkCardStylesPage from '../modules/bookmark-card-styles'
 import { fetchPlugins, fetchAdminMenus } from '../lib/api-client'
 
 // Props 简化为仅外部必需的回调
@@ -87,7 +88,7 @@ function AdminContent() {
 
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useTheme()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'analytics' | 'settings' | 'plugins' | 'menus' | 'users' | 'security' | 'theme' | 'wallpaper' | 'dock' | 'settings-tabs' | 'nav-items'>('bookmarks')
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'analytics' | 'settings' | 'plugins' | 'menus' | 'users' | 'security' | 'theme' | 'wallpaper' | 'dock' | 'settings-tabs' | 'nav-items' | 'bookmark-card-styles'>('bookmarks')
   
   // 密码修改状态
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -502,6 +503,19 @@ function AdminContent() {
                 transition={{ duration: 0.15 }}
               >
                 <WallpaperPage />
+              </motion.div>
+            )}
+
+            {/* Bookmark Card Styles Tab */}
+            {activeTab === 'bookmark-card-styles' && (
+              <motion.div
+                key="bookmark-card-styles"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              >
+                <BookmarkCardStylesPage />
               </motion.div>
             )}
           </AnimatePresence>

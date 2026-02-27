@@ -28,10 +28,12 @@
     "enableWeather": true,
     "enableLunar": true,
     "wallpaper": {
-      "enabled": false,
+      "enabled": true,
       "source": "upload",
-      "blur": 0,
-      "overlay": 30
+      "imageData": "data:image/jpeg;base64,/9j/4AAQ...",
+      "imageUrl": "",
+      "blur": 5,
+      "overlay": 40
     }
   }
 }
@@ -149,9 +151,59 @@
 |----|------|--------|------|
 | theme | string | "default" | 主题 |
 | wallpaper.enabled | boolean | false | 启用壁纸 |
-| wallpaper.source | string | "upload" | 壁纸来源 |
-| wallpaper.blur | number | 0 | 模糊度 |
-| wallpaper.overlay | number | 30 | 遮罩透明度 |
+| wallpaper.source | string | "upload" | 壁纸来源(upload/url/preset) |
+| wallpaper.imageData | string | "" | 上传图片的Base64数据 |
+| wallpaper.imageUrl | string | "" | 图片URL地址 |
+| wallpaper.blur | number | 0 | 模糊度(0-20) |
+| wallpaper.overlay | number | 30 | 遮罩透明度(0-100) |
+
+#### 壁纸设置详细说明
+
+壁纸设置通过 `/api/v2/settings/site` 接口的 `wallpaper` 字段进行配置：
+
+**请求示例 - 启用本地上传壁纸：**
+```json
+{
+  "wallpaper": {
+    "enabled": true,
+    "source": "upload",
+    "imageData": "data:image/jpeg;base64,/9j/4AAQ...",
+    "blur": 5,
+    "overlay": 40
+  }
+}
+```
+
+**请求示例 - 使用图片URL：**
+```json
+{
+  "wallpaper": {
+    "enabled": true,
+    "source": "url",
+    "imageUrl": "https://example.com/wallpaper.jpg",
+    "blur": 0,
+    "overlay": 30
+  }
+}
+```
+
+**请求示例 - 使用预设壁纸：**
+```json
+{
+  "wallpaper": {
+    "enabled": true,
+    "source": "preset",
+    "imageUrl": "/wallpapers/preset1.jpg",
+    "blur": 2,
+    "overlay": 25
+  }
+}
+```
+
+**注意事项：**
+- `wallpaper` 字段在请求中需要作为 JSON 字符串发送，后端会自动解析
+- 前端 SDK 中的 `updateSettings` 函数会自动处理对象到字符串的转换
+- 获取设置时，`wallpaper` 字段会作为对象返回
 
 ### 系统设置
 
@@ -178,4 +230,61 @@ curl -X PUT "http://localhost:3000/api/v2/settings/site" \
   -d '{
     "siteTitle": "我的书签"
   }'
+```
+
+### 前端 SDK 使用示例
+
+**获取站点设置（包含壁纸）：**
+```typescript
+import { fetchSettings } from '@/lib/api'
+
+const settings = await fetchSettings()
+console.log(settings.wallpaper)  // { enabled: true, source: 'upload', ... }
+```
+
+**更新壁纸设置：**
+```typescript
+import { updateSettings } from '@/lib/api'
+
+// 启用壁纸并设置图片
+await updateSettings({
+  wallpaper: {
+    enabled: true,
+    source: 'upload',
+    imageData: 'data:image/jpeg;base64,/9j/4AAQ...',
+    blur: 5,
+    overlay: 40
+  }
+})
+
+// 禁用壁纸
+await updateSettings({
+  wallpaper: {
+    enabled: false,
+    source: 'upload',
+    blur: 0,
+    overlay: 30
+  }
+})
+```
+
+**使用壁纸模块 Hook：**
+```typescript
+import { useWallpaper } from '@/modules/wallpaper/hooks/useWallpaper'
+
+function WallpaperSettings() {
+  const { settings, setEnabled, uploadImage, setBlur, setOverlay } = useWallpaper()
+  
+  // 启用/禁用壁纸
+  const toggleWallpaper = () => setEnabled(!settings.enabled)
+  
+  // 上传图片
+  const handleUpload = async (file: File) => {
+    await uploadImage(file)
+  }
+  
+  return (
+    // ...
+  )
+}
 ```

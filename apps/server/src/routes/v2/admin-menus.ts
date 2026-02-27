@@ -26,12 +26,13 @@ router.get('/', authMiddleware, adminMiddleware, (req: Request, res: Response) =
         { id: 'analytics', name: '数据分析', icon: 'BarChart3', path: 'analytics', isEnabled: true, isVisible: true, orderIndex: 3, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
         { id: 'theme', name: '主题管理', icon: 'Palette', path: 'theme', isEnabled: true, isVisible: true, orderIndex: 4, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
         { id: 'wallpaper', name: '壁纸设置', icon: 'Image', path: 'wallpaper', isEnabled: true, isVisible: true, orderIndex: 5, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 'plugins', name: '插件中心', icon: 'Puzzle', path: 'plugins', isEnabled: true, isVisible: true, orderIndex: 6, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 'menus', name: '菜单管理', icon: 'Layout', path: 'menus', isEnabled: true, isVisible: true, orderIndex: 7, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 'users', name: '用户管理', icon: 'Users', path: 'users', isEnabled: true, isVisible: true, orderIndex: 8, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 'settings', name: '系统设置', icon: 'Settings', path: 'settings', isEnabled: true, isVisible: true, orderIndex: 9, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 'audit', name: '审计中心', icon: 'ClipboardList', path: 'audit', isEnabled: true, isVisible: true, orderIndex: 10, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-        { id: 'security', name: '安全管理', icon: 'Shield', path: 'security', isEnabled: true, isVisible: true, orderIndex: 11, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'bookmark-card-styles', name: '书签样式', icon: 'LayoutGrid', path: 'bookmark-card-styles', isEnabled: true, isVisible: true, orderIndex: 6, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'plugins', name: '插件中心', icon: 'Puzzle', path: 'plugins', isEnabled: true, isVisible: true, orderIndex: 7, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'menus', name: '菜单管理', icon: 'Layout', path: 'menus', isEnabled: true, isVisible: true, orderIndex: 8, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'users', name: '用户管理', icon: 'Users', path: 'users', isEnabled: true, isVisible: true, orderIndex: 9, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'settings', name: '系统设置', icon: 'Settings', path: 'settings', isEnabled: true, isVisible: true, orderIndex: 10, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'audit', name: '审计中心', icon: 'ClipboardList', path: 'audit', isEnabled: true, isVisible: true, orderIndex: 11, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+        { id: 'security', name: '安全管理', icon: 'Shield', path: 'security', isEnabled: true, isVisible: true, orderIndex: 12, visibility: 'public' as const, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       ]
       return successResponse(res, defaultMenus)
     }

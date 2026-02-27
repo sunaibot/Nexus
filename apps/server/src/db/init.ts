@@ -513,6 +513,28 @@ function createTables(db: SqlJsDatabase): void {
     )
   `)
 
+  // 插件前台显示配置表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS plugin_display_configs (
+      id TEXT PRIMARY KEY,
+      pluginId TEXT NOT NULL UNIQUE,
+      -- 网格定位 (12列网格系统)
+      gridPosition TEXT DEFAULT '{"colStart":1,"colEnd":13,"rowStart":1,"rowEnd":2}',
+      -- 层级系统
+      layer TEXT DEFAULT 'content',
+      zIndex INTEGER DEFAULT 0,
+      -- 显示配置
+      displayConfig TEXT DEFAULT '{"visible":true,"responsive":{"mobile":{"colStart":1,"colEnd":13},"tablet":{"colStart":1,"colEnd":13},"desktop":{"colStart":1,"colEnd":13}}}',
+      -- 样式配置
+      styleConfig TEXT DEFAULT '{"colors":{"background":"transparent","text":"","border":""},"typography":{"fontSize":"","fontFamily":"","fontWeight":""},"spacing":{"padding":"","margin":""},"effects":{"opacity":1,"blur":0,"shadow":"","animation":""}}',
+      -- 交互配置
+      interactionConfig TEXT DEFAULT '{"draggable":false,"resizable":false,"clickable":true}',
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (pluginId) REFERENCES plugins(id) ON DELETE CASCADE
+    )
+  `)
+
   // 系统配置表
   db.run(`
     CREATE TABLE IF NOT EXISTS system_config (
@@ -628,6 +650,102 @@ function createTables(db: SqlJsDatabase): void {
       requireAuth INTEGER DEFAULT 0, -- 是否需要登录
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // 书签卡片样式配置表 - 支持全局、角色、用户级别配置
+  db.run(`
+    CREATE TABLE IF NOT EXISTS bookmark_card_styles (
+      id TEXT PRIMARY KEY,
+      -- 基础样式
+      backgroundColor TEXT DEFAULT 'rgba(255, 255, 255, 0.1)',
+      backgroundGradient TEXT, -- JSON: { from, to, angle }
+      borderRadius TEXT DEFAULT '12px',
+      borderWidth TEXT DEFAULT '1px',
+      borderColor TEXT DEFAULT 'rgba(255, 255, 255, 0.1)',
+      borderStyle TEXT DEFAULT 'solid',
+      
+      -- 阴影效果
+      shadowColor TEXT DEFAULT 'rgba(0, 0, 0, 0.1)',
+      shadowBlur TEXT DEFAULT '10px',
+      shadowSpread TEXT DEFAULT '0px',
+      shadowX TEXT DEFAULT '0px',
+      shadowY TEXT DEFAULT '4px',
+      
+      -- 间距
+      padding TEXT DEFAULT '16px',
+      margin TEXT DEFAULT '8px',
+      gap TEXT DEFAULT '12px',
+      
+      -- 字体样式
+      titleFontSize TEXT DEFAULT '16px',
+      titleFontWeight TEXT DEFAULT '600',
+      titleColor TEXT DEFAULT 'inherit',
+      descriptionFontSize TEXT DEFAULT '14px',
+      descriptionFontWeight TEXT DEFAULT '400',
+      descriptionColor TEXT DEFAULT 'inherit',
+      
+      -- 效果
+      opacity REAL DEFAULT 1.0,
+      backdropBlur TEXT DEFAULT '10px',
+      backdropSaturate TEXT DEFAULT '180%',
+      
+      -- 悬停效果
+      hoverBackgroundColor TEXT,
+      hoverBorderColor TEXT,
+      hoverShadowBlur TEXT,
+      hoverScale REAL DEFAULT 1.02,
+      hoverTransition TEXT DEFAULT 'all 0.3s ease',
+      
+      -- 图标样式
+      iconSize TEXT DEFAULT '24px',
+      iconColor TEXT,
+      iconBackgroundColor TEXT,
+      iconBorderRadius TEXT DEFAULT '8px',
+      
+      -- 图片样式
+      imageHeight TEXT DEFAULT '120px',
+      imageBorderRadius TEXT DEFAULT '8px',
+      imageObjectFit TEXT DEFAULT 'cover',
+      
+      -- 标签样式
+      tagBackgroundColor TEXT DEFAULT 'rgba(0, 0, 0, 0.1)',
+      tagTextColor TEXT,
+      tagBorderRadius TEXT DEFAULT '4px',
+      tagFontSize TEXT DEFAULT '12px',
+      
+      -- 配置范围
+      scope TEXT DEFAULT 'global', -- global(全局), role(角色), user(用户)
+      userId TEXT, -- scope=user时使用
+      role TEXT, -- scope=role时使用
+      
+      -- 优先级和启用状态
+      priority INTEGER DEFAULT 0, -- 优先级，数字越大优先级越高
+      isEnabled INTEGER DEFAULT 1,
+      isDefault INTEGER DEFAULT 0, -- 1=默认配置
+      
+      -- 元数据
+      name TEXT, -- 配置名称
+      description TEXT, -- 配置描述
+      previewImage TEXT, -- 预览图URL
+      
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
+
+  // 自定义图标表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS custom_icons (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      url TEXT NOT NULL,
+      userId TEXT,
+      isPublic INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `)
 }
@@ -849,13 +967,23 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
       visibility: 'public'
     },
     {
+      id: 'bookmark-card-styles',
+      name: '书签样式',
+      icon: 'LayoutGrid',
+      path: 'bookmark-card-styles',
+      isVisible: 1,
+      isEnabled: 1,
+      orderIndex: 6,
+      visibility: 'public'
+    },
+    {
       id: 'plugins',
       name: '插件中心',
       icon: 'Puzzle',
       path: 'plugins',
       isVisible: 1,
       isEnabled: 1,
-      orderIndex: 6,
+      orderIndex: 7,
       visibility: 'public'
     },
     {
@@ -865,7 +993,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
       path: 'menus',
       isVisible: 1,
       isEnabled: 1,
-      orderIndex: 7,
+      orderIndex: 8,
       visibility: 'public'
     },
     {
@@ -875,7 +1003,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
       path: 'users',
       isVisible: 1,
       isEnabled: 1,
-      orderIndex: 8,
+      orderIndex: 9,
       visibility: 'public'
     },
     {
@@ -885,7 +1013,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
       path: 'settings',
       isVisible: 1,
       isEnabled: 1,
-      orderIndex: 9,
+      orderIndex: 10,
       visibility: 'public'
     },
     // 注意: 审计中心菜单已移除，审计日志功能合并到安全管理 - 安全日志中
@@ -896,7 +1024,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
       path: 'security',
       isVisible: 1,
       isEnabled: 1,
-      orderIndex: 10,
+      orderIndex: 11,
       visibility: 'public'
     }
   ]
@@ -1604,6 +1732,25 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
     }
   }
 
+  // 迁移：添加书签样式菜单（如果不存在）
+  const bookmarkCardStylesMenuExists = db.exec('SELECT 1 FROM admin_menus WHERE id = ?', ['bookmark-card-styles'])
+  if (bookmarkCardStylesMenuExists.length === 0) {
+    db.run(
+      `INSERT INTO admin_menus (id, name, icon, path, isVisible, isEnabled, orderIndex, visibility, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ['bookmark-card-styles', '书签样式', 'LayoutGrid', 'bookmark-card-styles', 1, 1, 6, 'public', now, now]
+    )
+    console.log('✅ Admin menu "书签样式" created')
+    
+    // 更新其他菜单的顺序
+    db.run("UPDATE admin_menus SET orderIndex = 7 WHERE id = 'plugins'")
+    db.run("UPDATE admin_menus SET orderIndex = 8 WHERE id = 'menus'")
+    db.run("UPDATE admin_menus SET orderIndex = 9 WHERE id = 'users'")
+    db.run("UPDATE admin_menus SET orderIndex = 10 WHERE id = 'settings'")
+    db.run("UPDATE admin_menus SET orderIndex = 11 WHERE id = 'security'")
+    console.log('✅ Admin menu order indexes updated')
+  }
+
   // 确保默认主题存在
   const themeExists = db.exec('SELECT 1 FROM themes WHERE id = ?', ['default-light'])
   if (themeExists.length === 0) {
@@ -1673,6 +1820,9 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
 
   // 确保默认Frontend NavItems存在
   ensureDefaultFrontendNavItems(db, now)
+
+  // 确保默认书签卡片样式预设存在
+  ensureDefaultBookmarkCardStyles(db, now)
 }
 
 /**
@@ -1758,6 +1908,197 @@ function ensureDefaultFrontendNavItems(db: SqlJsDatabase, now: string): void {
 }
 
 /**
+ * 确保默认书签卡片样式预设存在
+ */
+function ensureDefaultBookmarkCardStyles(db: SqlJsDatabase, now: string): void {
+  const stylesExist = db.exec('SELECT 1 FROM bookmark_card_styles LIMIT 1')
+  if (stylesExist.length === 0) {
+    const defaultStyles = [
+      {
+        id: 'preset-glassmorphism',
+        name: '玻璃拟态',
+        description: '现代毛玻璃效果，适合深色背景',
+        scope: 'global',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backdropBlur: '20px',
+        backdropSaturate: '180%',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: '16px',
+        shadowColor: 'rgba(0, 0, 0, 0.2)',
+        shadowBlur: '20px',
+        hoverScale: 1.03,
+        isEnabled: 1,
+        isDefault: 0,
+        priority: 10,
+      },
+      {
+        id: 'preset-minimal',
+        name: '极简卡片',
+        description: '简洁干净的设计风格',
+        scope: 'global',
+        backgroundColor: '#ffffff',
+        borderColor: '#e5e7eb',
+        borderWidth: '1px',
+        borderRadius: '8px',
+        shadowColor: 'rgba(0, 0, 0, 0.05)',
+        shadowBlur: '4px',
+        backdropBlur: '0px',
+        hoverScale: 1.01,
+        isEnabled: 1,
+        isDefault: 0,
+        priority: 10,
+      },
+      {
+        id: 'preset-dark-elegant',
+        name: '深色优雅',
+        description: '深色主题，适合夜间模式',
+        scope: 'global',
+        backgroundColor: 'rgba(30, 30, 30, 0.8)',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        shadowColor: 'rgba(0, 0, 0, 0.4)',
+        shadowBlur: '15px',
+        titleColor: '#ffffff',
+        descriptionColor: '#a1a1aa',
+        hoverScale: 1.02,
+        isEnabled: 1,
+        isDefault: 0,
+        priority: 10,
+      },
+      {
+        id: 'preset-gradient',
+        name: '渐变炫彩',
+        description: '活泼的渐变背景效果',
+        scope: 'global',
+        backgroundGradient: JSON.stringify({ from: '#667eea', to: '#764ba2', angle: 135 }),
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+        borderRadius: '20px',
+        shadowColor: 'rgba(102, 126, 234, 0.4)',
+        shadowBlur: '25px',
+        titleColor: '#ffffff',
+        descriptionColor: 'rgba(255, 255, 255, 0.9)',
+        hoverScale: 1.05,
+        isEnabled: 1,
+        isDefault: 0,
+        priority: 10,
+      },
+      {
+        id: 'preset-soft-shadow',
+        name: '柔和阴影',
+        description: '柔和的阴影效果，增加层次感',
+        scope: 'global',
+        backgroundColor: '#ffffff',
+        borderColor: 'transparent',
+        borderRadius: '12px',
+        shadowColor: 'rgba(0, 0, 0, 0.08)',
+        shadowBlur: '24px',
+        shadowSpread: '4px',
+        shadowY: '8px',
+        hoverScale: 1.02,
+        hoverTransition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        isEnabled: 1,
+        isDefault: 0,
+        priority: 10,
+      },
+      {
+        id: 'preset-bordered',
+        name: '边框强调',
+        description: '醒目的边框设计',
+        scope: 'global',
+        backgroundColor: 'transparent',
+        borderColor: '#3b82f6',
+        borderWidth: '2px',
+        borderRadius: '10px',
+        shadowColor: 'rgba(59, 130, 246, 0.2)',
+        shadowBlur: '0px',
+        hoverScale: 1.02,
+        isEnabled: 1,
+        isDefault: 0,
+        priority: 10,
+      },
+      {
+        id: 'default-system',
+        name: '系统默认',
+        description: '系统默认样式配置',
+        scope: 'global',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        borderWidth: '1px',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        shadowColor: 'rgba(0, 0, 0, 0.1)',
+        shadowBlur: '10px',
+        shadowSpread: '0px',
+        shadowX: '0px',
+        shadowY: '4px',
+        padding: '16px',
+        margin: '8px',
+        gap: '12px',
+        titleFontSize: '16px',
+        titleFontWeight: '600',
+        titleColor: 'inherit',
+        descriptionFontSize: '14px',
+        descriptionFontWeight: '400',
+        descriptionColor: 'inherit',
+        opacity: 1.0,
+        backdropBlur: '10px',
+        backdropSaturate: '180%',
+        hoverScale: 1.02,
+        hoverTransition: 'all 0.3s ease',
+        iconSize: '24px',
+        iconBorderRadius: '8px',
+        imageHeight: '120px',
+        imageBorderRadius: '8px',
+        imageObjectFit: 'cover',
+        tagBackgroundColor: 'rgba(0, 0, 0, 0.1)',
+        tagBorderRadius: '4px',
+        tagFontSize: '12px',
+        isEnabled: 1,
+        isDefault: 1,
+        priority: 0,
+      },
+    ]
+
+    for (const style of defaultStyles) {
+      db.run(
+        `INSERT INTO bookmark_card_styles (
+          id, name, description, scope, backgroundColor, backgroundGradient,
+          borderRadius, borderWidth, borderColor, shadowColor, shadowBlur,
+          shadowSpread, shadowX, shadowY, padding, margin, gap,
+          titleFontSize, titleFontWeight, titleColor, descriptionFontSize,
+          descriptionFontWeight, descriptionColor, opacity, backdropBlur,
+          backdropSaturate, hoverScale, hoverTransition, iconSize, iconBorderRadius,
+          imageHeight, imageBorderRadius, imageObjectFit, tagBackgroundColor,
+          tagBorderRadius, tagFontSize, isEnabled, isDefault, priority, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          style.id, style.name, style.description, style.scope,
+          style.backgroundColor || 'rgba(255, 255, 255, 0.1)',
+          style.backgroundGradient || null,
+          style.borderRadius || '12px', style.borderWidth || '1px',
+          style.borderColor || 'rgba(255, 255, 255, 0.1)',
+          style.shadowColor || 'rgba(0, 0, 0, 0.1)',
+          style.shadowBlur || '10px', style.shadowSpread || '0px',
+          style.shadowX || '0px', style.shadowY || '4px',
+          style.padding || '16px', style.margin || '8px', style.gap || '12px',
+          style.titleFontSize || '16px', style.titleFontWeight || '600',
+          style.titleColor || 'inherit', style.descriptionFontSize || '14px',
+          style.descriptionFontWeight || '400', style.descriptionColor || 'inherit',
+          style.opacity || 1.0, style.backdropBlur || '10px',
+          style.backdropSaturate || '180%', style.hoverScale || 1.02,
+          style.hoverTransition || 'all 0.3s ease', style.iconSize || '24px',
+          style.iconBorderRadius || '8px', style.imageHeight || '120px',
+          style.imageBorderRadius || '8px', style.imageObjectFit || 'cover',
+          style.tagBackgroundColor || 'rgba(0, 0, 0, 0.1)',
+          style.tagBorderRadius || '4px', style.tagFontSize || '12px',
+          style.isEnabled, style.isDefault, style.priority, now, now
+        ]
+      )
+    }
+    console.log('✅ Default bookmark card styles created')
+  }
+}
+
+/**
  * 数据库迁移
  */
 function migrateDatabase(db: SqlJsDatabase): void {
@@ -1778,6 +2119,216 @@ function migrateDatabase(db: SqlJsDatabase): void {
       if (!e.message?.includes('duplicate column')) {
         console.error('Migration error (description):', e)
       }
+    }
+
+    // 迁移：添加默认书签卡片样式预设
+    try {
+      const now = new Date().toISOString()
+      const presetIds = [
+        'preset-glassmorphism',
+        'preset-minimal', 
+        'preset-dark-elegant',
+        'preset-gradient',
+        'preset-soft-shadow',
+        'preset-bordered',
+        'default-system'
+      ]
+      
+      // 检查是否已存在预设样式
+      const existingPresets = db.exec(`SELECT id FROM bookmark_card_styles WHERE id IN (${presetIds.map(() => '?').join(',')})`, presetIds)
+      const existingIds = new Set(existingPresets.length > 0 ? existingPresets[0].values.map((row: any[]) => row[0]) : [])
+      
+      const defaultStyles = [
+        {
+          id: 'preset-glassmorphism',
+          name: '玻璃拟态',
+          description: '现代毛玻璃效果，适合深色背景',
+          scope: 'global',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backdropBlur: '20px',
+          backdropSaturate: '180%',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '16px',
+          shadowColor: 'rgba(0, 0, 0, 0.2)',
+          shadowBlur: '20px',
+          hoverScale: 1.03,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-minimal',
+          name: '极简卡片',
+          description: '简洁干净的设计风格',
+          scope: 'global',
+          backgroundColor: '#ffffff',
+          borderColor: '#e5e7eb',
+          borderWidth: '1px',
+          borderRadius: '8px',
+          shadowColor: 'rgba(0, 0, 0, 0.05)',
+          shadowBlur: '4px',
+          backdropBlur: '0px',
+          hoverScale: 1.01,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-dark-elegant',
+          name: '深色优雅',
+          description: '深色主题，适合夜间模式',
+          scope: 'global',
+          backgroundColor: 'rgba(30, 30, 30, 0.8)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          shadowColor: 'rgba(0, 0, 0, 0.4)',
+          shadowBlur: '15px',
+          titleColor: '#ffffff',
+          descriptionColor: '#a1a1aa',
+          hoverScale: 1.02,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-gradient',
+          name: '渐变炫彩',
+          description: '活泼的渐变背景效果',
+          scope: 'global',
+          backgroundGradient: JSON.stringify({ from: '#667eea', to: '#764ba2', angle: 135 }),
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          borderRadius: '20px',
+          shadowColor: 'rgba(102, 126, 234, 0.4)',
+          shadowBlur: '25px',
+          titleColor: '#ffffff',
+          descriptionColor: 'rgba(255, 255, 255, 0.9)',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-soft-shadow',
+          name: '柔和阴影',
+          description: '柔和的阴影效果，增加层次感',
+          scope: 'global',
+          backgroundColor: '#ffffff',
+          borderColor: 'transparent',
+          borderRadius: '12px',
+          shadowColor: 'rgba(0, 0, 0, 0.08)',
+          shadowBlur: '24px',
+          shadowSpread: '4px',
+          shadowY: '8px',
+          hoverScale: 1.02,
+          hoverTransition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-bordered',
+          name: '边框强调',
+          description: '醒目的边框设计',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: '#3b82f6',
+          borderWidth: '2px',
+          borderRadius: '10px',
+          shadowColor: 'rgba(59, 130, 246, 0.2)',
+          shadowBlur: '0px',
+          hoverScale: 1.02,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'default-system',
+          name: '系统默认',
+          description: '系统默认样式配置',
+          scope: 'global',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '12px',
+          borderWidth: '1px',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          shadowColor: 'rgba(0, 0, 0, 0.1)',
+          shadowBlur: '10px',
+          shadowSpread: '0px',
+          shadowX: '0px',
+          shadowY: '4px',
+          padding: '16px',
+          margin: '8px',
+          gap: '12px',
+          titleFontSize: '16px',
+          titleFontWeight: '600',
+          titleColor: 'inherit',
+          descriptionFontSize: '14px',
+          descriptionFontWeight: '400',
+          descriptionColor: 'inherit',
+          opacity: 1.0,
+          backdropBlur: '10px',
+          backdropSaturate: '180%',
+          hoverScale: 1.02,
+          hoverTransition: 'all 0.3s ease',
+          iconSize: '24px',
+          iconBorderRadius: '8px',
+          imageHeight: '120px',
+          imageBorderRadius: '8px',
+          imageObjectFit: 'cover',
+          tagBackgroundColor: 'rgba(0, 0, 0, 0.1)',
+          tagBorderRadius: '4px',
+          tagFontSize: '12px',
+          isEnabled: 1,
+          isDefault: 1,
+          priority: 0,
+        },
+      ]
+
+      let addedCount = 0
+      for (const style of defaultStyles) {
+        if (!existingIds.has(style.id)) {
+          db.run(
+            `INSERT INTO bookmark_card_styles (
+              id, name, description, scope, backgroundColor, backgroundGradient,
+              borderRadius, borderWidth, borderColor, shadowColor, shadowBlur,
+              shadowSpread, shadowX, shadowY, padding, margin, gap,
+              titleFontSize, titleFontWeight, titleColor, descriptionFontSize,
+              descriptionFontWeight, descriptionColor, opacity, backdropBlur,
+              backdropSaturate, hoverScale, hoverTransition, iconSize, iconBorderRadius,
+              imageHeight, imageBorderRadius, imageObjectFit, tagBackgroundColor,
+              tagBorderRadius, tagFontSize, isEnabled, isDefault, priority, createdAt, updatedAt
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              style.id, style.name, style.description, style.scope,
+              style.backgroundColor || 'rgba(255, 255, 255, 0.1)',
+              style.backgroundGradient || null,
+              style.borderRadius || '12px', style.borderWidth || '1px',
+              style.borderColor || 'rgba(255, 255, 255, 0.1)',
+              style.shadowColor || 'rgba(0, 0, 0, 0.1)',
+              style.shadowBlur || '10px', style.shadowSpread || '0px',
+              style.shadowX || '0px', style.shadowY || '4px',
+              style.padding || '16px', style.margin || '8px', style.gap || '12px',
+              style.titleFontSize || '16px', style.titleFontWeight || '600',
+              style.titleColor || 'inherit', style.descriptionFontSize || '14px',
+              style.descriptionFontWeight || '400', style.descriptionColor || 'inherit',
+              style.opacity || 1.0, style.backdropBlur || '10px',
+              style.backdropSaturate || '180%', style.hoverScale || 1.02,
+              style.hoverTransition || 'all 0.3s ease', style.iconSize || '24px',
+              style.iconBorderRadius || '8px', style.imageHeight || '120px',
+              style.imageBorderRadius || '8px', style.imageObjectFit || 'cover',
+              style.tagBackgroundColor || 'rgba(0, 0, 0, 0.1)',
+              style.tagBorderRadius || '4px', style.tagFontSize || '12px',
+              style.isEnabled, style.isDefault, style.priority, now, now
+            ]
+          )
+          addedCount++
+        }
+      }
+      
+      if (addedCount > 0) {
+        console.log(`✅ Migrated: Added ${addedCount} default bookmark card styles`)
+      }
+    } catch (e: any) {
+      console.error('Migration error (bookmark card styles):', e)
     }
   } catch (error) {
     console.error('Migration error:', error)

@@ -96,6 +96,12 @@ const defaultSiteSettings = {
     buttonSecondaryBg: '',    // 次按钮背景
     buttonSecondaryText: '',  // 次按钮文字
   },
+  // 网络环境检测配置
+  networkEnv: {
+    internalSuffixes: ['.local', '.lan', '.internal', '.corp', '.home'], // 内网域名后缀
+    internalIPs: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'], // 内网IP段
+    localhostNames: ['localhost', '127.0.0.1', '[::1]'], // localhost别名
+  },
 }
 
 // 设置项到操作类型的映射

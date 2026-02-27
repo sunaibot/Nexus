@@ -30,7 +30,7 @@ export function getCurrentUserId(): string | null {
 
 export function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null
-  return localStorage.getItem('admin_token')
+  return localStorage.getItem('token')
 }
 
 export function getCurrentUserRole(): string | null {

@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useSiteSettings } from './useSiteSettings'
+import type { NetworkEnvConfig } from '../lib/api'
 
 /**
  * 判断一个 hostname 是否属于内网地址
- * - localhost / 127.x
- * - 10.x.x.x
- * - 172.16.x.x ~ 172.31.x.x
- * - 192.168.x.x
- * - 任何 .local / .lan / .internal 后缀的域名
+ * 使用站点设置中的配置
  */
-function isInternalHost(hostname: string): boolean {
+function isInternalHost(hostname: string, config: NetworkEnvConfig): boolean {
   // localhost
-  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]') {
+  if (config.localhostNames.includes(hostname)) {
     return true
   }
   
@@ -27,8 +25,7 @@ function isInternalHost(hostname: string): boolean {
   }
   
   // 内网域名后缀
-  const internalSuffixes = ['.local', '.lan', '.internal', '.corp', '.home']
-  if (internalSuffixes.some(suffix => hostname.endsWith(suffix))) {
+  if (config.internalSuffixes.some(suffix => hostname.endsWith(suffix))) {
     return true
   }
   
@@ -40,17 +37,32 @@ function isInternalHost(hostname: string): boolean {
  * 基于当前页面所在 host 进行判断：
  * - 如果页面部署在内网 IP/域名上 → 内网环境
  * - 如果页面部署在公网域名上 → 外网环境
+ * 
+ * 使用站点设置中的网络环境配置
  */
 export function useNetworkEnv() {
+  const { siteSettings, settingsLoaded } = useSiteSettings()
+  
+  // 默认配置
+  const defaultConfig: NetworkEnvConfig = {
+    internalSuffixes: ['.local', '.lan', '.internal', '.corp', '.home'],
+    internalIPs: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'],
+    localhostNames: ['localhost', '127.0.0.1', '[::1]'],
+  }
+  
+  const config: NetworkEnvConfig = siteSettings.networkEnv || defaultConfig
+  
   const [isInternal, setIsInternal] = useState(() => {
-    return isInternalHost(window.location.hostname)
+    return isInternalHost(window.location.hostname, config)
   })
 
   useEffect(() => {
-    setIsInternal(isInternalHost(window.location.hostname))
-  }, [])
+    if (settingsLoaded) {
+      setIsInternal(isInternalHost(window.location.hostname, config))
+    }
+  }, [settingsLoaded, config])
 
-  return { isInternal }
+  return { isInternal, config }
 }
 
 /**

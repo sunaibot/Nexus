@@ -19,7 +19,8 @@ import {
   RotateCcw,
   Info,
   Upload,
-  Link
+  Link,
+  Network
 } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
 import { themes, useTheme } from '../../../hooks/useTheme'
@@ -27,7 +28,7 @@ import { cn } from '../../../lib/utils'
 import { fetchSettings, updateSettings, type SiteSettings, factoryReset, clearAuthStatus, adminChangePassword, exportData, importData } from '../../../lib/api'
 
 // 设置模块类型
- type SettingsModule = 'site' | 'widget' | 'security' | 'data'
+ type SettingsModule = 'site' | 'widget' | 'network' | 'security' | 'data'
 
 // 模块配置
 const modules = [
@@ -46,6 +47,14 @@ const modules = [
     icon: Gauge,
     color: 'from-sky-500 to-violet-500',
     bgColor: 'from-sky-500/10 to-violet-500/10'
+  },
+  {
+    id: 'network' as SettingsModule,
+    title: '网络环境',
+    desc: '内网检测、域名配置',
+    icon: Network,
+    color: 'from-indigo-500 to-purple-500',
+    bgColor: 'from-indigo-500/10 to-purple-500/10'
   },
   {
     id: 'security' as SettingsModule,
@@ -453,6 +462,107 @@ function WidgetModule({
         checked={visibility.networkTelemetry ?? false}
         onChange={(v) => onChange('widgetVisibility', { ...visibility, networkTelemetry: v })}
       />
+    </div>
+  )
+}
+
+// 网络环境配置模块
+function NetworkConfigModule({
+  settings,
+  onChange
+}: {
+  settings: Partial<SiteSettings>
+  onChange: (key: keyof SiteSettings, value: any) => void
+}) {
+  const networkEnv = settings.networkEnv || {
+    internalSuffixes: ['.local', '.lan', '.internal', '.corp', '.home'],
+    internalIPs: ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16'],
+    localhostNames: ['localhost', '127.0.0.1', '[::1]'],
+  }
+
+  const updateNetworkEnv = (key: keyof typeof networkEnv, value: string[]) => {
+    onChange('networkEnv', { ...networkEnv, [key]: value })
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* 内网域名后缀 */}
+      <div>
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+          内网域名后缀
+        </label>
+        <textarea
+          value={networkEnv.internalSuffixes.join('\n')}
+          onChange={(e) => updateNetworkEnv('internalSuffixes', e.target.value.split('\n').filter(s => s.trim()))}
+          placeholder=".local&#10;.lan&#10;.internal"
+          rows={5}
+          className="w-full px-4 py-3 rounded-xl border bg-transparent transition-all resize-none font-mono text-sm"
+          style={{
+            borderColor: 'var(--color-glass-border)',
+            color: 'var(--color-text-primary)'
+          }}
+        />
+        <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+          每行一个后缀，用于识别内网域名（如 .local, .lan）
+        </p>
+      </div>
+
+      {/* 内网IP段 */}
+      <div>
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+          内网IP段
+        </label>
+        <textarea
+          value={networkEnv.internalIPs.join('\n')}
+          onChange={(e) => updateNetworkEnv('internalIPs', e.target.value.split('\n').filter(s => s.trim()))}
+          placeholder="10.0.0.0/8&#10;172.16.0.0/12&#10;192.168.0.0/16"
+          rows={5}
+          className="w-full px-4 py-3 rounded-xl border bg-transparent transition-all resize-none font-mono text-sm"
+          style={{
+            borderColor: 'var(--color-glass-border)',
+            color: 'var(--color-text-primary)'
+          }}
+        />
+        <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+          每行一个CIDR格式的IP段，用于识别内网IP地址
+        </p>
+      </div>
+
+      {/* localhost别名 */}
+      <div>
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+          localhost别名
+        </label>
+        <textarea
+          value={networkEnv.localhostNames.join('\n')}
+          onChange={(e) => updateNetworkEnv('localhostNames', e.target.value.split('\n').filter(s => s.trim()))}
+          placeholder="localhost&#10;127.0.0.1&#10;[::1]"
+          rows={3}
+          className="w-full px-4 py-3 rounded-xl border bg-transparent transition-all resize-none font-mono text-sm"
+          style={{
+            borderColor: 'var(--color-glass-border)',
+            color: 'var(--color-text-primary)'
+          }}
+        />
+        <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+          每行一个localhost别名，用于识别本地开发环境
+        </p>
+      </div>
+
+      {/* 说明 */}
+      <div className="p-4 rounded-xl" style={{ background: 'var(--color-glass)' }}>
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-primary)' }} />
+          <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            <p className="mb-2">这些配置用于自动检测当前网络环境是否为内网：</p>
+            <ul className="list-disc list-inside space-y-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              <li>当访问的域名匹配上述后缀时，自动切换到内网模式</li>
+              <li>内网模式下，书签会优先显示内网链接（如果配置了）</li>
+              <li>修改后需要刷新前台页面才能生效</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -1466,6 +1576,9 @@ export default function SettingsPage() {
                 )}
                 {activeModule === 'widget' && (
                   <WidgetModule settings={settings} onChange={handleChange} />
+                )}
+                {activeModule === 'network' && (
+                  <NetworkConfigModule settings={settings} onChange={handleChange} />
                 )}
                 {activeModule === 'security' && <SecurityModule />}
                 {activeModule === 'data' && <DataModule />}

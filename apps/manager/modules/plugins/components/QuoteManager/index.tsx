@@ -182,7 +182,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
 
       const response = await fetch(`/api/quotes?${params.toString()}`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
       const result = await response.json()
@@ -219,7 +219,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ isEnabled: !isPluginEnabled })
       })
@@ -243,7 +243,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ config })
       })
@@ -312,7 +312,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(data)
       })
@@ -340,7 +340,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
       const response = await fetch(`/api/quotes/${quote.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       })
 
@@ -364,7 +364,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({ isActive: !quote.isActive })
       })

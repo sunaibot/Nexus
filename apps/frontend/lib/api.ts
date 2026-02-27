@@ -104,7 +104,7 @@ function getToken(): string | null {
 }
 
 // 统一请求处理
-async function request<T>(
+export async function request<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
@@ -451,10 +451,12 @@ export function clearAuthStatus(): void {
   
   // 同时清除 Cookie
   const expires = 'Thu, 01 Jan 1970 00:00:00 GMT'
-  document.cookie = `admin_authenticated=; expires=${expires}; path=/; SameSite=Lax`
-  document.cookie = `admin_username=; expires=${expires}; path=/; SameSite=Lax`
-  document.cookie = `admin_token=; expires=${expires}; path=/; SameSite=Lax`
-  document.cookie = `admin_login_time=; expires=${expires}; path=/; SameSite=Lax`
+  // 设置 domain 为 localhost 以支持跨端口清除
+  const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
+  document.cookie = `admin_authenticated=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+  document.cookie = `admin_username=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+  document.cookie = `admin_token=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+  document.cookie = `admin_login_time=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
 }
 
 // 清除密码变更标志
@@ -517,6 +519,13 @@ export interface SiteSettings {
   themeId?: string         // 当前主题ID
   themeMode?: 'light' | 'dark' | 'auto'  // 主题模式
   themeColors?: ThemeColors  // 主题颜色配置
+  networkEnv?: NetworkEnvConfig  // 网络环境配置
+}
+
+export interface NetworkEnvConfig {
+  internalSuffixes: string[]  // 内网域名后缀
+  internalIPs: string[]       // 内网IP段
+  localhostNames: string[]    // localhost别名
 }
 
 // 默认站点设置
@@ -1051,6 +1060,17 @@ export async function checkBookmarksHealth(bookmarkIds?: string[]): Promise<Heal
 export const healthCheckApi = {
   check: checkBookmarksHealth,
 }
+
+// 书签卡片样式 API
+export {
+  fetchCurrentBookmarkCardStyle,
+  styleToCSS,
+  getHoverStyle,
+  getTitleStyle,
+  getDescriptionStyle,
+  getIconStyle,
+  type BookmarkCardStyle,
+} from './api/bookmark-card-styles'
 
 // 重新导出类型供外部使用
 export type { Bookmark, Category } from '../types/bookmark'

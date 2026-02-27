@@ -8,6 +8,7 @@ import { cn } from '../lib/utils'
 import { IconRenderer } from './IconRenderer'
 import { visitsApi } from '../lib/api'
 import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
+import { useBookmarkCardStyle } from '../hooks/useBookmarkCardStyle'
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -38,6 +39,7 @@ export function BookmarkCard({
   const descRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const { isInternal } = useNetworkEnv()
+  const { cardStyle, hoverStyle, titleStyle, descriptionStyle, iconStyle } = useBookmarkCardStyle()
 
   // 清理 timeout
   useEffect(() => {
@@ -103,8 +105,8 @@ export function BookmarkCard({
       exit={{ opacity: 0, scale: 0.95, y: -15 }}
       // 1. 物理层：克制的浮起，保持重量感
       whileHover={{ 
-        y: -4,         // 轻微浮起，不是跳跃
-        scale: 1.01,   // 几乎不缩放，克制
+        y: hoverStyle.transform ? undefined : -4,
+        scale: hoverStyle.transform ? undefined : 1.01,
       }}
       whileTap={{ scale: 0.98 }}
       transition={{ 
@@ -118,6 +120,7 @@ export function BookmarkCard({
         'vibe-card vibe-card--glow group cursor-pointer h-full',
         isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
+      style={cardStyle}
       onClick={handleClick}
       onMouseEnter={() => setShowMenu(true)}
       onMouseLeave={() => setShowMenu(false)}
@@ -278,10 +281,15 @@ export function BookmarkCard({
           {/* Favicon/Icon - 图标微动：Hover 时轻轻摇晃，像是在对焦 */}
           <motion.div 
             className={cn(
-              'flex-shrink-0 w-12 h-12 rounded-xl',
-              'flex items-center justify-center',
-              'bg-white/10 p-1.5'
+              'flex-shrink-0 flex items-center justify-center p-1.5',
+              !iconStyle.width && 'w-12 h-12 rounded-xl bg-white/10'
             )}
+            style={{
+              width: iconStyle.width,
+              height: iconStyle.height,
+              borderRadius: iconStyle.borderRadius,
+              backgroundColor: iconStyle.backgroundColor || 'rgba(255,255,255,0.1)',
+            }}
             whileHover={{ 
               rotate: [0, -5, 5, -3, 0], 
               transition: { duration: 0.5, ease: 'easeInOut' } 
@@ -295,7 +303,7 @@ export function BookmarkCard({
                 onError={() => setImageError(true)}
               />
             ) : bookmark.icon ? (
-              <IconRenderer icon={bookmark.icon} className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
+              <IconRenderer icon={bookmark.icon} className="w-7 h-7" style={{ color: iconStyle.color || 'var(--gradient-1)' }} />
             ) : bookmark.favicon && !imageError ? (
               <img
                 src={bookmark.favicon}
@@ -306,7 +314,7 @@ export function BookmarkCard({
             ) : (
               <span 
                 className="text-xl font-semibold"
-                style={{ color: 'var(--text-secondary)' }}
+                style={{ color: iconStyle.color || 'var(--text-secondary)' }}
               >
                 {bookmark.title.charAt(0).toUpperCase()}
               </span>
@@ -316,8 +324,12 @@ export function BookmarkCard({
           {/* 文本内容 */}
           <div className="flex-1 min-w-0 flex flex-col h-full">
             <h3 
-              className="font-medium text-base truncate flex items-center gap-2"
-              style={{ color: 'var(--text-primary)' }}
+              className="truncate flex items-center gap-2"
+              style={{ 
+                color: titleStyle.color || 'var(--text-primary)',
+                fontSize: titleStyle.fontSize,
+                fontWeight: titleStyle.fontWeight,
+              }}
             >
               {bookmark.title}
               <ExternalLink 
@@ -332,8 +344,12 @@ export function BookmarkCard({
               onMouseLeave={bookmark.description ? handleDescMouseLeave : undefined}
             >
               <p 
-                className="text-sm card-desc cursor-default"
-                style={{ color: 'var(--text-muted)' }}
+                className="card-desc cursor-default"
+                style={{ 
+                  color: descriptionStyle.color || 'var(--text-muted)',
+                  fontSize: descriptionStyle.fontSize,
+                  fontWeight: descriptionStyle.fontWeight,
+                }}
               >
                 {bookmark.description || ''}
               </p>

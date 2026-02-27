@@ -50,8 +50,14 @@ export function useWallpaper() {
       // 调用真实 API 保存到后端
       const result = await updateSettings({ wallpaper: updated })
       console.log('[Wallpaper] Save result:', result)
+      console.log('[Wallpaper] Returned wallpaper:', result.wallpaper)
       
-      setSettings(updated)
+      // 使用后端返回的壁纸设置更新状态
+      if (result.wallpaper) {
+        setSettings(result.wallpaper)
+      } else {
+        setSettings(updated)
+      }
       return updated
     } catch (err) {
       setError('保存壁纸设置失败')

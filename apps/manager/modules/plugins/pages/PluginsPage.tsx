@@ -11,7 +11,10 @@ import {
   Shield,
   Globe,
   Database,
-  ArrowLeft
+  ArrowLeft,
+  LayoutGrid,
+  Settings2,
+  Download
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import { useToast } from '../../../components/admin/Toast'
@@ -20,12 +23,14 @@ import {
   createPlugin, 
   updatePlugin, 
   deletePlugin,
+  installPlugin,
   type Plugin,
   type CreatePluginData,
   type UpdatePluginData
 } from '../../../lib/api-client'
 import { getCurrentUserRole } from '../../../lib/api-client/client'
 import QuoteManager from '../components/QuoteManager/index'
+import PluginDisplayConfigManager from '../components/PluginDisplayConfigManager'
 
 export default function PluginsPage() {
   const { showToast } = useToast()
@@ -35,6 +40,8 @@ export default function PluginsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingPlugin, setEditingPlugin] = useState<Plugin | null>(null)
   const [managingPlugin, setManagingPlugin] = useState<Plugin | null>(null)
+  const [configuringPlugin, setConfiguringPlugin] = useState<Plugin | null>(null)
+  const [activeTab, setActiveTab] = useState<'data' | 'display'>('data')
   const [formData, setFormData] = useState<CreatePluginData & UpdatePluginData>({
     name: '',
     description: '',
@@ -48,7 +55,8 @@ export default function PluginsPage() {
   const loadPlugins = useCallback(async () => {
     setIsLoading(true)
     try {
-      const data = await fetchPlugins()
+      // 获取所有插件，包括已卸载的
+      const data = await fetchPlugins(undefined, true)
       setPlugins(data)
     } catch (err: any) {
       showToast('error', err.message || '加载插件失败')
@@ -97,13 +105,23 @@ export default function PluginsPage() {
   }
 
   const handleDelete = async (plugin: Plugin) => {
-    if (!confirm(`确定要删除插件 "${plugin.name}" 吗？`)) return
+    if (!confirm(`确定要卸载插件 "${plugin.name}" 吗？卸载后可以重新安装。`)) return
     try {
       await deletePlugin(plugin.id)
-      showToast('success', '插件删除成功')
+      showToast('success', '插件卸载成功')
       await loadPlugins()
     } catch (err: any) {
-      showToast('error', err.message || '删除失败')
+      showToast('error', err.message || '卸载失败')
+    }
+  }
+
+  const handleInstall = async (plugin: Plugin) => {
+    try {
+      await installPlugin(plugin.id)
+      showToast('success', '插件安装成功')
+      await loadPlugins()
+    } catch (err: any) {
+      showToast('error', err.message || '安装失败')
     }
   }
 
@@ -166,15 +184,46 @@ export default function PluginsPage() {
           <div>
             <h2 className="text-lg font-semibold">{managingPlugin.name}</h2>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              管理插件数据
+              管理插件数据和显示配置
             </p>
           </div>
         </div>
 
-        {/* 根据插件类型渲染对应的数据管理组件 */}
+        {/* 标签页切换 */}
+        <div className="flex gap-2 p-1 rounded-xl" style={{ background: 'var(--color-glass)' }}>
+          <button
+            onClick={() => setActiveTab('data')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+              activeTab === 'data'
+                ? 'bg-white dark:bg-gray-800 shadow-sm'
+                : 'hover:bg-white/50 dark:hover:bg-gray-800/50'
+            )}
+            style={{ color: activeTab === 'data' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+          >
+            <Database className="w-4 h-4" />
+            数据管理
+          </button>
+          <button
+            onClick={() => setActiveTab('display')}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+              activeTab === 'display'
+                ? 'bg-white dark:bg-gray-800 shadow-sm'
+                : 'hover:bg-white/50 dark:hover:bg-gray-800/50'
+            )}
+            style={{ color: activeTab === 'display' ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            显示配置
+          </button>
+        </div>
+
+        {/* 根据标签页渲染对应内容 */}
         <AnimatePresence mode="wait">
-          {managingPlugin.id === 'quotes' && (
+          {activeTab === 'data' && managingPlugin.id === 'quotes' && (
             <motion.div
+              key="data"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -188,8 +237,9 @@ export default function PluginsPage() {
               />
             </motion.div>
           )}
-          {managingPlugin.id !== 'quotes' && (
+          {activeTab === 'data' && managingPlugin.id !== 'quotes' && (
             <motion.div
+              key="data"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -203,6 +253,21 @@ export default function PluginsPage() {
               <p style={{ color: 'var(--color-text-muted)' }}>
                 插件 "{managingPlugin.name}" 暂无数据管理功能
               </p>
+            </motion.div>
+          )}
+          {activeTab === 'display' && (
+            <motion.div
+              key="display"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <PluginDisplayConfigManager
+                plugin={managingPlugin}
+                onConfigUpdate={() => {
+                  loadPlugins()
+                }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -297,55 +362,72 @@ export default function PluginsPage() {
 
                 <div className="flex items-center justify-between pt-4" style={{ borderTop: '1px solid var(--color-glass-border)' }}>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleToggleEnabled(plugin)}
-                      className={cn(
-                        'p-2 rounded-lg transition-all',
-                        plugin.isEnabled
-                          ? 'text-green-400 hover:bg-green-500/20'
-                          : 'text-gray-400 hover:bg-gray-500/20'
-                      )}
-                      title={plugin.isEnabled ? '禁用' : '启用'}
-                    >
-                      {plugin.isEnabled ? <Power className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => handleEdit(plugin)}
-                      className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
-                      style={{ color: 'var(--color-text-muted)' }}
-                      title="编辑"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(plugin)}
-                      className="p-2 rounded-lg hover:text-red-400 hover:bg-red-500/20 transition-all"
-                      style={{ color: 'var(--color-text-muted)' }}
-                      title="删除"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    {/* 管理数据按钮 */}
-                    <button
-                      onClick={() => setManagingPlugin(plugin)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-all"
-                      style={{ 
-                        background: 'var(--color-glass-hover)',
-                        color: 'var(--color-text-primary)'
-                      }}
-                      title="管理插件数据"
-                    >
-                      <Database className="w-3.5 h-3.5" />
-                      管理数据
-                    </button>
+                    {/* 已安装的插件显示操作按钮 */}
+                    {(plugin as any).isInstalled !== false ? (
+                      <>
+                        <button
+                          onClick={() => handleToggleEnabled(plugin)}
+                          className={cn(
+                            'p-2 rounded-lg transition-all',
+                            plugin.isEnabled
+                              ? 'text-green-400 hover:bg-green-500/20'
+                              : 'text-gray-400 hover:bg-gray-500/20'
+                          )}
+                          title={plugin.isEnabled ? '禁用' : '启用'}
+                        >
+                          {plugin.isEnabled ? <Power className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(plugin)}
+                          className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
+                          style={{ color: 'var(--color-text-muted)' }}
+                          title="编辑"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(plugin)}
+                          className="p-2 rounded-lg hover:text-orange-400 hover:bg-orange-500/20 transition-all"
+                          style={{ color: 'var(--color-text-muted)' }}
+                          title="卸载"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {/* 管理数据按钮 */}
+                        <button
+                          onClick={() => setManagingPlugin(plugin)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-all"
+                          style={{ 
+                            background: 'var(--color-glass-hover)',
+                            color: 'var(--color-text-primary)'
+                          }}
+                          title="管理插件数据"
+                        >
+                          <Database className="w-3.5 h-3.5" />
+                          管理数据
+                        </button>
+                      </>
+                    ) : (
+                      /* 未安装的插件显示安装按钮 */
+                      <button
+                        onClick={() => handleInstall(plugin)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-all bg-blue-500 hover:bg-blue-600 text-white"
+                        title="安装插件"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        安装
+                      </button>
+                    )}
                   </div>
                   <span className={cn(
                     'text-xs px-2 py-1 rounded-full',
-                    plugin.isEnabled
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-gray-500/20 text-gray-400'
+                    (plugin as any).isInstalled === false
+                      ? 'bg-gray-500/20 text-gray-400'
+                      : plugin.isEnabled
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-yellow-500/20 text-yellow-400'
                   )}>
-                    {plugin.isEnabled ? '已启用' : '已禁用'}
+                    {(plugin as any).isInstalled === false ? '未安装' : plugin.isEnabled ? '已启用' : '已禁用'}
                   </span>
                 </div>
               </motion.div>

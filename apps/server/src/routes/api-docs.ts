@@ -1860,6 +1860,136 @@ const apiModules = {
         response: { code: 200, desc: '导入成功', example: { success: true, data: { imported: 100, skipped: 10, message: '成功导入 100 条翻译，跳过 10 条' } } }
       }
     ]
+  },
+
+  // 自定义图标模块
+  customIcons: {
+    id: 'customIcons',
+    name: '自定义图标',
+    icon: '🎨',
+    description: '用户自定义图标管理',
+    apis: [
+      {
+        method: 'GET', path: '/api/v2/custom-icons', auth: true, admin: false,
+        name: '获取自定义图标列表',
+        desc: '获取当前用户的所有自定义图标',
+        response: { code: 200, desc: '图标列表', example: { success: true, data: [{ id: 'icon1', name: '百度', url: 'https://baidu.com/favicon.ico', isPublic: false }] } }
+      },
+      {
+        method: 'POST', path: '/api/v2/custom-icons', auth: true, admin: false,
+        name: '创建自定义图标',
+        desc: '创建新的自定义图标',
+        body: [
+          { name: 'name', type: 'string', required: true, desc: '图标名称' },
+          { name: 'url', type: 'string', required: true, desc: '图标URL' },
+          { name: 'isPublic', type: 'boolean', required: false, desc: '是否公开', default: false }
+        ],
+        response: { code: 201, desc: '创建成功', example: { success: true, data: { id: 'icon1', name: '百度', url: 'https://baidu.com/favicon.ico' } } }
+      },
+      {
+        method: 'PUT', path: '/api/v2/custom-icons/:id', auth: true, admin: false,
+        name: '更新自定义图标',
+        desc: '更新指定图标',
+        params: [{ name: 'id', type: 'string', required: true, desc: '图标ID' }],
+        body: [
+          { name: 'name', type: 'string', required: false, desc: '图标名称' },
+          { name: 'url', type: 'string', required: false, desc: '图标URL' },
+          { name: 'isPublic', type: 'boolean', required: false, desc: '是否公开' }
+        ],
+        response: { code: 200, desc: '更新成功', example: { success: true, data: { id: 'icon1' } } }
+      },
+      {
+        method: 'DELETE', path: '/api/v2/custom-icons/:id', auth: true, admin: false,
+        name: '删除自定义图标',
+        desc: '删除指定图标',
+        params: [{ name: 'id', type: 'string', required: true, desc: '图标ID' }],
+        response: { code: 200, desc: '删除成功', example: { success: true, message: '删除成功' } }
+      }
+    ]
+  },
+
+  // 天气模块
+  weather: {
+    id: 'weather',
+    name: '天气服务',
+    icon: '🌤️',
+    description: '天气数据查询（后端代理，保护用户IP）',
+    apis: [
+      {
+        method: 'GET', path: '/api/v2/weather', auth: false, admin: false,
+        name: '获取天气数据',
+        desc: '根据经纬度获取天气数据',
+        query: [
+          { name: 'lat', type: 'number', required: true, desc: '纬度' },
+          { name: 'lon', type: 'number', required: true, desc: '经度' },
+          { name: 'city', type: 'string', required: false, desc: '城市名称' }
+        ],
+        response: { code: 200, desc: '天气数据', example: { success: true, data: { temperature: 24, feelsLike: 26, humidity: 65, description: '晴', icon: '☀️', city: '北京' } } }
+      },
+      {
+        method: 'GET', path: '/api/v2/weather/city', auth: false, admin: false,
+        name: '根据城市获取天气',
+        desc: '根据城市名称获取天气数据',
+        query: [
+          { name: 'name', type: 'string', required: true, desc: '城市名称' }
+        ],
+        response: { code: 200, desc: '天气数据', example: { success: true, data: { temperature: 24, description: '晴', city: '北京' } } }
+      }
+    ]
+  },
+
+  // 书签卡片样式模块
+  bookmarkCardStyles: {
+    id: 'bookmarkCardStyles',
+    name: '书签卡片样式',
+    icon: '🎴',
+    description: '书签卡片样式配置管理（全局/角色/用户级别）',
+    apis: [
+      {
+        method: 'GET', path: '/api/v2/bookmark-card-styles', auth: true, admin: true,
+        name: '获取样式列表',
+        desc: '获取所有书签卡片样式（管理员）',
+        query: [
+          { name: 'scope', type: 'string', required: false, desc: '作用域筛选 (global/role/user)' },
+          { name: 'isEnabled', type: 'boolean', required: false, desc: '是否启用' }
+        ],
+        response: { code: 200, desc: '样式列表', example: { success: true, data: [{ id: 'style1', name: '玻璃拟态', scope: 'global', isEnabled: true }] } }
+      },
+      {
+        method: 'GET', path: '/api/v2/bookmark-card-styles/active', auth: false, admin: false,
+        name: '获取当前样式',
+        desc: '获取当前用户生效的卡片样式',
+        response: { code: 200, desc: '当前样式', example: { success: true, data: { id: 'style1', name: '玻璃拟态', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' } } }
+      },
+      {
+        method: 'POST', path: '/api/v2/bookmark-card-styles', auth: true, admin: true,
+        name: '创建样式',
+        desc: '创建新的卡片样式（管理员）',
+        body: [
+          { name: 'name', type: 'string', required: true, desc: '样式名称' },
+          { name: 'description', type: 'string', required: false, desc: '样式描述' },
+          { name: 'scope', type: 'string', required: true, desc: '作用域 (global/role/user)' },
+          { name: 'backgroundColor', type: 'string', required: false, desc: '背景颜色' },
+          { name: 'borderRadius', type: 'string', required: false, desc: '边框圆角' },
+          { name: 'isEnabled', type: 'boolean', required: false, desc: '是否启用', default: true }
+        ],
+        response: { code: 201, desc: '创建成功', example: { success: true, data: { id: 'style1', name: '玻璃拟态' } } }
+      },
+      {
+        method: 'PUT', path: '/api/v2/bookmark-card-styles/:id', auth: true, admin: true,
+        name: '更新样式',
+        desc: '更新指定样式（管理员）',
+        params: [{ name: 'id', type: 'string', required: true, desc: '样式ID' }],
+        response: { code: 200, desc: '更新成功', example: { success: true, data: { id: 'style1' } } }
+      },
+      {
+        method: 'DELETE', path: '/api/v2/bookmark-card-styles/:id', auth: true, admin: true,
+        name: '删除样式',
+        desc: '删除指定样式（管理员）',
+        params: [{ name: 'id', type: 'string', required: true, desc: '样式ID' }],
+        response: { code: 200, desc: '删除成功', example: { success: true, message: '删除成功' } }
+      }
+    ]
   }
 }
 
@@ -2391,6 +2521,71 @@ const databaseSchema = {
         { name: 'value', type: 'TEXT', desc: '配置值' },
         { name: 'description', type: 'TEXT', desc: '描述' },
         { name: 'isEditable', type: 'INTEGER', default: 1, desc: '是否可编辑' },
+        { name: 'updatedAt', type: 'TEXT', desc: '更新时间' }
+      ]
+    },
+    {
+      name: 'custom_icons',
+      desc: '自定义图标表 - 存储用户自定义图标',
+      columns: [
+        { name: 'id', type: 'TEXT', pk: true, desc: '图标ID' },
+        { name: 'name', type: 'TEXT', desc: '图标名称' },
+        { name: 'url', type: 'TEXT', desc: '图标URL' },
+        { name: 'userId', type: 'TEXT', desc: '用户ID' },
+        { name: 'isPublic', type: 'INTEGER', default: 0, desc: '是否公开' },
+        { name: 'createdAt', type: 'TEXT', desc: '创建时间' },
+        { name: 'updatedAt', type: 'TEXT', desc: '更新时间' }
+      ]
+    },
+    {
+      name: 'bookmark_card_styles',
+      desc: '书签卡片样式表 - 存储卡片样式配置',
+      columns: [
+        { name: 'id', type: 'TEXT', pk: true, desc: '样式ID' },
+        { name: 'name', type: 'TEXT', desc: '样式名称' },
+        { name: 'description', type: 'TEXT', desc: '样式描述' },
+        { name: 'scope', type: 'TEXT', desc: '作用域(global/role/user)' },
+        { name: 'roleId', type: 'TEXT', desc: '角色ID' },
+        { name: 'userId', type: 'TEXT', desc: '用户ID' },
+        { name: 'backgroundColor', type: 'TEXT', desc: '背景颜色' },
+        { name: 'backgroundGradient', type: 'TEXT', desc: '背景渐变' },
+        { name: 'borderRadius', type: 'TEXT', desc: '边框圆角' },
+        { name: 'borderWidth', type: 'TEXT', desc: '边框宽度' },
+        { name: 'borderColor', type: 'TEXT', desc: '边框颜色' },
+        { name: 'shadowColor', type: 'TEXT', desc: '阴影颜色' },
+        { name: 'shadowBlur', type: 'TEXT', desc: '阴影模糊' },
+        { name: 'shadowSpread', type: 'TEXT', desc: '阴影扩散' },
+        { name: 'shadowX', type: 'TEXT', desc: '阴影X偏移' },
+        { name: 'shadowY', type: 'TEXT', desc: '阴影Y偏移' },
+        { name: 'padding', type: 'TEXT', desc: '内边距' },
+        { name: 'margin', type: 'TEXT', desc: '外边距' },
+        { name: 'gap', type: 'TEXT', desc: '间距' },
+        { name: 'titleFontSize', type: 'TEXT', desc: '标题字体大小' },
+        { name: 'titleFontWeight', type: 'TEXT', desc: '标题字体粗细' },
+        { name: 'titleColor', type: 'TEXT', desc: '标题颜色' },
+        { name: 'descriptionFontSize', type: 'TEXT', desc: '描述字体大小' },
+        { name: 'descriptionFontWeight', type: 'TEXT', desc: '描述字体粗细' },
+        { name: 'descriptionColor', type: 'TEXT', desc: '描述颜色' },
+        { name: 'opacity', type: 'REAL', desc: '透明度' },
+        { name: 'backdropBlur', type: 'TEXT', desc: '背景模糊' },
+        { name: 'backdropSaturate', type: 'TEXT', desc: '背景饱和度' },
+        { name: 'hoverScale', type: 'REAL', desc: '悬停缩放' },
+        { name: 'hoverTransition', type: 'TEXT', desc: '悬停过渡' },
+        { name: 'iconSize', type: 'TEXT', desc: '图标大小' },
+        { name: 'iconColor', type: 'TEXT', desc: '图标颜色' },
+        { name: 'iconBackgroundColor', type: 'TEXT', desc: '图标背景色' },
+        { name: 'iconBorderRadius', type: 'TEXT', desc: '图标圆角' },
+        { name: 'imageHeight', type: 'TEXT', desc: '图片高度' },
+        { name: 'imageBorderRadius', type: 'TEXT', desc: '图片圆角' },
+        { name: 'imageObjectFit', type: 'TEXT', desc: '图片填充方式' },
+        { name: 'tagBackgroundColor', type: 'TEXT', desc: '标签背景色' },
+        { name: 'tagTextColor', type: 'TEXT', desc: '标签文字颜色' },
+        { name: 'tagBorderRadius', type: 'TEXT', desc: '标签圆角' },
+        { name: 'tagFontSize', type: 'TEXT', desc: '标签字体大小' },
+        { name: 'isEnabled', type: 'INTEGER', default: 1, desc: '是否启用' },
+        { name: 'isDefault', type: 'INTEGER', default: 0, desc: '是否默认' },
+        { name: 'priority', type: 'INTEGER', default: 0, desc: '优先级' },
+        { name: 'createdAt', type: 'TEXT', desc: '创建时间' },
         { name: 'updatedAt', type: 'TEXT', desc: '更新时间' }
       ]
     }

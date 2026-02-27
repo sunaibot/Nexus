@@ -68,6 +68,7 @@ export {
   createPlugin,
   updatePlugin,
   deletePlugin,
+  installPlugin,
   addUserPlugin,
   removeUserPlugin,
   addRolePlugin,
@@ -89,6 +90,17 @@ export {
   fetchMenuStats,
 } from './admin-menus'
 export type { AdminMenu, CreateAdminMenuData, UpdateAdminMenuData, ReorderMenuItem, MenuStats } from './admin-menus'
+
+export {
+  fetchBookmarkCardStyles,
+  fetchBookmarkCardStyle,
+  createBookmarkCardStyle,
+  updateBookmarkCardStyle,
+  deleteBookmarkCardStyle,
+  setDefaultBookmarkCardStyle,
+  fetchCurrentBookmarkCardStyle,
+} from './bookmark-card-styles'
+export type { BookmarkCardStyle, CreateBookmarkCardStyleData, UpdateBookmarkCardStyleData } from './bookmark-card-styles'
 
 import { authApi } from './auth'
 import { bookmarksApi } from './bookmarks'

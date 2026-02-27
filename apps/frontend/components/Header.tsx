@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion'
-import { Sun, Moon, Edit3, Sparkles, Languages, User, LogOut } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Sun, Moon, Edit3, Sparkles, Languages, User, LogOut, Settings, Shield, BookMarked, ChevronDown, LayoutDashboard } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTime } from '../hooks/useTime'
 import { useTheme } from '../hooks/useTheme'
@@ -206,46 +207,198 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode, isLoggedIn
             </motion.a>
           )}
 
-          {/* 已登录显示用户名和退出按钮 */}
+          {/* 已登录显示用户下拉菜单 */}
           {isLoggedIn && username && (
-            <>
-              <motion.div
-                className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-xl',
-                  'bg-purple-500/10 border border-purple-500/20',
-                  'transition-all duration-200'
-                )}
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-                  <span className="text-xs font-medium text-white">
-                    {username.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  {username}
-                </span>
-              </motion.div>
-              
-              <motion.button
-                onClick={onLogout}
-                className={cn(
-                  'p-2.5 rounded-xl',
-                  'bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20',
-                  'transition-all duration-200 cursor-pointer'
-                )}
-                style={{ color: 'var(--text-secondary)' }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label={t('logout')}
-                title={t('logout')}
-              >
-                <LogOut className="w-4 h-4" />
-              </motion.button>
-            </>
+            <UserDropdown 
+              username={username} 
+              onLogout={onLogout}
+              onOpenCommand={onOpenCommand}
+            />
           )}
         </div>
       </div>
     </motion.header>
+  )
+}
+
+// 用户下拉菜单组件
+interface UserDropdownProps {
+  username: string
+  onLogout?: () => void
+  onOpenCommand: () => void
+}
+
+function UserDropdown({ username, onLogout, onOpenCommand }: UserDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // 菜单项配置
+  const menuItems = [
+    {
+      id: 'bookmarks',
+      label: '我的书签',
+      icon: BookMarked,
+      onClick: () => {
+        onOpenCommand()
+        setIsOpen(false)
+      },
+    },
+    {
+      id: 'admin',
+      label: '管理后台',
+      icon: LayoutDashboard,
+      onClick: () => {
+        window.open('http://localhost:5174', '_blank')
+        setIsOpen(false)
+      },
+    },
+    {
+      id: 'settings',
+      label: '个人设置',
+      icon: Settings,
+      onClick: () => {
+        // TODO: 打开个人设置
+        console.log('打开个人设置')
+        setIsOpen(false)
+      },
+    },
+    {
+      id: 'security',
+      label: '安全中心',
+      icon: Shield,
+      onClick: () => {
+        // TODO: 打开安全中心
+        console.log('打开安全中心')
+        setIsOpen(false)
+      },
+    },
+  ]
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      {/* 用户头像按钮 */}
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          'flex items-center gap-2 px-3 py-2 rounded-xl',
+          'bg-purple-500/10 border border-purple-500/20',
+          'transition-all duration-200 cursor-pointer',
+          isOpen && 'bg-purple-500/20 border-purple-500/30'
+        )}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+          <span className="text-xs font-medium text-white">
+            {username.charAt(0).toUpperCase()}
+          </span>
+        </div>
+        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+          {username}
+        </span>
+        <ChevronDown 
+          className={cn(
+            'w-4 h-4 transition-transform duration-200',
+            isOpen && 'rotate-180'
+          )}
+          style={{ color: 'var(--text-secondary)' }}
+        />
+      </motion.button>
+
+      {/* 下拉菜单 */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className={cn(
+              'absolute right-0 top-full mt-2 w-48 rounded-xl',
+              'bg-[var(--bg-secondary)] border border-[var(--border)]',
+              'shadow-lg shadow-black/20',
+              'overflow-hidden z-50'
+            )}
+          >
+            {/* 用户信息头部 */}
+            <div className="px-4 py-3 border-b border-[var(--border)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">
+                    {username.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {username}
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    已登录
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 菜单项 */}
+            <div className="py-1">
+              {menuItems.map((item) => (
+                <motion.button
+                  key={item.id}
+                  onClick={item.onClick}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-4 py-2.5',
+                    'hover:bg-white/5 transition-colors duration-150',
+                    'text-left cursor-pointer'
+                  )}
+                  whileHover={{ x: 2 }}
+                >
+                  <item.icon className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {item.label}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+
+            {/* 分隔线 */}
+            <div className="border-t border-[var(--border)]" />
+
+            {/* 退出登录 */}
+            <div className="py-1">
+              <motion.button
+                onClick={() => {
+                  onLogout?.()
+                  setIsOpen(false)
+                }}
+                className={cn(
+                  'w-full flex items-center gap-3 px-4 py-2.5',
+                  'hover:bg-red-500/10 transition-colors duration-150',
+                  'text-left cursor-pointer'
+                )}
+                whileHover={{ x: 2 }}
+              >
+                <LogOut className="w-4 h-4 text-red-400" />
+                <span className="text-sm text-red-400">
+                  {t('logout')}
+                </span>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }

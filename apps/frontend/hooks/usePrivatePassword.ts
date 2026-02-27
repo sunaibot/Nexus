@@ -13,6 +13,7 @@ import {
   deletePrivatePassword,
   type PrivatePasswordStatus,
 } from '../lib/api-client'
+import { getAuthToken } from '../lib/api-client/client'
 
 interface UsePrivatePasswordReturn {
   // 状态
@@ -66,13 +67,25 @@ export function usePrivatePassword(): UsePrivatePasswordReturn {
 
   // 获取私密密码状态
   const refreshStatus = useCallback(async () => {
+    // 检查是否有登录token，没有则不获取
+    const token = getAuthToken()
+    if (!token) {
+      setStatus(null)
+      return
+    }
+
     setIsLoading(true)
     setError(null)
     try {
       const data = await getPrivatePasswordStatus()
       setStatus(data)
     } catch (err: any) {
-      setError(err.message || '获取状态失败')
+      // 401错误不显示错误信息，这是正常的未登录状态
+      if (err.status === 401) {
+        setStatus(null)
+      } else {
+        setError(err.message || '获取状态失败')
+      }
     } finally {
       setIsLoading(false)
     }

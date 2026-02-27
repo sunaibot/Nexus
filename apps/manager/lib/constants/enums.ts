@@ -221,7 +221,7 @@ export const LinkHealthStatusLabels: Record<LinkHealthStatus, string> = {
 // ==================== 存储键枚举 ====================
 
 export enum StorageKey {
-  TOKEN = 'admin_token',
+  TOKEN = 'token',
   USERNAME = 'admin_username',
   ROLE = 'admin_role',
   THEME = 'theme',

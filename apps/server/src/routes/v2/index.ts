@@ -42,6 +42,8 @@ import ipFiltersRouter from './ipFilters.js'
 import batchRouter from './batch.js'
 import privateModeRouter from './privateMode.js'
 import pluginsRouter from './plugins.js'
+import pluginDisplayConfigsRouter from './plugin-display-configs.js'
+import bookmarkCardStylesRouter from './bookmark-card-styles.js'
 import adminMenusRouter from './admin-menus.js'
 import securityRouter from './security.js'
 import categoriesEnhancedRouter from './categories-enhanced.js'
@@ -53,6 +55,8 @@ import announcementsRouter from './announcements.js'
 import i18nRouter from './i18n.js'
 import permissionsRouter from './permissions.js'
 import statsRouter from './stats.js'
+import customIconsRouter from './custom-icons.js'
+import weatherRouter from './weather.js'
 import apiDocsRouter from '../api-docs.js'
 
 const router = Router()
@@ -100,6 +104,8 @@ router.use('/ip-filters', ipFiltersRouter)
 router.use('/batch', batchRouter)
 router.use('/private-mode', privateModeRouter)
 router.use('/plugins', pluginsRouter)
+router.use('/plugin-display-configs', pluginDisplayConfigsRouter)
+router.use('/bookmark-card-styles', bookmarkCardStylesRouter)
 router.use('/admin-menus', adminMenusRouter)
 router.use('/security', securityRouter)
 router.use('/categories-enhanced', categoriesEnhancedRouter)
@@ -112,6 +118,8 @@ router.use('/frontend-nav', frontendNavRouter)
 router.use('/announcements', announcementsRouter)
 router.use('/i18n', i18nRouter)
 router.use('/permissions', permissionsRouter)
+router.use('/custom-icons', customIconsRouter)
+router.use('/weather', weatherRouter)
 
 // ========== 数据统计分析 ==========
 router.use('/stats', statsRouter)

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { BookMarked, X } from 'lucide-react'
 import { Header } from './components/Header'
 import { BookmarkGrid } from './components/BookmarkGrid'
 import { AddBookmarkModal } from './components/AddBookmarkModal'
@@ -27,6 +29,19 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Admin } from './pages/Admin'
 import { Bookmark } from './types/bookmark'
+
+// 插件系统
+import { PluginRenderer, registerFrontendPlugin } from './components/plugin-system'
+import { QuotePlugin } from './components/plugin-system/plugins/QuotePlugin'
+import { ClockPlugin } from './components/plugin-system/plugins/ClockPlugin'
+import { WeatherPlugin } from './components/plugin-system/plugins/WeatherPlugin'
+import { SearchPlugin } from './components/plugin-system/plugins/SearchPlugin'
+
+// 注册插件组件
+registerFrontendPlugin('名言', QuotePlugin)
+registerFrontendPlugin('时钟', ClockPlugin)
+registerFrontendPlugin('天气', WeatherPlugin)
+registerFrontendPlugin('搜索', SearchPlugin)
 
 function ManagerRedirect() {
   const location = useLocation()
@@ -93,6 +108,7 @@ function HomePage() {
   const [selectedCategory] = useState<string>('all')
   const [searchQuery] = useState('')
   const [showPrivateBookmarks, setShowPrivateBookmarks] = useState(false)
+  const [showReadLaterOnly, setShowReadLaterOnly] = useState(false)
 
   // 登出时自动退出编辑模式
   useEffect(() => {
@@ -114,7 +130,10 @@ function HomePage() {
     // 私密书签过滤：如果未验证通过，不显示私密书签
     const matchesPrivate = bookmark.visibility !== 'private' || showPrivateBookmarks
     
-    return matchesCategory && matchesSearch && matchesPrivate
+    // 稍后阅读筛选
+    const matchesReadLater = !showReadLaterOnly || bookmark.isReadLater
+    
+    return matchesCategory && matchesSearch && matchesPrivate && matchesReadLater
   })
 
   const readLaterBookmarks = bookmarks.filter(b => b.isReadLater)
@@ -283,6 +302,9 @@ function HomePage() {
               onOpenSearch={handleOpenSearch}
             />
 
+            {/* 插件系统 */}
+            <PluginRenderer className="my-8" />
+
             {/* 系统监控组件 */}
             {!isLiteMode && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -293,13 +315,62 @@ function HomePage() {
               </div>
             )}
 
-            {readLaterBookmarks.length > 0 && (
+            {/* 稍后阅读区域标题和查看全部按钮 */}
+            {readLaterBookmarks.length > 0 && !showReadLaterOnly && (
               <ReadLaterSection 
                 bookmarks={readLaterBookmarks}
                 isLiteMode={isLiteMode}
                 onMarkRead={handleMarkRead}
                 onRemove={handleRemoveBookmark}
               />
+            )}
+            
+            {/* 查看全部稍后阅读按钮 */}
+            {readLaterBookmarks.length > 0 && !showReadLaterOnly && (
+              <motion.div 
+                className="flex justify-center mb-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
+              >
+                <button
+                  onClick={() => setShowReadLaterOnly(true)}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all"
+                  style={{
+                    background: 'var(--color-glass)',
+                    border: '1px solid var(--color-glass-border)',
+                    color: 'var(--color-primary)',
+                  }}
+                >
+                  <BookMarked className="w-5 h-5" />
+                  查看全部稍后阅读 ({readLaterBookmarks.length})
+                </button>
+              </motion.div>
+            )}
+            
+            {/* 返回全部书签按钮 */}
+            {showReadLaterOnly && (
+              <motion.div 
+                className="flex justify-between items-center mb-6"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <h2 className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                  稍后阅读
+                </h2>
+                <button
+                  onClick={() => setShowReadLaterOnly(false)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                  style={{
+                    background: 'var(--color-glass)',
+                    border: '1px solid var(--color-glass-border)',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                  返回全部书签
+                </button>
+              </motion.div>
             )}
 
             {filteredBookmarks.length === 0 ? (
