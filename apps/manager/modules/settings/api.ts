@@ -1,0 +1,212 @@
+/**
+ * 系统设置模块 API 封装
+ * 低耦合：所有设置相关 API 集中管理，便于维护和替换
+ */
+
+import { 
+  SiteSettings, 
+  WidgetVisibility, 
+  ThemeSettings, 
+  WallpaperSettings,
+  SecuritySettings,
+  DataManagementSettings,
+  SettingsOperationResult 
+} from './types'
+
+// 导入基础 API 工具
+import { request } from '../../lib/api-client/client'
+
+const API_BASE = '/api/v2'
+
+/**
+ * 站点设置 API
+ */
+export const siteSettingsApi = {
+  // 获取站点设置
+  async get(): Promise<SiteSettings> {
+    return request<SiteSettings>(`${API_BASE}/settings/site`, {
+      requireAuth: true,
+    })
+  },
+
+  // 更新站点设置
+  async update(settings: Partial<SiteSettings>): Promise<SiteSettings> {
+    return request<SiteSettings>(`${API_BASE}/settings/site`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+      requireAuth: true,
+    })
+  },
+
+  // 上传站点图标
+  async uploadFavicon(file: File): Promise<{ url: string }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    return request<{ url: string }>(`${API_BASE}/settings/site/favicon`, {
+      method: 'POST',
+      body: formData,
+      requireAuth: true,
+    })
+  },
+}
+
+/**
+ * 主题设置 API
+ */
+export const themeSettingsApi = {
+  // 获取当前主题设置
+  async get(): Promise<ThemeSettings> {
+    return request<ThemeSettings>(`${API_BASE}/theme`, {
+      requireAuth: true,
+    })
+  },
+
+  // 更新主题设置
+  async update(settings: Partial<ThemeSettings>): Promise<ThemeSettings> {
+    return request<ThemeSettings>(`${API_BASE}/theme`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+      requireAuth: true,
+    })
+  },
+
+  // 获取所有可用主题
+  async list(): Promise<ThemeSettings[]> {
+    return request<ThemeSettings[]>(`${API_BASE}/themes`, {
+      requireAuth: true,
+    })
+  },
+}
+
+/**
+ * 壁纸设置 API
+ */
+export const wallpaperSettingsApi = {
+  // 获取壁纸设置
+  async get(): Promise<WallpaperSettings> {
+    return request<WallpaperSettings>(`${API_BASE}/settings/wallpaper`, {
+      requireAuth: true,
+    })
+  },
+
+  // 更新壁纸设置
+  async update(settings: Partial<WallpaperSettings>): Promise<WallpaperSettings> {
+    return request<WallpaperSettings>(`${API_BASE}/settings/wallpaper`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+      requireAuth: true,
+    })
+  },
+
+  // 上传壁纸图片
+  async upload(file: File): Promise<{ url: string }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    return request<{ url: string }>(`${API_BASE}/settings/wallpaper/upload`, {
+      method: 'POST',
+      body: formData,
+      requireAuth: true,
+    })
+  },
+}
+
+/**
+ * 仪表显示设置 API
+ */
+export const widgetSettingsApi = {
+  // 获取仪表显示设置
+  async get(): Promise<WidgetVisibility> {
+    return request<WidgetVisibility>(`${API_BASE}/settings/widgets`, {
+      requireAuth: true,
+    })
+  },
+
+  // 更新仪表显示设置
+  async update(settings: Partial<WidgetVisibility>): Promise<WidgetVisibility> {
+    return request<WidgetVisibility>(`${API_BASE}/settings/widgets`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+      requireAuth: true,
+    })
+  },
+}
+
+/**
+ * 安全设置 API
+ */
+export const securitySettingsApi = {
+  // 获取安全设置
+  async get(): Promise<SecuritySettings> {
+    return request<SecuritySettings>(`${API_BASE}/settings/security`, {
+      requireAuth: true,
+    })
+  },
+
+  // 更新安全设置
+  async update(settings: Partial<SecuritySettings>): Promise<SecuritySettings> {
+    return request<SecuritySettings>(`${API_BASE}/settings/security`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+      requireAuth: true,
+    })
+  },
+
+  // 修改密码
+  async changePassword(currentPassword: string, newPassword: string): Promise<SettingsOperationResult> {
+    return request<SettingsOperationResult>(`${API_BASE}/admin/change-password`, {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+      requireAuth: true,
+    })
+  },
+}
+
+/**
+ * 数据管理 API
+ */
+export const dataManagementApi = {
+  // 导出数据
+  async export(): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/data/export`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('导出数据失败')
+    }
+    
+    return response.blob()
+  },
+
+  // 导入数据
+  async import(data: FormData, mode: 'merge' | 'overwrite' | 'skip' = 'merge'): Promise<SettingsOperationResult> {
+    return request<SettingsOperationResult>(`${API_BASE}/data/import?mode=${mode}`, {
+      method: 'POST',
+      body: data,
+      requireAuth: true,
+    })
+  },
+
+  // 恢复出厂设置
+  async factoryReset(): Promise<SettingsOperationResult> {
+    return request<SettingsOperationResult>(`${API_BASE}/data/factory-reset`, {
+      method: 'POST',
+      requireAuth: true,
+    })
+  },
+}
+
+// 统一导出设置 API
+export const settingsApi = {
+  site: siteSettingsApi,
+  theme: themeSettingsApi,
+  wallpaper: wallpaperSettingsApi,
+  widget: widgetSettingsApi,
+  security: securitySettingsApi,
+  data: dataManagementApi,
+}

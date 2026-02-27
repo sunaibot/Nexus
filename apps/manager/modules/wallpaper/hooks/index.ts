@@ -1,0 +1,1 @@
+export { useWallpaper } from './useWallpaper'

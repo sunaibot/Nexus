@@ -1,0 +1,1562 @@
+{
+  "generatedAt": "2026-02-22T05:21:40.475Z",
+  "version": "v2",
+  "modules": {
+    "admin-menus": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取管理菜单"
+      },
+      {
+        "method": "GET",
+        "path": "/stats",
+        "auth": true,
+        "admin": true,
+        "description": "获取菜单统计信息 - 必须在 /:id 之前定义"
+      },
+      {
+        "method": "PATCH",
+        "path": "/reorder",
+        "auth": false,
+        "admin": false,
+        "description": "如果表不存在，返回0"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "创建菜单"
+      },
+      {
+        "method": "PUT",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "更新菜单"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": true,
+        "description": "删除菜单"
+      }
+    ],
+    "admin": [
+      {
+        "method": "POST",
+        "path": "/login",
+        "auth": true,
+        "admin": false,
+        "description": "登录接口"
+      },
+      {
+        "method": "POST",
+        "path": "/change-password",
+        "auth": true,
+        "admin": false,
+        "description": "修改密码"
+      },
+      {
+        "method": "GET",
+        "path": "/verify",
+        "auth": true,
+        "admin": false,
+        "description": "验证 Token 有效性"
+      },
+      {
+        "method": "GET",
+        "path": "/debug-role",
+        "auth": true,
+        "admin": false,
+        "description": "验证 Token 有效性"
+      },
+      {
+        "method": "POST",
+        "path": "/logout",
+        "auth": false,
+        "admin": false,
+        "description": "验证 Token 有效性"
+      },
+      {
+        "method": "GET",
+        "path": "/password-hint",
+        "auth": true,
+        "admin": false,
+        "description": "获取密码提示（公开接口）"
+      },
+      {
+        "method": "POST",
+        "path": "/password-hint",
+        "auth": false,
+        "admin": false,
+        "description": "获取密码提示（公开接口）"
+      }
+    ],
+    "announcements": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "默认不包含过期的"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "增加阅读计数"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "增加阅读计数"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "如果直接发布，发送通知"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": true,
+        "description": "如果变为已发布，发送通知"
+      },
+      {
+        "method": "POST",
+        "path": "/:id/publish",
+        "auth": false,
+        "admin": false,
+        "description": "POST /:id/publish"
+      },
+      {
+        "method": "GET",
+        "path": "/unread/count",
+        "auth": true,
+        "admin": false,
+        "description": "发送通知"
+      },
+      {
+        "method": "POST",
+        "path": "/:id/read",
+        "auth": false,
+        "admin": false,
+        "description": "检查是否已读"
+      }
+    ],
+    "audit-enhanced": [
+      {
+        "method": "GET",
+        "path": "/stats",
+        "auth": true,
+        "admin": true,
+        "description": "获取审计统计"
+      },
+      {
+        "method": "GET",
+        "path": "/export",
+        "auth": true,
+        "admin": true,
+        "description": "获取审计统计"
+      }
+    ],
+    "auth": [
+      {
+        "method": "POST",
+        "path": "/admin/login",
+        "auth": false,
+        "admin": false,
+        "description": "========== 管理员认证 =========="
+      },
+      {
+        "method": "GET",
+        "path": "/admin/verify",
+        "auth": true,
+        "admin": false,
+        "description": "管理员验证 - 兼容 /auth/admin/verify"
+      },
+      {
+        "method": "POST",
+        "path": "/admin/logout",
+        "auth": false,
+        "admin": false,
+        "description": "管理员验证 - 兼容 /auth/admin/verify"
+      },
+      {
+        "method": "POST",
+        "path": "/login",
+        "auth": true,
+        "admin": false,
+        "description": "管理员登出 - 兼容 /auth/admin/logout"
+      },
+      {
+        "method": "POST",
+        "path": "/register",
+        "auth": false,
+        "admin": false,
+        "description": "用户注册 - 兼容 /auth/register"
+      },
+      {
+        "method": "GET",
+        "path": "/verify",
+        "auth": true,
+        "admin": false,
+        "description": "注册成功后自动登录"
+      },
+      {
+        "method": "POST",
+        "path": "/logout",
+        "auth": false,
+        "admin": false,
+        "description": "用户验证 - 兼容 /auth/verify"
+      }
+    ],
+    "batch": [
+      {
+        "method": "POST",
+        "path": "/bookmarks/delete",
+        "auth": true,
+        "admin": true,
+        "description": "批量删除书签"
+      },
+      {
+        "method": "POST",
+        "path": "/bookmarks/move",
+        "auth": true,
+        "admin": false,
+        "description": "批量删除书签"
+      },
+      {
+        "method": "POST",
+        "path": "/bookmarks/update",
+        "auth": true,
+        "admin": false,
+        "description": "批量移动书签"
+      }
+    ],
+    "bookmarks": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "获取书签列表（支持三种权限模型）- 带缓存"
+      },
+      {
+        "method": "GET",
+        "path": "/public",
+        "auth": true,
+        "admin": true,
+        "description": "获取书签列表（支持三种权限模型）- 带缓存"
+      },
+      {
+        "method": "GET",
+        "path": "/admin/all",
+        "auth": false,
+        "admin": false,
+        "description": "获取公共书签（无需登录）- 带缓存（10分钟）"
+      },
+      {
+        "method": "GET",
+        "path": "/paginated",
+        "auth": true,
+        "admin": true,
+        "description": "获取所有书签（管理后台）"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "查询数据"
+      },
+      {
+        "method": "PATCH",
+        "path": "/reorder",
+        "auth": false,
+        "admin": false,
+        "description": "重排序书签"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "获取单个书签"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "获取单个书签"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "删除书签 - 清除相关缓存"
+      },
+      {
+        "method": "POST",
+        "path": "/:id/password",
+        "auth": false,
+        "admin": false,
+        "description": "设置书签私密密码"
+      },
+      {
+        "method": "POST",
+        "path": "/:id/password/verify",
+        "auth": true,
+        "admin": false,
+        "description": "验证书签私密密码"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id/password",
+        "auth": false,
+        "admin": false,
+        "description": "验证书签私密密码"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id/visibility",
+        "auth": true,
+        "admin": false,
+        "description": "切换书签可见性状态"
+      },
+      {
+        "method": "GET",
+        "path": "/:id/password",
+        "auth": false,
+        "admin": false,
+        "description": "检查书签是否有私密密码"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id/private",
+        "auth": true,
+        "admin": false,
+        "description": "切换书签私密状态（兼容前端调用）"
+      }
+    ],
+    "categories-enhanced": [
+      {
+        "method": "GET",
+        "path": "/tree",
+        "auth": true,
+        "admin": true,
+        "description": "获取分类树"
+      },
+      {
+        "method": "POST",
+        "path": "/reorder",
+        "auth": true,
+        "admin": true,
+        "description": "获取分类树"
+      }
+    ],
+    "categories": [
+      {
+        "method": "GET",
+        "path": "/admin/all",
+        "auth": true,
+        "admin": true,
+        "description": "获取所有分类（管理后台专用）"
+      },
+      {
+        "method": "GET",
+        "path": "/public",
+        "auth": true,
+        "admin": true,
+        "description": "获取所有分类（管理后台专用）"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "获取所有分类（管理后台专用）"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "获取分类列表（支持公开访问和认证访问）"
+      },
+      {
+        "method": "PATCH",
+        "path": "/reorder",
+        "auth": true,
+        "admin": false,
+        "description": "重排序分类"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "获取单个分类"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "获取单个分类"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "删除分类"
+      }
+    ],
+    "custom-metrics": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取自定义指标"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取自定义指标"
+      }
+    ],
+    "data": [
+      {
+        "method": "GET",
+        "path": "/export",
+        "auth": true,
+        "admin": true,
+        "description": "导出数据接口"
+      },
+      {
+        "method": "POST",
+        "path": "/import",
+        "auth": false,
+        "admin": false,
+        "description": "POST /import"
+      },
+      {
+        "method": "POST",
+        "path": "/factory-reset",
+        "auth": true,
+        "admin": true,
+        "description": "记录审计日志"
+      },
+      {
+        "method": "GET",
+        "path": "/overview",
+        "auth": false,
+        "admin": false,
+        "description": "GET /overview"
+      }
+    ],
+    "dock-configs": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "解析Dock配置数据"
+      },
+      {
+        "method": "GET",
+        "path": "/current",
+        "auth": false,
+        "admin": false,
+        "description": "优先查找用户专属配置"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "如果还没有，使用第一个全局配置"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": true,
+        "description": "权限检查"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "如果设置为默认，取消其他默认配置"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": false,
+        "admin": true,
+        "description": "不能删除默认配置"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id/reorder",
+        "auth": true,
+        "admin": false,
+        "description": "不能删除默认配置"
+      },
+      {
+        "method": "GET",
+        "path": "/stats/overview",
+        "auth": false,
+        "admin": true,
+        "description": "GET /stats/overview"
+      }
+    ],
+    "frontend-nav": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "根据用户认证状态过滤"
+      },
+      {
+        "method": "GET",
+        "path": "/all",
+        "auth": false,
+        "admin": true,
+        "description": "GET /all"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "权限检查"
+      },
+      {
+        "method": "GET",
+        "path": "/by-navId/:navId",
+        "auth": true,
+        "admin": false,
+        "description": "权限检查"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": true,
+        "description": "检查navId是否已存在"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "如果修改了navId，检查是否与其他冲突"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": false,
+        "admin": true,
+        "description": "DELETE /:id"
+      },
+      {
+        "method": "PATCH",
+        "path": "/reorder",
+        "auth": true,
+        "admin": false,
+        "description": "验证每个item"
+      },
+      {
+        "method": "GET",
+        "path": "/stats/overview",
+        "auth": false,
+        "admin": true,
+        "description": "批量更新"
+      }
+    ],
+    "health-check": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "根健康检查端点 - 用于前端健康检查"
+      }
+    ],
+    "i18n": [
+      {
+        "method": "GET",
+        "path": "/locales",
+        "auth": false,
+        "admin": false,
+        "description": "解析语言配置"
+      },
+      {
+        "method": "GET",
+        "path": "/config",
+        "auth": false,
+        "admin": false,
+        "description": "GET /config"
+      },
+      {
+        "method": "GET",
+        "path": "/translations/:locale",
+        "auth": false,
+        "admin": false,
+        "description": "GET /translations/:locale"
+      },
+      {
+        "method": "GET",
+        "path": "/translations",
+        "auth": true,
+        "admin": true,
+        "description": "转换为嵌套对象格式"
+      },
+      {
+        "method": "POST",
+        "path": "/translations",
+        "auth": false,
+        "admin": false,
+        "description": "检查是否已存在"
+      },
+      {
+        "method": "POST",
+        "path": "/translations/batch",
+        "auth": true,
+        "admin": true,
+        "description": "POST /translations/batch"
+      },
+      {
+        "method": "DELETE",
+        "path": "/translations/:id",
+        "auth": false,
+        "admin": false,
+        "description": "DELETE /translations/:id"
+      },
+      {
+        "method": "POST",
+        "path": "/locales",
+        "auth": true,
+        "admin": true,
+        "description": "检查是否已存在"
+      },
+      {
+        "method": "PATCH",
+        "path": "/locales/:code",
+        "auth": false,
+        "admin": false,
+        "description": "PATCH /locales/:code"
+      },
+      {
+        "method": "DELETE",
+        "path": "/locales/:code",
+        "auth": true,
+        "admin": true,
+        "description": "删除该语言的所有翻译"
+      },
+      {
+        "method": "GET",
+        "path": "/export",
+        "auth": false,
+        "admin": false,
+        "description": "删除该语言的所有翻译"
+      },
+      {
+        "method": "POST",
+        "path": "/import",
+        "auth": true,
+        "admin": true,
+        "description": "POST /import"
+      }
+    ],
+    "index": [
+      {
+        "method": "GET",
+        "path": "/cache/stats",
+        "auth": false,
+        "admin": true,
+        "description": "========== 配置管理路由 =========="
+      },
+      {
+        "method": "POST",
+        "path": "/cache/clear",
+        "auth": false,
+        "admin": false,
+        "description": "========== 数据统计分析 =========="
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": false,
+        "admin": true,
+        "description": "========== 数据统计分析 =========="
+      }
+    ],
+    "ipFilters": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取IP过滤规则"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取IP过滤规则"
+      }
+    ],
+    "metadata": [
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "提取URL元数据"
+      }
+    ],
+    "notepads": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "创建记事本验证schema"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "获取记事本列表（带用户隔离）"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "获取单个记事本（带用户隔离验证）"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "更新记事本（带用户隔离验证）"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "删除记事本（带用户隔离验证）"
+      }
+    ],
+    "notes": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "更新笔记验证schema"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "创建笔记（带用户隔离）"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "获取单个笔记（带用户隔离验证）"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "更新笔记（带用户隔离验证）"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "删除笔记（带用户隔离验证）"
+      },
+      {
+        "method": "GET",
+        "path": "/folders/list",
+        "auth": false,
+        "admin": false,
+        "description": "验证所有权"
+      },
+      {
+        "method": "POST",
+        "path": "/folders",
+        "auth": true,
+        "admin": false,
+        "description": "创建文件夹"
+      },
+      {
+        "method": "PATCH",
+        "path": "/folders/:id",
+        "auth": false,
+        "admin": false,
+        "description": "更新文件夹"
+      },
+      {
+        "method": "DELETE",
+        "path": "/folders/:id",
+        "auth": true,
+        "admin": false,
+        "description": "删除文件夹"
+      }
+    ],
+    "permissions": [
+      {
+        "method": "GET",
+        "path": "/me",
+        "auth": true,
+        "admin": true,
+        "description": "GET /me"
+      },
+      {
+        "method": "GET",
+        "path": "/definitions",
+        "auth": true,
+        "admin": true,
+        "description": "GET /definitions"
+      },
+      {
+        "method": "GET",
+        "path": "/roles",
+        "auth": false,
+        "admin": false,
+        "description": "GET /roles"
+      },
+      {
+        "method": "GET",
+        "path": "/roles/:role",
+        "auth": true,
+        "admin": true,
+        "description": "GET /roles/:role"
+      },
+      {
+        "method": "POST",
+        "path": "/check",
+        "auth": false,
+        "admin": false,
+        "description": "获取用户拥有的权限"
+      },
+      {
+        "method": "GET",
+        "path": "/api-map",
+        "auth": true,
+        "admin": true,
+        "description": "按权限分组"
+      },
+      {
+        "method": "POST",
+        "path": "/verify-api",
+        "auth": false,
+        "admin": false,
+        "description": "按路径分组"
+      },
+      {
+        "method": "GET",
+        "path": "/pages",
+        "auth": true,
+        "admin": false,
+        "description": "GET /pages"
+      }
+    ],
+    "plugins": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "检查用户是否有权限访问插件"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "查询所有已启用的插件"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "检查权限"
+      },
+      {
+        "method": "PUT",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "更新插件（管理员）"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": true,
+        "description": "删除插件（管理员）"
+      },
+      {
+        "method": "POST",
+        "path": "/:id/install",
+        "auth": false,
+        "admin": false,
+        "description": "安装插件"
+      },
+      {
+        "method": "POST",
+        "path": "/:id/uninstall",
+        "auth": true,
+        "admin": true,
+        "description": "卸载插件"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id/enable",
+        "auth": false,
+        "admin": false,
+        "description": "启用/禁用插件"
+      }
+    ],
+    "quotes": [
+      {
+        "method": "GET",
+        "path": "/random",
+        "auth": true,
+        "admin": false,
+        "description": "获取随机名言"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "获取随机名言"
+      }
+    ],
+    "rss": [
+      {
+        "method": "GET",
+        "path": "/feeds",
+        "auth": true,
+        "admin": false,
+        "description": "GET /feeds"
+      },
+      {
+        "method": "GET",
+        "path": "/feeds/:id",
+        "auth": true,
+        "admin": false,
+        "description": "GET /feeds/:id"
+      },
+      {
+        "method": "POST",
+        "path": "/feeds",
+        "auth": false,
+        "admin": false,
+        "description": "POST /feeds"
+      },
+      {
+        "method": "PATCH",
+        "path": "/feeds/:id",
+        "auth": false,
+        "admin": false,
+        "description": "PATCH /feeds/:id"
+      },
+      {
+        "method": "DELETE",
+        "path": "/feeds/:id",
+        "auth": false,
+        "admin": false,
+        "description": "DELETE /feeds/:id"
+      },
+      {
+        "method": "GET",
+        "path": "/articles",
+        "auth": false,
+        "admin": false,
+        "description": "GET /articles"
+      },
+      {
+        "method": "GET",
+        "path": "/unread-count",
+        "auth": false,
+        "admin": false,
+        "description": "GET /unread-count"
+      },
+      {
+        "method": "PATCH",
+        "path": "/articles/:id/read",
+        "auth": false,
+        "admin": false,
+        "description": "PATCH /articles/:id/read"
+      },
+      {
+        "method": "POST",
+        "path": "/mark-all-read",
+        "auth": false,
+        "admin": false,
+        "description": "POST /mark-all-read"
+      },
+      {
+        "method": "PATCH",
+        "path": "/articles/:id/star",
+        "auth": false,
+        "admin": false,
+        "description": "PATCH /articles/:id/star"
+      }
+    ],
+    "security": [
+      {
+        "method": "GET",
+        "path": "/config",
+        "auth": true,
+        "admin": true,
+        "description": "默认忽略的 CSRF 路径"
+      },
+      {
+        "method": "PUT",
+        "path": "/csrf",
+        "auth": false,
+        "admin": false,
+        "description": "15分钟"
+      },
+      {
+        "method": "GET",
+        "path": "/logs",
+        "auth": true,
+        "admin": true,
+        "description": "获取安全日志"
+      },
+      {
+        "method": "GET",
+        "path": "/stats",
+        "auth": false,
+        "admin": false,
+        "description": "获取安全统计"
+      }
+    ],
+    "service-monitors": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取监控服务列表"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "获取监控服务列表"
+      },
+      {
+        "method": "GET",
+        "path": "/:id/check",
+        "auth": true,
+        "admin": true,
+        "description": "添加监控服务"
+      }
+    ],
+    "settings-tabs": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "根据用户角色过滤可见性"
+      },
+      {
+        "method": "GET",
+        "path": "/all",
+        "auth": false,
+        "admin": true,
+        "description": "GET /all"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "权限检查"
+      },
+      {
+        "method": "GET",
+        "path": "/by-tabId/:tabId",
+        "auth": true,
+        "admin": false,
+        "description": "权限检查"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": true,
+        "description": "检查tabId是否已存在"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "如果修改了tabId，检查是否与其他冲突"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": false,
+        "admin": true,
+        "description": "DELETE /:id"
+      },
+      {
+        "method": "PATCH",
+        "path": "/reorder",
+        "auth": true,
+        "admin": false,
+        "description": "验证每个item"
+      },
+      {
+        "method": "GET",
+        "path": "/stats/overview",
+        "auth": false,
+        "admin": true,
+        "description": "批量更新"
+      }
+    ],
+    "settings": [
+      {
+        "method": "GET",
+        "path": "/default",
+        "auth": false,
+        "admin": false,
+        "description": "获取默认设置（公开接口，无需认证）"
+      },
+      {
+        "method": "GET",
+        "path": "/site",
+        "auth": false,
+        "admin": false,
+        "description": "获取默认设置（公开接口，无需认证）"
+      },
+      {
+        "method": "PUT",
+        "path": "/site",
+        "auth": true,
+        "admin": true,
+        "description": "更新站点设置（需要管理员权限）"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "获取用户设置"
+      },
+      {
+        "method": "GET",
+        "path": "/demo-mode",
+        "auth": true,
+        "admin": false,
+        "description": "获取用户设置"
+      },
+      {
+        "method": "PATCH",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "获取演示模式状态（公开接口，无需认证）"
+      }
+    ],
+    "shares": [
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "创建分享"
+      },
+      {
+        "method": "GET",
+        "path": "/:code",
+        "auth": false,
+        "admin": false,
+        "description": "获取分享内容"
+      }
+    ],
+    "stats": [
+      {
+        "method": "GET",
+        "path": "/overview",
+        "auth": true,
+        "admin": true,
+        "description": "========== 访问统计 =========="
+      },
+      {
+        "method": "GET",
+        "path": "/trends",
+        "auth": true,
+        "admin": false,
+        "description": "分类总数"
+      },
+      {
+        "method": "GET",
+        "path": "/popular-bookmarks",
+        "auth": false,
+        "admin": false,
+        "description": "GET /popular-bookmarks"
+      },
+      {
+        "method": "GET",
+        "path": "/heatmap",
+        "auth": true,
+        "admin": false,
+        "description": "========== 书签点击热力图 =========="
+      },
+      {
+        "method": "GET",
+        "path": "/categories",
+        "auth": false,
+        "admin": false,
+        "description": "========== 分类使用统计 =========="
+      },
+      {
+        "method": "GET",
+        "path": "/user-activity",
+        "auth": true,
+        "admin": true,
+        "description": "========== 用户活跃度统计（仅管理员） =========="
+      },
+      {
+        "method": "GET",
+        "path": "/duration",
+        "auth": false,
+        "admin": false,
+        "description": "========== 停留时长统计 =========="
+      },
+      {
+        "method": "POST",
+        "path": "/export",
+        "auth": true,
+        "admin": false,
+        "description": "========== 导出统计报告 =========="
+      }
+    ],
+    "system": [
+      {
+        "method": "GET",
+        "path": "/status",
+        "auth": true,
+        "admin": true,
+        "description": "获取系统状态（公开接口）"
+      },
+      {
+        "method": "GET",
+        "path": "/info",
+        "auth": true,
+        "admin": false,
+        "description": "获取系统状态（公开接口）"
+      },
+      {
+        "method": "GET",
+        "path": "/stats",
+        "auth": false,
+        "admin": true,
+        "description": "获取系统统计（需要管理员权限）"
+      }
+    ],
+    "tags": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "获取所有标签"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "获取标签详情"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "获取使用该标签的书签"
+      },
+      {
+        "method": "PUT",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "更新标签"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "删除标签"
+      }
+    ],
+    "theme": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "检查用户是否有权限访问主题"
+      },
+      {
+        "method": "GET",
+        "path": "/all",
+        "auth": false,
+        "admin": false,
+        "description": "4. 如果没有找到任何主题，返回错误"
+      },
+      {
+        "method": "GET",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "GET /:id"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "POST /"
+      },
+      {
+        "method": "PUT",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "PUT /:id"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "DELETE /:id"
+      },
+      {
+        "method": "POST",
+        "path": "/preference",
+        "auth": true,
+        "admin": false,
+        "description": "验证主题是否存在且用户有权限访问"
+      },
+      {
+        "method": "POST",
+        "path": "/role-default",
+        "auth": false,
+        "admin": true,
+        "description": "验证主题是否存在"
+      }
+    ],
+    "users": [
+      {
+        "method": "POST",
+        "path": "/login",
+        "auth": false,
+        "admin": false,
+        "description": "检查是否被锁定（使用用户名作为锁定键）"
+      },
+      {
+        "method": "POST",
+        "path": "/register",
+        "auth": false,
+        "admin": false,
+        "description": "POST /register"
+      },
+      {
+        "method": "POST",
+        "path": "/logout",
+        "auth": true,
+        "admin": false,
+        "description": "POST /logout"
+      },
+      {
+        "method": "GET",
+        "path": "/verify",
+        "auth": false,
+        "admin": false,
+        "description": "GET /verify"
+      },
+      {
+        "method": "GET",
+        "path": "/profile",
+        "auth": true,
+        "admin": false,
+        "description": "获取当前登录用户信息"
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": true,
+        "description": "用户管理路由需要管理员权限"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": false,
+        "admin": false,
+        "description": "用户管理路由需要管理员权限"
+      },
+      {
+        "method": "PUT",
+        "path": "/:userId",
+        "auth": true,
+        "admin": true,
+        "description": "PUT /:userId"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:userId",
+        "auth": false,
+        "admin": false,
+        "description": "DELETE /:userId"
+      }
+    ],
+    "visits": [
+      {
+        "method": "POST",
+        "path": "/track",
+        "auth": true,
+        "admin": true,
+        "description": "记录书签访问（公开接口）"
+      },
+      {
+        "method": "GET",
+        "path": "/stats",
+        "auth": true,
+        "admin": false,
+        "description": "更新书签访问计数"
+      },
+      {
+        "method": "GET",
+        "path": "/top",
+        "auth": false,
+        "admin": false,
+        "description": "获取热门书签排行"
+      },
+      {
+        "method": "GET",
+        "path": "/trend",
+        "auth": true,
+        "admin": false,
+        "description": "获取访问趋势"
+      },
+      {
+        "method": "GET",
+        "path": "/recent",
+        "auth": false,
+        "admin": false,
+        "description": "获取最近访问记录"
+      },
+      {
+        "method": "GET",
+        "path": "/stats/:bookmarkId",
+        "auth": true,
+        "admin": false,
+        "description": "获取单个书签的统计"
+      },
+      {
+        "method": "GET",
+        "path": "/category-stats",
+        "auth": false,
+        "admin": false,
+        "description": "获取分类使用统计"
+      },
+      {
+        "method": "GET",
+        "path": "/category-trend/:categoryId",
+        "auth": true,
+        "admin": false,
+        "description": "添加百分比"
+      },
+      {
+        "method": "DELETE",
+        "path": "/clear",
+        "auth": false,
+        "admin": true,
+        "description": "清除所有访问记录（需要管理员权限）"
+      }
+    ],
+    "widgets": [
+      {
+        "method": "GET",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "获取当前用户的所有小部件"
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "auth": true,
+        "admin": false,
+        "description": "获取当前用户的所有小部件"
+      },
+      {
+        "method": "PATCH",
+        "path": "/:id",
+        "auth": false,
+        "admin": false,
+        "description": "更新小部件"
+      },
+      {
+        "method": "DELETE",
+        "path": "/:id",
+        "auth": true,
+        "admin": false,
+        "description": "删除小部件"
+      }
+    ]
+  }
+}
