@@ -7,7 +7,7 @@ import { useAuth } from './hooks/useAuth'
 import { useThemeContext } from './hooks/useTheme'
 import { cn } from './lib/utils'
 import { Admin } from './pages/Admin'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 function App() {
   const { 
@@ -27,6 +27,18 @@ function App() {
   } = useAuth()
   
   const { isDark } = useThemeContext()
+  
+  // 检查 URL 参数，如果 login=true 则强制显示登录页
+  const [forceLogin, setForceLogin] = useState(false)
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('login') === 'true') {
+      setForceLogin(true)
+      // 清除 URL 参数
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -78,7 +90,8 @@ function App() {
     window.location.href = 'http://localhost:5173'
   }
 
-  if (!isLoggedIn) {
+  // 如果强制登录或用户未登录，显示登录页面
+  if (forceLogin || !isLoggedIn) {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
         <ErrorBoundary>
