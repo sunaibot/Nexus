@@ -327,6 +327,24 @@ import { sharesApi } from './shares'
 import { quotesApi } from './quotes'
 import { rssApi } from './rss'
 
+// 缓存管理
+export {
+  cacheManager,
+  requestWithCache,
+  invalidateCache,
+  invalidateCacheByTags,
+  getCacheStats,
+} from './cache'
+
+// 天气 API
+export {
+  fetchWeather,
+  fetchWeatherByCoords,
+  weatherApi,
+  type WeatherData,
+  type WeatherCoords,
+} from './weather'
+
 export default {
   auth: authApi,
   bookmarks: bookmarksApi,
