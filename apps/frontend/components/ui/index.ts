@@ -7,12 +7,12 @@
 export { AnimatedNumber } from './AnimatedNumber'
 
 // 3D效果组件
-export { Card3D, CardBody, CardItem } from './3d-card'
+export { Card3D } from './3d-card'
 
 // 高级效果组件
 export {
   MovingBorder,
-  ButtonWithMovingBorder,
+  Button,
 } from './moving-border'
 
 // 背景效果
@@ -24,8 +24,8 @@ export { BentoGrid, BentoGridItem } from './bento-grid'
 
 // 效果组件
 export {
-  Spotlight,
-  SpotlightCard,
+  Meteors,
+  Sparkles,
 } from './effects'
 
 // 浮动Dock
@@ -55,7 +55,7 @@ export { ScrollToTop } from './scroll-to-top'
 export { SidebarNav } from './sidebar-nav'
 
 // 聚光灯效果
-export { Spotlight as SpotlightEffect } from './spotlight-card'
+export { SpotlightCard } from './spotlight-card'
 export { SpotlightSearch } from './spotlight-search'
 
 // 打字机效果
@@ -63,7 +63,5 @@ export { Typewriter } from './typewriter'
 
 // 高级效果
 export {
-  GlareCard,
-  AnimatedGridPattern,
-  PulseBeams,
+  BorderBeam,
 } from './advanced-effects'

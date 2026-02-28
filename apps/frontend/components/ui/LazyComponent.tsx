@@ -92,7 +92,7 @@ interface LazyComponentOptions {
 export function createLazyComponent<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
   options: LazyComponentOptions = {}
-) {
+): React.FC<React.ComponentProps<T>> & { prefetch?: () => Promise<unknown> } {
   const {
     loading: LoadingComponent = DefaultLoadingComponent,
     error: ErrorComponent = DefaultErrorComponent,
@@ -103,7 +103,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
 
   const LazyComponent = lazy(factory)
 
-  const ComponentWithLazy: React.FC<React.ComponentProps<T> & { className?: string }> = (props) => {
+  const ComponentWithLazy: React.FC<React.ComponentProps<T>> & { prefetch?: () => Promise<unknown> } = (props) => {
     const [shouldLoad, setShouldLoad] = useState(!delay)
     const [error, setError] = useState<Error | null>(null)
 

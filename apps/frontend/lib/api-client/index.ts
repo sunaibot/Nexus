@@ -1,7 +1,5 @@
 export {
   request,
-  requestWithCache,
-  invalidateCache,
   getAuthToken,
   getCurrentUserId,
   setApiBaseUrl,
@@ -339,10 +337,8 @@ export {
 // 天气 API
 export {
   fetchWeather,
-  fetchWeatherByCoords,
-  weatherApi,
+  fetchWeatherByCity,
   type WeatherData,
-  type WeatherCoords,
 } from './weather'
 
 export default {

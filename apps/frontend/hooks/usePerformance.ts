@@ -188,7 +188,9 @@ export function usePerformanceMonitor() {
             if (entry.name === 'LCP') {
               newMetrics.lcp = entry.startTime
             } else if (entry.name === 'FID') {
-              newMetrics.fid = entry.processingStart - entry.startTime
+              // FID 是 PerformanceEventTiming 类型
+              const fidEntry = entry as PerformanceEventTiming
+              newMetrics.fid = fidEntry.processingStart - fidEntry.startTime
             } else if (entry.name === 'CLS') {
               newMetrics.cls = (entry as any).value
             }
