@@ -394,6 +394,7 @@ function HomePage() {
                     onDelete={deleteBookmark}
                     onTogglePin={togglePin}
                     onToggleReadLater={toggleReadLater}
+                    isLoggedIn={isLoggedIn}
                   />
                 </SortableContext>
               </DndContext>

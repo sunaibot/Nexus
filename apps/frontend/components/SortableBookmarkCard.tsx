@@ -12,6 +12,7 @@ interface SortableBookmarkCardProps {
   onToggleReadLater?: (id: string) => void
   onMarkAsRead?: (id: string) => void
   isNew?: boolean
+  isLoggedIn?: boolean
 }
 
 export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkCardProps>(
@@ -23,6 +24,7 @@ export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkC
     onToggleReadLater,
     onMarkAsRead,
     isNew,
+    isLoggedIn,
   }, ref) {
     const {
       attributes,
@@ -59,6 +61,7 @@ export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkC
           onMarkAsRead={onMarkAsRead}
           isDragging={isDragging}
           isNew={isNew}
+          isLoggedIn={isLoggedIn}
         />
       </div>
     )

@@ -36,6 +36,7 @@ interface BookmarkGridProps {
   onToggleReadLater?: (id: string) => void
   onMarkAsRead?: (id: string) => void
   onReorder?: (bookmarks: Bookmark[]) => void
+  isLoggedIn?: boolean
 }
 
 export function BookmarkGrid({
@@ -49,6 +50,7 @@ export function BookmarkGrid({
   onToggleReadLater,
   onMarkAsRead,
   onReorder,
+  isLoggedIn = false,
 }: BookmarkGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   
@@ -168,6 +170,7 @@ export function BookmarkGrid({
       onToggleReadLater={onToggleReadLater}
       onMarkAsRead={onMarkAsRead}
       isNew={bookmark.id === newlyAddedId}
+      isLoggedIn={isLoggedIn}
     />
   )
 

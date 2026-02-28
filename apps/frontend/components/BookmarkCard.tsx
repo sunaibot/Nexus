@@ -19,6 +19,7 @@ interface BookmarkCardProps {
   onMarkAsRead?: (id: string) => void
   isDragging?: boolean
   isNew?: boolean
+  isLoggedIn?: boolean
 }
 
 export function BookmarkCard({
@@ -30,6 +31,7 @@ export function BookmarkCard({
   onMarkAsRead,
   isDragging = false,
   isNew = false,
+  isLoggedIn = false,
 }: BookmarkCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -172,108 +174,110 @@ export function BookmarkCard({
         </div>
       )}
 
-      {/* 操作菜单 */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ 
-          opacity: showMenu ? 1 : 0,
-          scale: showMenu ? 1 : 0.8,
-        }}
-        className={cn(
-          "absolute top-3 z-20",
-          bookmark.isReadLater ? "right-12" : "right-3"
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="relative">
-          <motion.button
-            className={cn(
-              'p-1.5 rounded-lg glass',
-              'hover:bg-white/20 transition-colors'
-            )}
-            style={{ color: 'var(--text-secondary)' }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </motion.button>
-
-          {/* 下拉菜单 */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: showMenu ? 1 : 0, y: showMenu ? 0 : -10 }}
-            className={cn(
-              'absolute right-0 top-full mt-1 py-1 min-w-[140px]',
-              'rounded-xl glass shadow-xl',
-              'border border-white/10',
-              showMenu ? 'pointer-events-auto' : 'pointer-events-none'
-            )}
-          >
-            <button
-              onClick={() => onTogglePin?.(bookmark.id)}
+      {/* 操作菜单 - 仅登录用户可见 */}
+      {isLoggedIn && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ 
+            opacity: showMenu ? 1 : 0,
+            scale: showMenu ? 1 : 0.8,
+          }}
+          className={cn(
+            "absolute top-3 z-20",
+            bookmark.isReadLater ? "right-12" : "right-3"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="relative">
+            <motion.button
               className={cn(
-                'w-full px-3 py-2 flex items-center gap-2',
-                'text-sm text-left hover:bg-white/10 transition-colors'
+                'p-1.5 rounded-lg glass',
+                'hover:bg-white/20 transition-colors'
               )}
               style={{ color: 'var(--text-secondary)' }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <Pin className="w-4 h-4" />
-              {bookmark.isPinned ? t('bookmark.unpin') : t('bookmark.pin')}
-            </button>
-            
-            <button
-              onClick={() => onToggleReadLater?.(bookmark.id)}
-              className={cn(
-                'w-full px-3 py-2 flex items-center gap-2',
-                'text-sm text-left hover:bg-white/10 transition-colors'
-              )}
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              <BookOpen className="w-4 h-4" />
-              {bookmark.isReadLater ? t('bookmark.remove_read_later') : t('bookmark.read_later')}
-            </button>
+              <MoreHorizontal className="w-4 h-4" />
+            </motion.button>
 
-            {bookmark.isReadLater && (
+            {/* 下拉菜单 */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: showMenu ? 1 : 0, y: showMenu ? 0 : -10 }}
+              className={cn(
+                'absolute right-0 top-full mt-1 py-1 min-w-[140px]',
+                'rounded-xl glass shadow-xl',
+                'border border-white/10',
+                showMenu ? 'pointer-events-auto' : 'pointer-events-none'
+              )}
+            >
               <button
-                onClick={() => onMarkAsRead?.(bookmark.id)}
+                onClick={() => onTogglePin?.(bookmark.id)}
                 className={cn(
                   'w-full px-3 py-2 flex items-center gap-2',
                   'text-sm text-left hover:bg-white/10 transition-colors'
                 )}
-                style={{ color: bookmark.isRead ? 'var(--text-muted)' : 'var(--text-secondary)' }}
+                style={{ color: 'var(--text-secondary)' }}
               >
-                <CheckCircle2 className="w-4 h-4" />
-                {bookmark.isRead ? t('bookmark.mark_unread') : t('bookmark.mark_read')}
+                <Pin className="w-4 h-4" />
+                {bookmark.isPinned ? t('bookmark.unpin') : t('bookmark.pin')}
               </button>
-            )}
+              
+              <button
+                onClick={() => onToggleReadLater?.(bookmark.id)}
+                className={cn(
+                  'w-full px-3 py-2 flex items-center gap-2',
+                  'text-sm text-left hover:bg-white/10 transition-colors'
+                )}
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <BookOpen className="w-4 h-4" />
+                {bookmark.isReadLater ? t('bookmark.remove_read_later') : t('bookmark.read_later')}
+              </button>
 
-            <button
-              onClick={() => onEdit?.(bookmark)}
-              className={cn(
-                'w-full px-3 py-2 flex items-center gap-2',
-                'text-sm text-left hover:bg-white/10 transition-colors'
+              {bookmark.isReadLater && (
+                <button
+                  onClick={() => onMarkAsRead?.(bookmark.id)}
+                  className={cn(
+                    'w-full px-3 py-2 flex items-center gap-2',
+                    'text-sm text-left hover:bg-white/10 transition-colors'
+                  )}
+                  style={{ color: bookmark.isRead ? 'var(--text-muted)' : 'var(--text-secondary)' }}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {bookmark.isRead ? t('bookmark.mark_unread') : t('bookmark.mark_read')}
+                </button>
               )}
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              <Edit3 className="w-4 h-4" />
-              {t('bookmark.edit')}
-            </button>
-            
-            <div className="my-1 border-t border-white/5" />
-            
-            <button
-              onClick={() => onDelete?.(bookmark.id)}
-              className={cn(
-                'w-full px-3 py-2 flex items-center gap-2',
-                'text-sm text-left hover:bg-white/10 transition-colors text-red-400'
-              )}
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('bookmark.delete')}
-            </button>
-          </motion.div>
-        </div>
-      </motion.div>
+
+              <button
+                onClick={() => onEdit?.(bookmark)}
+                className={cn(
+                  'w-full px-3 py-2 flex items-center gap-2',
+                  'text-sm text-left hover:bg-white/10 transition-colors'
+                )}
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <Edit3 className="w-4 h-4" />
+                {t('bookmark.edit')}
+              </button>
+              
+              <div className="my-1 border-t border-white/5" />
+              
+              <button
+                onClick={() => onDelete?.(bookmark.id)}
+                className={cn(
+                  'w-full px-3 py-2 flex items-center gap-2',
+                  'text-sm text-left hover:bg-white/10 transition-colors text-red-400'
+                )}
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('bookmark.delete')}
+              </button>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
 
       {/* 4. 内容层：z-10 保证在光效之上 */}
       <div className="relative z-10 p-5 h-full flex flex-col">
