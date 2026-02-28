@@ -751,6 +751,49 @@ const apiModules = {
     ]
   },
 
+  // 数据统计模块
+  stats: {
+    id: 'stats',
+    name: '数据统计',
+    icon: '📈',
+    description: '访问统计、书签点击热力图、分类使用统计',
+    apis: [
+      {
+        method: 'GET', path: '/api/v2/stats/overview', auth: true, admin: false,
+        name: '获取统计概览',
+        desc: '获取PV/UV/今日访问/书签数/分类数等统计概览',
+        response: { code: 200, desc: '统计概览', example: { success: true, data: { pv: 1000, uv: 500, today: 50, bookmarks: 100, categories: 10 } } }
+      },
+      {
+        method: 'GET', path: '/api/v2/stats/trends', auth: true, admin: false,
+        name: '获取访问趋势',
+        desc: '按日期获取访问趋势数据',
+        query: [{ name: 'days', type: 'integer', required: false, desc: '天数(7-90)', default: 30 }],
+        response: { code: 200, desc: '趋势数据', example: { success: true, data: [{ date: '2024-01-01', pv: 100, uv: 50 }] } }
+      },
+      {
+        method: 'GET', path: '/api/v2/stats/popular-bookmarks', auth: true, admin: false,
+        name: '热门书签排行',
+        desc: '获取访问量最高的书签排行',
+        query: [{ name: 'limit', type: 'integer', required: false, desc: '数量限制', default: 20 }],
+        response: { code: 200, desc: '热门书签', example: { success: true, data: [{ id: 'bm1', title: '书签', url: 'https://example.com', visitCount: 100, uniqueVisitors: 50 }] } }
+      },
+      {
+        method: 'GET', path: '/api/v2/stats/heatmap', auth: true, admin: false,
+        name: '获取点击热力图',
+        desc: '获取书签点击热力图数据（按小时/星期/分类）',
+        query: [{ name: 'days', type: 'integer', required: false, desc: '天数(7-365)', default: 30 }],
+        response: { code: 200, desc: '热力图数据', example: { success: true, data: { hourly: [{ hour: '00', count: 10 }], weekday: [{ weekday: '周一', count: 50 }], category: [{ category: '技术', count: 100 }] } } }
+      },
+      {
+        method: 'GET', path: '/api/v2/stats/category-usage', auth: true, admin: false,
+        name: '分类使用统计',
+        desc: '获取各分类的书签数量和访问统计',
+        response: { code: 200, desc: '分类统计', example: { success: true, data: [{ categoryId: 'cat1', name: '技术', bookmarkCount: 20, visitCount: 500 }] } }
+      }
+    ]
+  },
+
   // 主题管理模块
   theme: {
     id: 'theme',
