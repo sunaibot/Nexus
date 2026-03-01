@@ -88,7 +88,9 @@ export function isIconifyIcon(name: string | undefined): boolean {
 // 根据图标名称获取 Lucide 图标组件（仅用于非 Iconify 图标）
 export function getIconComponent(name: string | undefined): LucideIcon {
   if (!name || isIconifyIcon(name)) return Folder;
-  return iconMap[name] || Folder;
+  // 支持大小写不敏感的图标名称匹配
+  const lowerName = name.toLowerCase();
+  return iconMap[lowerName] || Folder;
 }
 
 // ========== Iconify 搜索 API ==========
