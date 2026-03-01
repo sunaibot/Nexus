@@ -833,10 +833,10 @@ function AdminContent() {
                                 >
                                   {bookmark.iconUrl ? (
                                     <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
-                                  ) : bookmark.icon ? (
-                                    <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
                                   ) : bookmark.favicon ? (
                                     <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
+                                  ) : bookmark.icon ? (
+                                    <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
                                   ) : (
                                     <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
                                   )}
@@ -972,10 +972,10 @@ function AdminContent() {
                                     >
                                       {bookmark.iconUrl ? (
                                         <img src={bookmark.iconUrl} alt="" className="w-4 h-4 rounded object-contain" />
-                                      ) : bookmark.icon ? (
-                                        <IconRenderer icon={bookmark.icon} className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                                       ) : bookmark.favicon ? (
                                         <img src={bookmark.favicon} alt="" className="w-4 h-4 rounded" />
+                                      ) : bookmark.icon ? (
+                                        <IconRenderer icon={bookmark.icon} className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                                       ) : (
                                         <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
                                       )}

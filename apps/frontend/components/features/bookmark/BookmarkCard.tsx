@@ -323,8 +323,6 @@ export function BookmarkCard({
                 className="w-full h-full object-contain rounded-lg"
                 onError={() => setImageError(true)}
               />
-            ) : bookmark.icon ? (
-              <IconRenderer icon={bookmark.icon} className="w-7 h-7" style={{ color: iconStyle.color || 'var(--gradient-1)' }} />
             ) : bookmark.favicon && !imageError ? (
               <img
                 src={bookmark.favicon}
@@ -332,6 +330,8 @@ export function BookmarkCard({
                 className="w-full h-full object-contain rounded-lg"
                 onError={() => setImageError(true)}
               />
+            ) : bookmark.icon ? (
+              <IconRenderer icon={bookmark.icon} className="w-7 h-7" style={{ color: iconStyle.color || 'var(--gradient-1)' }} />
             ) : (
               <span 
                 className="text-xl font-semibold"

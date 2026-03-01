@@ -989,8 +989,6 @@ export function AddBookmarkModal({
                             alt="" 
                             className="w-full h-full object-contain rounded-lg"
                           />
-                        ) : icon ? (
-                          <IconRenderer icon={icon} className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
                         ) : favicon ? (
                           <img 
                             src={favicon} 
@@ -1000,6 +998,8 @@ export function AddBookmarkModal({
                               (e.target as HTMLImageElement).style.display = 'none'
                             }}
                           />
+                        ) : icon ? (
+                          <IconRenderer icon={icon} className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
                         ) : (
                           <span 
                             className="text-xl font-semibold"

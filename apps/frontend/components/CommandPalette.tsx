@@ -188,10 +188,10 @@ export function CommandPalette({
       filtered.forEach(bookmark => {
         const iconElement = bookmark.iconUrl ? (
           <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
-        ) : bookmark.icon ? (
-          <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
         ) : bookmark.favicon ? (
           <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
+        ) : bookmark.icon ? (
+          <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
         ) : (
           <Globe className="w-5 h-5" />
         )

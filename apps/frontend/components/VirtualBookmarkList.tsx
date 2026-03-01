@@ -91,10 +91,10 @@ export function VirtualBookmarkList({
           >
             {bookmark.iconUrl ? (
               <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" loading="lazy" />
-            ) : bookmark.icon ? (
-              <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
             ) : bookmark.favicon ? (
               <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" loading="lazy" />
+            ) : bookmark.icon ? (
+              <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
             ) : (
               <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
             )}
