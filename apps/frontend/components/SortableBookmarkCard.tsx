@@ -13,6 +13,7 @@ interface SortableBookmarkCardProps {
   onMarkAsRead?: (id: string) => void
   isNew?: boolean
   isLoggedIn?: boolean
+  isEditMode?: boolean
 }
 
 export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkCardProps>(
@@ -25,6 +26,7 @@ export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkC
     onMarkAsRead,
     isNew,
     isLoggedIn,
+    isEditMode = false,
   }, ref) {
     const {
       attributes,
@@ -33,7 +35,10 @@ export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkC
       transform,
       transition,
       isDragging,
-    } = useSortable({ id: bookmark.id })
+    } = useSortable({
+      id: bookmark.id,
+      disabled: !isEditMode, // 仅在编辑模式下启用拖拽
+    })
 
     // VIBE CODING: 拖拽时的"悬浮感" - 卡片上浮、变亮、提升层级
     const style: React.CSSProperties = {
@@ -44,8 +49,8 @@ export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkC
       zIndex: isDragging ? 50 : 1,
       // 拖拽时稍微放大，增加"抓起"的感觉
       scale: isDragging ? 1.05 : 1,
-      // 光标样式
-      cursor: isDragging ? 'grabbing' : 'grab',
+      // 光标样式：编辑模式下显示抓取光标，否则默认
+      cursor: isEditMode ? (isDragging ? 'grabbing' : 'grab') : 'default',
       // 拖拽时添加阴影，增强悬浮感
       filter: isDragging ? 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.25))' : 'none',
     }
@@ -62,6 +67,7 @@ export const SortableBookmarkCard = forwardRef<HTMLDivElement, SortableBookmarkC
           isDragging={isDragging}
           isNew={isNew}
           isLoggedIn={isLoggedIn}
+          isEditMode={isEditMode}
         />
       </div>
     )

@@ -175,10 +175,31 @@ export async function fetchCategoryTrend(categoryId: string, days?: number): Pro
 }
 
 /**
+ * 使用 sendBeacon 记录访问（用于页面跳转前）
+ * @param bookmarkId 书签ID
+ * @returns 是否成功发送
+ */
+export function trackVisitBeacon(bookmarkId: string): boolean {
+  if (typeof navigator === 'undefined' || !navigator.sendBeacon) {
+    return false
+  }
+
+  const data = JSON.stringify({ bookmarkId })
+  const url = '/api/v2/visits/track'
+
+  try {
+    return navigator.sendBeacon(url, data)
+  } catch {
+    return false
+  }
+}
+
+/**
  * 访问记录 API 对象
  */
 export const visitsApi = {
   track: trackVisit,
+  trackBeacon: trackVisitBeacon,
   fetchStats: fetchVisitStats,
   fetchTopBookmarks,
   fetchTrends: fetchVisitTrends,

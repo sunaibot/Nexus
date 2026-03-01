@@ -58,6 +58,7 @@ export function HomePage() {
     backgroundStyle,
     overlayStyle,
     hasWallpaper,
+    editingBookmark,
 
     // 操作
     setShowAddModal,
@@ -67,6 +68,7 @@ export function HomePage() {
     setShowReadLaterOnly,
     setCurrentPage,
     refreshWeather,
+    handleCloseModal,
 
     // 书签操作
     addBookmark,
@@ -74,6 +76,7 @@ export function HomePage() {
     deleteBookmark,
     togglePin,
     toggleReadLater,
+    reorderBookmarks,
 
     // 分类操作
     addCategory,
@@ -108,6 +111,17 @@ export function HomePage() {
   const handleAdminEditBookmark = React.useCallback((_bookmark: Bookmark) => {
     setShowAddModal(true)
   }, [setShowAddModal])
+
+  // 处理书签提交（添加或编辑）
+  const handleBookmarkSubmit = React.useCallback((bookmarkData: Omit<Bookmark, 'id' | 'orderIndex' | 'createdAt' | 'updatedAt'>) => {
+    if (editingBookmark) {
+      // 编辑模式：调用 updateBookmark
+      updateBookmark(editingBookmark.id, bookmarkData as Partial<Bookmark>)
+    } else {
+      // 添加模式：调用 addBookmark
+      addBookmark(bookmarkData)
+    }
+  }, [editingBookmark, addBookmark, updateBookmark])
 
   // 强制修改密码页面
   if (currentPage === 'force-password-change') {
@@ -224,8 +238,10 @@ export function HomePage() {
               onTogglePin={togglePin}
               onToggleReadLater={toggleReadLater}
               onReorder={(newBookmarks) => {
-                // TODO: 实现书签重新排序的保存
-                console.log('书签重新排序:', newBookmarks)
+                reorderBookmarks(newBookmarks)
+              }}
+              onChangeCategory={(bookmarkId, categoryId) => {
+                updateBookmark(bookmarkId, { category: categoryId })
               }}
             />
 
@@ -237,14 +253,15 @@ export function HomePage() {
           </div>
         </main>
 
-        {/* 添加书签弹窗 */}
+        {/* 添加/编辑书签弹窗 */}
         {showAddModal && (
           <AddBookmarkModal
             isOpen={showAddModal}
-            onClose={() => setShowAddModal(false)}
-            onAdd={addBookmark}
+            onClose={handleCloseModal}
+            onAdd={handleBookmarkSubmit}
             categories={categories}
             customIcons={customIcons}
+            editBookmark={editingBookmark}
             onCategoryAdded={handleCategoryAdded}
           />
         )}

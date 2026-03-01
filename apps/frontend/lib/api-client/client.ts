@@ -107,9 +107,20 @@ class ApiClient {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        // 处理后端返回的错误格式: { error: { code, message, details } } 或 { error: string }
+        let errorMessage: string
+        if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error
+        } else if (errorData.error?.message) {
+          errorMessage = errorData.error.message
+        } else if (typeof errorData.message === 'string') {
+          errorMessage = errorData.message
+        } else {
+          errorMessage = `HTTP ${response.status}`
+        }
         throw new ApiError(
           response.status,
-          errorData.error || errorData.message || `HTTP ${response.status}`,
+          errorMessage,
           errorData
         )
       }
@@ -214,9 +225,20 @@ export async function request<T>(
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
+    // 处理后端返回的错误格式: { error: { code, message, details } } 或 { error: string }
+    let errorMessage: string
+    if (typeof errorData.error === 'string') {
+      errorMessage = errorData.error
+    } else if (errorData.error?.message) {
+      errorMessage = errorData.error.message
+    } else if (typeof errorData.message === 'string') {
+      errorMessage = errorData.message
+    } else {
+      errorMessage = `HTTP ${response.status}`
+    }
     throw new ApiError(
       response.status,
-      errorData.error || errorData.message || `HTTP ${response.status}`,
+      errorMessage,
       errorData
     )
   }

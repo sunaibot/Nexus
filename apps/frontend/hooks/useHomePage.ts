@@ -24,6 +24,7 @@ export function useHomePage() {
     deleteBookmark,
     togglePin,
     toggleReadLater,
+    reorderBookmarks,
     addCategory,
     updateCategory,
     deleteCategory,
@@ -58,6 +59,7 @@ export function useHomePage() {
   const [isEditMode, setIsEditMode] = useState(false)
   const [showPrivateBookmarks, setShowPrivateBookmarks] = useState(false)
   const [showReadLaterOnly, setShowReadLaterOnly] = useState(false)
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null)
 
   // 同步主题设置
   useEffect(() => {
@@ -71,6 +73,14 @@ export function useHomePage() {
   useEffect(() => {
     if (!isLoggedIn) {
       setIsEditMode(false)
+      setShowPrivateBookmarks(false)
+    }
+  }, [isLoggedIn])
+
+  // 登录后自动显示私密书签
+  useEffect(() => {
+    if (isLoggedIn) {
+      setShowPrivateBookmarks(true)
     }
   }, [isLoggedIn])
 
@@ -150,8 +160,14 @@ export function useHomePage() {
     setShowCommandPalette(true)
   }, [])
 
-  const handleBookmarkEdit = useCallback((_bookmark: Bookmark) => {
+  const handleBookmarkEdit = useCallback((bookmark: Bookmark) => {
+    setEditingBookmark(bookmark)
     setShowAddModal(true)
+  }, [])
+
+  const handleCloseModal = useCallback(() => {
+    setShowAddModal(false)
+    setEditingBookmark(null)
   }, [])
 
   // 键盘快捷键
@@ -202,6 +218,7 @@ export function useHomePage() {
     backgroundStyle,
     overlayStyle,
     hasWallpaper,
+    editingBookmark,
 
     // 操作
     setShowAddModal,
@@ -211,6 +228,7 @@ export function useHomePage() {
     setShowReadLaterOnly,
     setCurrentPage,
     refreshWeather,
+    handleCloseModal,
 
     // 书签操作
     addBookmark,
@@ -218,6 +236,7 @@ export function useHomePage() {
     deleteBookmark,
     togglePin,
     toggleReadLater,
+    reorderBookmarks,
 
     // 分类操作
     addCategory,

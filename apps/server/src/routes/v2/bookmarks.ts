@@ -315,7 +315,15 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
   const updates = req.body
   const now = new Date().toISOString()
 
-  const current = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
+  // 首先尝试查找用户自己的书签
+  let current = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
+  let isOwnBookmark = true
+
+  // 如果不是用户自己的书签，尝试查找公共书签（允许修改分类和排序）
+  if (!current) {
+    current = queryOne('SELECT * FROM bookmarks WHERE id = ? AND visibility = ?', [resourceId, 'public'])
+    isOwnBookmark = false
+  }
 
   if (!current) {
     return errorResponse(res, '书签不存在', 404)
@@ -323,19 +331,32 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
 
   const merged = { ...current, ...updates, updatedAt: now }
 
-  run(`
-    UPDATE bookmarks SET
-      url = ?, internalUrl = ?, title = ?, description = ?, favicon = ?, ogImage = ?, icon = ?, iconUrl = ?,
-      category = ?, tags = ?, notes = ?, orderIndex = ?, isPinned = ?,
-      isReadLater = ?, isRead = ?, visibility = ?, updatedAt = ?
-    WHERE id = ? AND userId = ?
-  `, [
-    merged.url, merged.internalUrl || null, merged.title, merged.description, merged.favicon, merged.ogImage, merged.icon, merged.iconUrl,
-    merged.category, merged.tags, merged.notes || null, merged.orderIndex, merged.isPinned ? 1 : 0,
-    merged.isReadLater ? 1 : 0, merged.isRead ? 1 : 0, merged.visibility || 'personal', now, resourceId, user.id
-  ])
+  // 如果是公共书签且不是自己的，只允许修改特定字段
+  if (!isOwnBookmark) {
+    // 只允许修改 category 和 orderIndex
+    run(`
+      UPDATE bookmarks SET
+        category = ?, orderIndex = ?, updatedAt = ?
+      WHERE id = ?
+    `, [
+      merged.category, merged.orderIndex, now, resourceId
+    ])
+  } else {
+    // 自己的书签可以修改所有字段
+    run(`
+      UPDATE bookmarks SET
+        url = ?, internalUrl = ?, title = ?, description = ?, favicon = ?, ogImage = ?, icon = ?, iconUrl = ?,
+        category = ?, tags = ?, notes = ?, orderIndex = ?, isPinned = ?,
+        isReadLater = ?, isRead = ?, visibility = ?, updatedAt = ?
+      WHERE id = ? AND userId = ?
+    `, [
+      merged.url, merged.internalUrl || null, merged.title, merged.description, merged.favicon, merged.ogImage, merged.icon, merged.iconUrl,
+      merged.category, merged.tags, merged.notes || null, merged.orderIndex, merged.isPinned ? 1 : 0,
+      merged.isReadLater ? 1 : 0, merged.isRead ? 1 : 0, merged.visibility || 'personal', now, resourceId, user.id
+    ])
+  }
 
-  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
+  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [resourceId])
 
   logAudit({
     userId: user.id,
@@ -343,7 +364,7 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
     action: 'UPDATE_BOOKMARK',
     resourceType: 'bookmark',
     resourceId: resourceId,
-    details: { title: merged.title, url: merged.url, visibility: merged.visibility },
+    details: { title: merged.title, url: merged.url, visibility: merged.visibility, isOwnBookmark },
     ip,
     userAgent
   })

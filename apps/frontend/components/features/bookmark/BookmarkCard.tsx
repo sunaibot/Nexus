@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2 } from 'lucide-react'
+import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2, Eye } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../../../types/bookmark'
 import { cn } from '../../../lib/utils'
@@ -20,6 +20,7 @@ interface BookmarkCardProps {
   isDragging?: boolean
   isNew?: boolean
   isLoggedIn?: boolean
+  isEditMode?: boolean
 }
 
 export function BookmarkCard({
@@ -32,6 +33,7 @@ export function BookmarkCard({
   isDragging = false,
   isNew = false,
   isLoggedIn = false,
+  isEditMode = false,
 }: BookmarkCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -80,15 +82,15 @@ export function BookmarkCard({
 
   const handleClick = () => {
     const url = getBookmarkUrl(bookmark, isInternal)
-    
+
     // 优先使用 sendBeacon 记录访问，确保数据不丢失
     const beaconSent = visitsApi.trackBeacon(bookmark.id)
-    
+
     // 如果 sendBeacon 不可用，使用异步请求
     if (!beaconSent) {
-      visitsApi.track(bookmark.id).catch(console.error)
+      visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error)
     }
-    
+
     // 延迟跳转，给 sendBeacon 时间发送数据
     setTimeout(() => {
       window.open(url, '_blank', 'noopener,noreferrer')
@@ -174,8 +176,17 @@ export function BookmarkCard({
         </div>
       )}
 
-      {/* 操作菜单 - 仅登录用户可见 */}
-      {isLoggedIn && (
+      {/* 私密书签标识 - 右下角 */}
+      {bookmark.visibility === 'private' && (
+        <div className="absolute bottom-3 right-3 z-10">
+          <div className="p-1.5 rounded-full bg-purple-500/20 backdrop-blur-sm">
+            <Eye className="w-3.5 h-3.5 text-purple-400" />
+          </div>
+        </div>
+      )}
+
+      {/* 操作菜单 - 仅编辑模式下可见 */}
+      {isEditMode && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ 

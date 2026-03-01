@@ -10,6 +10,7 @@ import {
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
+  useDroppable,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -36,7 +37,9 @@ interface BookmarkGridProps {
   onToggleReadLater?: (id: string) => void
   onMarkAsRead?: (id: string) => void
   onReorder?: (bookmarks: Bookmark[]) => void
+  onChangeCategory?: (bookmarkId: string, categoryId: string) => void
   isLoggedIn?: boolean
+  isEditMode?: boolean
 }
 
 export function BookmarkGrid({
@@ -50,7 +53,9 @@ export function BookmarkGrid({
   onToggleReadLater,
   onMarkAsRead,
   onReorder,
+  onChangeCategory,
   isLoggedIn = false,
+  isEditMode = false,
 }: BookmarkGridProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
   
@@ -101,14 +106,44 @@ export function BookmarkGrid({
     const { active, over } = event
     setActiveId(null)
 
-    if (over && active.id !== over.id) {
-      const oldIndex = bookmarks.findIndex(b => b.id === active.id)
-      const newIndex = bookmarks.findIndex(b => b.id === over.id)
-      
+    if (!over) return
+
+    const activeBookmark = bookmarks.find(b => b.id === active.id)
+    if (!activeBookmark) return
+
+    // 检查是否拖放到分类标题上
+    const overId = over.id as string
+    const targetCategory = categories.find(c => c.id === overId)
+
+    if (targetCategory) {
+      // 拖放到分类上 - 更改分类
+      const currentCategory = activeBookmark.category || 'uncategorized'
+      if (currentCategory !== targetCategory.id) {
+        onChangeCategory?.(activeBookmark.id, targetCategory.id)
+
+        // VIBE CODING: 落地触觉反馈
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([5, 30, 5])
+        }
+      }
+    } else if (active.id !== over.id) {
+      // 同分类内排序 - 获取同一分类的书签
+      const activeCategory = activeBookmark.category || 'uncategorized'
+      const categoryBookmarks = bookmarks.filter(b => (b.category || 'uncategorized') === activeCategory)
+
+      const oldIndex = categoryBookmarks.findIndex(b => b.id === active.id)
+      const newIndex = categoryBookmarks.findIndex(b => b.id === over.id)
+
       if (oldIndex !== -1 && newIndex !== -1) {
-        const newOrder = arrayMove(bookmarks, oldIndex, newIndex)
+        // 只重新排序该分类内的书签
+        const reorderedCategoryBookmarks = arrayMove(categoryBookmarks, oldIndex, newIndex)
+
+        // 合并其他分类的书签（保持原有顺序）
+        const otherBookmarks = bookmarks.filter(b => (b.category || 'uncategorized') !== activeCategory)
+        const newOrder = [...otherBookmarks, ...reorderedCategoryBookmarks]
+
         onReorder?.(newOrder)
-        
+
         // VIBE CODING: 落地触觉反馈
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate([5, 30, 5])
@@ -117,9 +152,29 @@ export function BookmarkGrid({
     }
   }
 
-  const activeBookmark = activeId 
-    ? bookmarks.find(b => b.id === activeId) 
+  const activeBookmark = activeId
+    ? bookmarks.find(b => b.id === activeId)
     : null
+
+  // 可拖拽的分类标题组件
+  function DroppableCategory({ category, children }: { category: Category; children: React.ReactNode }) {
+    const { isOver, setNodeRef } = useDroppable({
+      id: category.id,
+      disabled: !isEditMode,
+    })
+
+    return (
+      <div
+        ref={setNodeRef}
+        className={cn(
+          'flex items-center gap-3 mb-5 p-2 rounded-xl transition-all',
+          isOver && isEditMode && 'bg-purple-500/20 ring-2 ring-purple-500/50'
+        )}
+      >
+        {children}
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -168,6 +223,7 @@ export function BookmarkGrid({
       onMarkAsRead={onMarkAsRead}
       isNew={bookmark.id === newlyAddedId}
       isLoggedIn={isLoggedIn}
+      isEditMode={isEditMode}
     />
   )
 
@@ -245,13 +301,8 @@ export function BookmarkGrid({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <motion.div 
-                className="flex items-center gap-3 mb-5"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-              >
-                <motion.div 
+              <DroppableCategory category={category}>
+                <motion.div
                   className={cn('p-2 rounded-lg glass')}
                   style={{ color: category.color }}
                   whileHover={{ scale: 1.1, rotate: 5 }}
@@ -261,19 +312,19 @@ export function BookmarkGrid({
                     return <IconRenderer icon={category.icon} className="w-4 h-4" />
                   })()}
                 </motion.div>
-                <h2 
+                <h2
                   className="text-lg font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
                   {category.name}
                 </h2>
-                <span 
+                <span
                   className="text-sm px-2 py-0.5 rounded-full glass"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   {categoryBookmarks.length}
                 </span>
-              </motion.div>
+              </DroppableCategory>
 
               <SortableContext
                 items={categoryBookmarks.map(b => b.id)}

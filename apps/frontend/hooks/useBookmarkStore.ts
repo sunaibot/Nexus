@@ -73,7 +73,9 @@ export function useBookmarkStore() {
     setErrorFor('icons', null)
     try {
       const icons = await customIconsApi.fetchCustomIcons()
-      setCustomIcons(icons.map(icon => ({
+      // 确保 icons 是数组
+      const iconsArray = Array.isArray(icons) ? icons : []
+      setCustomIcons(iconsArray.map(icon => ({
         id: icon.id,
         name: icon.name,
         url: icon.url,
