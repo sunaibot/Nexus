@@ -38,7 +38,7 @@ export function WallpaperPage() {
     setEnabled
   } = useWallpaper()
 
-  const [activeTab, setActiveTab] = useState<WallpaperSource>(settings.source)
+  const [activeTab, setActiveTab] = useState<WallpaperSource>(settings.source || 'upload')
   const [urlInput, setUrlInput] = useState(settings.imageUrl || '')
   const [saveSuccess, setSaveSuccess] = useState(false)
 
@@ -255,7 +255,7 @@ export function WallpaperPage() {
                       选择预设壁纸
                     </h3>
                     <PresetWallpaperGrid
-                      selectedId={settings.presetId}
+                      selectedId={settings.presetId || undefined}
                       onSelect={handlePresetSelect}
                     />
                   </div>

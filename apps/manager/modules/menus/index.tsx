@@ -24,8 +24,15 @@ const MenusModule: Module = {
   version: '1.0.0',
   icon: Layout,
   enabled: true,
-  route: '/menus',
+  routes: [
+    {
+      path: '/menus',
+      component: () => null,
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'menus',
     label: '菜单管理',
     icon: Layout,
     order: 6,

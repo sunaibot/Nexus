@@ -1,56 +1,120 @@
+# NOWEN - 高颜值 Bento 风格个人导航页
+# 飞牛 NAS Docker Compose 配置
+# GitHub: https://github.com/cropflre/NOWEN
+#
+# ⚠️ 安全警告：部署前必须修改环境变量！
+#    1. 复制 .env.example 为 .env
+#    2. 修改 JWT_SECRET 和 SESSION_SECRET 为强随机字符串
+#    3. 建议修改默认端口映射
+
 version: '3.8'
 
 services:
-  # 后端 API 服务
-  server:
+  # 后端服务
+  nowen-server:
     build:
       context: .
-      dockerfile: ./apps/server/Dockerfile
+      dockerfile: apps/server/Dockerfile
     container_name: nowen-server
     restart: unless-stopped
+    # 安全：建议修改默认端口
     ports:
-      - "8787:8787"
+      - "${SERVER_PORT:-8787}:8787"
+    volumes:
+      # 数据持久化 - 飞牛 NAS 用户可修改此路径
+      - ${DATA_PATH:-./data}:/data
     environment:
       - NODE_ENV=production
       - PORT=8787
       - DB_PATH=/data/zen-garden.db
-    volumes:
-      - ./data:/data
+      # ⚠️ 必须修改：使用强随机字符串 (openssl rand -base64 32)
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET is required}
+      # 可选：限制允许访问的域名（生产环境建议设置）
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
+      # 日志级别
+      - LOG_LEVEL=${LOG_LEVEL:-info}
     networks:
       - nowen-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8787/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # 安全：资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    # 安全：只读根文件系统
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
 
-  # 用户前端（静态文件由 Caddy 托管）
-  frontend:
+  # 前端服务
+  nowen-frontend:
     build:
       context: .
-      dockerfile: ./apps/frontend/Dockerfile
+      dockerfile: apps/frontend/Dockerfile
     container_name: nowen-frontend
     restart: unless-stopped
+    # 安全：建议修改默认端口
     ports:
-      - "7171:80"
+      - "${FRONTEND_PORT:-5173}:80"
+    environment:
+      - VITE_API_URL=http://nowen-server:8787
     networks:
       - nowen-network
     depends_on:
-      - server
+      nowen-server:
+        condition: service_healthy
+    # 安全：资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
 
-  # 管理后台（静态文件由 Caddy 托管）
-  manager:
+  # 管理后台（可选，如不需要可注释掉）
+  nowen-manager:
     build:
       context: .
-      dockerfile: ./apps/manager/Dockerfile
+      dockerfile: apps/manager/Dockerfile
     container_name: nowen-manager
     restart: unless-stopped
+    # 安全：建议修改默认端口
     ports:
-      - "7272:80"
+      - "${MANAGER_PORT:-5174}:80"
+    environment:
+      - VITE_API_URL=http://nowen-server:8787
     networks:
       - nowen-network
     depends_on:
-      - server
+      nowen-server:
+        condition: service_healthy
+    # 安全：资源限制
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
 
 networks:
   nowen-network:
     driver: bridge
+    # 安全：内部网络隔离
+    internal: false
 
-volumes:
-  data:
-    driver: local
+# 安全部署检查清单：
+# □ 复制 .env.example 为 .env 并修改所有密钥
+# □ 修改默认端口映射（避免使用 5173, 5174, 8787）
+# □ 设置 ALLOWED_ORIGINS 限制访问来源
+# □ 配置 NAS 防火墙，只开放必要端口
+# □ 启用 HTTPS（建议使用反向代理）
+# □ 定期备份数据目录
+# □ 首次登录后立即修改管理员密码

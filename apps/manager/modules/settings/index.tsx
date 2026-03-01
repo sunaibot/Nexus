@@ -25,15 +25,19 @@ const SettingsModule: Module = {
   version: '1.0.0',
   icon: Settings,
   enabled: true,
-  route: '/settings',
+  routes: [
+    {
+      path: '/settings',
+      component: React.lazy(() => import('./pages/SettingsTabsPage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'settings',
     label: '系统设置',
     icon: Settings,
     order: 100,
     group: 'system',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/SettingsTabsPage'))
   },
   plugin: SettingsPlugin,
 }

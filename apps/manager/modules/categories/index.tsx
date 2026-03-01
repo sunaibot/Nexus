@@ -26,15 +26,19 @@ const CategoriesModule: Module = {
   version: '1.0.0',
   icon: Folder,
   enabled: true,
-  route: '/categories',
+  routes: [
+    {
+      path: '/categories',
+      component: React.lazy(() => import('./pages/CategoriesPage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'categories',
     label: '分类管理',
     icon: Folder,
     order: 2,
     group: 'content',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/CategoriesPage'))
   },
   plugin: CategoriesPlugin,
   config: categoriesConfig,

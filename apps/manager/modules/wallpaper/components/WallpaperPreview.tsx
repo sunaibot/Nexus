@@ -2,7 +2,10 @@
 
 import { motion } from 'framer-motion'
 import { Monitor, ImageOff } from 'lucide-react'
-import type { WallpaperSettings } from '../types'
+import type { WallpaperSettings as LocalWallpaperSettings } from '../types'
+import type { WallpaperSettings as ApiWallpaperSettings } from '@/lib/api'
+
+type WallpaperSettings = LocalWallpaperSettings | ApiWallpaperSettings
 
 interface WallpaperPreviewProps {
   settings: WallpaperSettings
@@ -10,7 +13,7 @@ interface WallpaperPreviewProps {
 }
 
 export function WallpaperPreview({ settings, title = '壁纸预览' }: WallpaperPreviewProps) {
-  const { enabled, source, imageData, imageUrl, blur, overlay } = settings
+  const { enabled, source, imageData, imageUrl, blur, overlay = 30 } = settings
 
   // 获取预览图片URL
   const getPreviewUrl = (): string | null => {

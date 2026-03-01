@@ -630,11 +630,12 @@ export interface MenuVisibility {
 // 壁纸设置
 export interface WallpaperSettings {
   enabled?: boolean         // 是否启用壁纸
-  source?: 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels'  // 壁纸来源
+  source?: 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels' | 'preset'  // 壁纸来源
   imageData?: string        // 上传的图片 data URL
   imageUrl?: string         // 外部图片 URL
   blur?: number             // 模糊度 0-20
   overlay?: number          // 遮罩透明度 0-100
+  presetId?: string | null  // 预设壁纸ID
 }
 
 // 主题颜色配置

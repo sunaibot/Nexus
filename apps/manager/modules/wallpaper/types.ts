@@ -3,7 +3,7 @@
  */
 
 // 壁纸来源类型
-export type WallpaperSource = 'upload' | 'url' | 'unsplash' | 'preset'
+export type WallpaperSource = 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels' | 'preset'
 
 // 壁纸设置
 export interface WallpaperSettings {

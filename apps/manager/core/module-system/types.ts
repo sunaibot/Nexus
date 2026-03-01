@@ -1,4 +1,5 @@
 import React from 'react'
+import type { Plugin } from '../plugin-system/types.js'
 
 // ==================== 模块生命周期钩子 ====================
 
@@ -159,12 +160,18 @@ export interface Module extends ModuleLifecycle {
   permissions?: ModulePermission[]
   /** 侧边栏配置 */
   sidebarItem?: SidebarItem
+  /** 路由配置（简写形式，等同于 routes: [{ path, component }]） */
+  route?: string
   /** 路由配置 */
   routes?: ModuleRoute[]
+  /** 页面组件（简写形式） */
+  component?: () => React.LazyExoticComponent<React.ComponentType<any>>
   /** API 端点 */
   apiEndpoints?: ModuleApiEndpoint[]
   /** 组件集合 */
   components?: Record<string, React.ComponentType<any>>
+  /** 关联的插件 */
+  plugin?: Plugin
   /** 模块状态 */
   state?: 'uninitialized' | 'initializing' | 'initialized' | 'enabling' | 'enabled' | 'disabling' | 'disabled' | 'destroying' | 'destroyed'
   /** 注册时间 */

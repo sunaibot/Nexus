@@ -69,8 +69,8 @@ router.get('/stats', authMiddleware, adminMiddleware, (req: Request, res: Respon
   }
 })
 
-// 获取系统监控数据（脉冲数据）
-router.get('/pulse', authMiddleware, async (req: Request, res: Response) => {
+// 获取系统监控数据（脉冲数据）- 需要管理员权限
+router.get('/pulse', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
   try {
     const os = await import('os')
     

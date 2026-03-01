@@ -24,8 +24,15 @@ const PluginsModule: Module = {
   version: '1.0.0',
   icon: Puzzle,
   enabled: true,
-  route: '/plugins',
+  routes: [
+    {
+      path: '/plugins',
+      component: () => null,
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'plugins',
     label: '插件中心',
     icon: Puzzle,
     order: 5,

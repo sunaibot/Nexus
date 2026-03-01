@@ -25,15 +25,19 @@ const SystemMonitorModule: Module = {
   version: '1.0.0',
   icon: Cpu,
   enabled: true,
-  route: '/system-monitor',
+  routes: [
+    {
+      path: '/system-monitor',
+      component: React.lazy(() => import('./pages/SystemMonitorPage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'system-monitor',
     label: '系统监控',
     icon: Cpu,
     order: 5,
     group: 'tools',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/SystemMonitorPage'))
   },
   plugin: SystemMonitorPlugin,
 }

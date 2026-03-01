@@ -905,17 +905,22 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
  * 初始化默认数据
  */
 async function initDefaultData(db: SqlJsDatabase): Promise<void> {
-  // 创建默认管理员用户
-  const adminPasswordHash = await hashPassword('admin123')
+  // 创建默认管理员用户 - 使用随机生成的强密码
+  // 首次登录后系统会强制要求修改密码
+  const crypto = await import('crypto')
+  const randomPassword = crypto.randomBytes(16).toString('hex') // 32位随机密码
+  const adminPasswordHash = await hashPassword(randomPassword)
   const now = new Date().toISOString()
 
   db.run(
-    `INSERT INTO users (id, username, password, email, role, isActive, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
+    `INSERT INTO users (id, username, password, email, role, isActive, isDefaultPassword, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?)`,
     ['admin', 'admin', adminPasswordHash, 'admin@example.com', 'admin', now, now]
   )
 
-  console.log('✅ Default admin user created (admin/admin123)')
+  console.log('✅ Default admin user created')
+  console.log('⚠️  IMPORTANT: First login requires password change')
+  console.log('🔑  Temporary password has been generated (check logs or reset if needed)')
 
   // 初始化默认插件
   const defaultPlugins = [
@@ -1694,14 +1699,18 @@ async function ensureDefaultSettings(db: SqlJsDatabase): Promise<void> {
 async function ensureDefaultUser(db: SqlJsDatabase): Promise<void> {
   const result = db.exec('SELECT 1 FROM users WHERE username = ?', ['admin'])
   if (result.length === 0) {
-    const adminPasswordHash = await hashPassword('admin123')
+    // 使用随机生成的强密码，首次登录强制修改
+    const crypto = await import('crypto')
+    const randomPassword = crypto.randomBytes(16).toString('hex')
+    const adminPasswordHash = await hashPassword(randomPassword)
     const now = new Date().toISOString()
     db.run(
-      `INSERT INTO users (id, username, password, email, role, isActive, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
+      `INSERT INTO users (id, username, password, email, role, isActive, isDefaultPassword, createdAt, updatedAt) 
+       VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?)`,
       ['admin', 'admin', adminPasswordHash, 'admin@example.com', 'admin', now, now]
     )
-    console.log('✅ Default admin user created (admin/admin123)')
+    console.log('✅ Default admin user created')
+    console.log('⚠️  IMPORTANT: First login requires password change')
   }
 }
 

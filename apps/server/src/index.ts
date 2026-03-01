@@ -81,16 +81,30 @@ app.use(sqlInjectionDetector)
 
 // Session 配置
 const isDevEnv = process.env.NODE_ENV === 'development'
+
+// 生产环境必须设置 SESSION_SECRET
+if (!isDevEnv && !process.env.SESSION_SECRET) {
+  console.error('❌ FATAL: SESSION_SECRET environment variable is required in production')
+  console.error('   Please set a strong random string (e.g., openssl rand -base64 32)')
+  process.exit(1)
+}
+
+// 生成或获取 session secret
+const sessionSecret = process.env.SESSION_SECRET || (() => {
+  console.warn('⚠️  WARNING: Using default session secret for development only')
+  return 'nowen-session-secret-dev-only-' + Date.now()
+})()
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'nowen-session-secret-dev-only',
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   name: 'nowen.sid',
   cookie: {
-    secure: false, // 开发环境不使用 HTTPS
+    secure: !isDevEnv, // 生产环境使用 HTTPS
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24小时
-    sameSite: 'lax' // 使用 lax 允许同站不同端口
+    sameSite: isDevEnv ? 'lax' : 'strict' // 生产环境使用 strict
   }
 }))
 

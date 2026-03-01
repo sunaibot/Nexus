@@ -26,15 +26,19 @@ const BookmarksModule: Module = {
   version: '1.0.0',
   icon: BookMarked,
   enabled: true,
-  route: '/bookmarks',
+  routes: [
+    {
+      path: '/bookmarks',
+      component: React.lazy(() => import('./pages/BookmarksPage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'bookmarks',
     label: '书签管理',
     icon: BookMarked,
     order: 1,
     group: 'content',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/BookmarksPage'))
   },
   plugin: BookmarksPlugin,
   config: bookmarksConfig,

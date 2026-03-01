@@ -25,11 +25,14 @@ const HealthCheckModule: Module = {
   version: '1.0.0',
   icon: Activity,
   enabled: true,
-  route: '/health-check',
+  routes: [
+    {
+      path: '/health-check',
+      component: React.lazy(() => import('./pages/HealthCheckPage')),
+      exact: true,
+    }
+  ],
   // 不显示在侧边栏，功能已整合到书签管理的"链接检查"标签页
-  component: () => {
-    return React.lazy(() => import('./pages/HealthCheckPage'))
-  },
   plugin: HealthCheckPlugin,
 }
 

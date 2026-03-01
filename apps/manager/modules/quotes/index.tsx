@@ -25,15 +25,19 @@ const QuotesModule: Module = {
   version: '1.0.0',
   icon: Quote,
   enabled: true,
-  route: '/quotes',
+  routes: [
+    {
+      path: '/quotes',
+      component: React.lazy(() => import('./pages/QuotesPage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'quotes',
     label: '名言管理',
     icon: Quote,
     order: 7,
     group: 'content',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/QuotesPage'))
   },
   plugin: QuotesPlugin,
 }

@@ -25,15 +25,19 @@ const ThemeModule: Module = {
   version: '1.0.0',
   icon: Palette,
   enabled: true,
-  route: '/theme',
+  routes: [
+    {
+      path: '/theme',
+      component: React.lazy(() => import('./pages/ThemePage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'theme',
     label: '主题管理',
     icon: Palette,
     order: 90,
     group: 'appearance',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/ThemePage'))
   },
   plugin: ThemePlugin,
 }

@@ -25,15 +25,19 @@ const AnalyticsModule: Module = {
   version: '1.0.0',
   icon: BarChart3,
   enabled: true,
-  route: '/analytics',
+  routes: [
+    {
+      path: '/analytics',
+      component: React.lazy(() => import('./pages/AnalyticsPage')),
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'analytics',
     label: '数据分析',
     icon: BarChart3,
     order: 6,
     group: 'tools',
-  },
-  component: () => {
-    return React.lazy(() => import('./pages/AnalyticsPage'))
   },
   plugin: AnalyticsPlugin,
 }

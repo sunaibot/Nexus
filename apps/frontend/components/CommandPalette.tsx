@@ -203,7 +203,7 @@ export function CommandPalette({
           description: new URL(bookmark.url).hostname,
           icon: iconElement,
           action: () => {
-            visitsApi.track(bookmark.id).catch(console.error)
+            visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error)
             window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
             onClose()
           },

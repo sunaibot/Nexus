@@ -24,8 +24,15 @@ const UsersModule: Module = {
   version: '1.0.0',
   icon: Users,
   enabled: true,
-  route: '/users',
+  routes: [
+    {
+      path: '/users',
+      component: () => null,
+      exact: true,
+    }
+  ],
   sidebarItem: {
+    id: 'users',
     label: '用户管理',
     icon: Users,
     order: 7,

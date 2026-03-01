@@ -41,7 +41,7 @@ function HeroBookmark({
   const domain = new URL(bookmark.url).hostname.replace('www.', '');
   
   const handleClick = useCallback(() => {
-    visitsApi.track(bookmark.id).catch(console.error);
+    visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error);
     window.open(getBookmarkUrl(bookmark, isInternal), '_blank');
   }, [bookmark.id, bookmark.url, bookmark.internalUrl, isInternal]);
 
@@ -496,7 +496,7 @@ export function ReadLaterSection({
                       onMarkRead={onMarkRead}
                       onRemove={onRemove}
                       onClick={() => {
-                        visitsApi.track(bookmark.id).catch(console.error);
+                        visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error);
                         window.open(getBookmarkUrl(bookmark, isInternal), '_blank');
                       }}
                     />

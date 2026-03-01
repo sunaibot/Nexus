@@ -17,7 +17,7 @@ export function ReadLaterHero({ bookmark, isLiteMode }: ReadLaterHeroProps) {
   const { isInternal } = useNetworkEnv();
 
   const handleClick = () => {
-    visitsApi.track(bookmark.id).catch(console.error);
+    visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error);
     window.open(getBookmarkUrl(bookmark, isInternal), '_blank');
   };
 

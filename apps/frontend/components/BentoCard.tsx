@@ -53,7 +53,7 @@ export function BentoCard({
   const handleClick = () => {
     if (!isEditMode) {
       // 异步记录访问
-      visitsApi.track(bookmark.id).catch(console.error)
+      visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error)
       window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
     }
     onClick?.()

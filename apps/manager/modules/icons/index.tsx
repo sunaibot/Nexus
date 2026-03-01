@@ -25,11 +25,14 @@ const IconsModule: Module = {
   version: '1.0.0',
   icon: Palette,
   enabled: true,
-  route: '/icons',
+  routes: [
+    {
+      path: '/icons',
+      component: React.lazy(() => import('./pages/IconsPage')),
+      exact: true,
+    }
+  ],
   // 不显示在侧边栏，功能已整合到书签管理的"图标管理"标签页
-  component: () => {
-    return React.lazy(() => import('./pages/IconsPage'))
-  },
   plugin: IconsPlugin,
 }
 

@@ -147,7 +147,7 @@ export function useBookmarkContextMenu() {
         id: 'open',
         label: t('bookmark.open_in_new_tab'),
         icon: <ExternalLink className="w-4 h-4" />,
-        onClick: () => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), '_blank') },
+        onClick: () => { visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), '_blank') },
       },
       {
         id: 'copy',

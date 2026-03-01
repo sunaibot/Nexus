@@ -55,7 +55,7 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       onClick={() => {
-        visitsApi.track(bookmark.id).catch(console.error)
+        visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error)
         window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
       }}
       whileHover={{ scale: 1.01 }}
@@ -134,7 +134,7 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--gradient-1)] to-[var(--gradient-2)] text-white flex items-center gap-2"
                 onClick={(e) => {
                   e.stopPropagation()
-                  visitsApi.track(bookmark.id).catch(console.error)
+                  visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error)
                   window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
                 }}
                 whileHover={{ scale: 1.02 }}

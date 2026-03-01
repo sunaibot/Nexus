@@ -169,7 +169,7 @@ export function VirtualBookmarkList({
         {/* Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), '_blank') }}
+            onClick={() => { visitsApi.track({ bookmarkId: bookmark.id }).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), '_blank') }}
             className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
             style={{ color: 'var(--color-text-muted)' }}
             title="打开链接"
