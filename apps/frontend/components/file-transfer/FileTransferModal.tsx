@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { X, Upload, File, Copy, Check, Download, AlertCircle } from 'lucide-react'
+import { X, Upload, File, Copy, Check, Download, AlertCircle, Settings, Clock, DownloadIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { request } from '@/lib/api-legacy'
 
@@ -16,6 +16,25 @@ interface UploadResult {
   maxDownloads: number
 }
 
+// 有效期选项
+const EXPIRY_OPTIONS = [
+  { value: 1, label: '1小时' },
+  { value: 6, label: '6小时' },
+  { value: 24, label: '24小时' },
+  { value: 72, label: '3天' },
+  { value: 168, label: '7天' },
+]
+
+// 下载次数选项
+const DOWNLOAD_OPTIONS = [
+  { value: 1, label: '1次' },
+  { value: 5, label: '5次' },
+  { value: 10, label: '10次' },
+  { value: 20, label: '20次' },
+  { value: 50, label: '50次' },
+  { value: 100, label: '100次' },
+]
+
 export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -23,6 +42,10 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [extractCode, setExtractCode] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
+  const [expiryHours, setExpiryHours] = useState(24)
+  const [maxDownloads, setMaxDownloads] = useState(10)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -56,12 +79,16 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                 fileName: file.name,
                 fileSize: file.size,
                 fileType: file.type || 'application/octet-stream',
+                expiryHours,
+                maxDownloads,
               }),
             }
           )
 
           if (response.success) {
             setUploadResult(response.data)
+            setSelectedFile(null)
+            setShowSettings(false)
           } else {
             setError('上传失败')
           }
@@ -82,21 +109,36 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
     }
   }
 
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      setSelectedFile(files[0])
+      setShowSettings(true)
+    }
+  }, [])
+
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
     const files = e.dataTransfer.files
     if (files.length > 0) {
-      uploadFile(files[0])
+      setSelectedFile(files[0])
+      setShowSettings(true)
     }
   }, [])
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
-      uploadFile(files[0])
+  const handleStartUpload = () => {
+    if (selectedFile) {
+      uploadFile(selectedFile)
     }
-  }, [])
+  }
+
+  const handleCancel = () => {
+    setSelectedFile(null)
+    setShowSettings(false)
+    setExpiryHours(24)
+    setMaxDownloads(10)
+  }
 
   const handleCopyLink = useCallback(() => {
     if (uploadResult) {
@@ -121,6 +163,10 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
     setUploadResult(null)
     setError(null)
     setCopied(false)
+    setSelectedFile(null)
+    setShowSettings(false)
+    setExpiryHours(24)
+    setMaxDownloads(10)
   }, [])
 
   const handleDownload = useCallback(() => {
@@ -265,6 +311,115 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                 </button>
               </div>
             </div>
+          ) : showSettings && selectedFile ? (
+            // 设置界面
+            <div className="space-y-6">
+              {/* 文件信息 */}
+              <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--color-glass-border)', background: 'var(--color-glass-hover)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <File className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                      {selectedFile.name}
+                    </p>
+                    <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCancel}
+                    className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* 有效期设置 */}
+              <div>
+                <label className="flex items-center gap-2 text-sm mb-3" style={{ color: 'var(--color-text)' }}>
+                  <Clock className="w-4 h-4" />
+                  有效期
+                </label>
+                <div className="grid grid-cols-5 gap-2">
+                  {EXPIRY_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setExpiryHours(option.value)}
+                      className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                        expiryHours === option.value
+                          ? 'bg-blue-500 text-white'
+                          : 'border hover:bg-white/5'
+                      }`}
+                      style={expiryHours !== option.value ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 下载次数设置 */}
+              <div>
+                <label className="flex items-center gap-2 text-sm mb-3" style={{ color: 'var(--color-text)' }}>
+                  <DownloadIcon className="w-4 h-4" />
+                  下载次数
+                </label>
+                <div className="grid grid-cols-6 gap-2">
+                  {DOWNLOAD_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => setMaxDownloads(option.value)}
+                      className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                        maxDownloads === option.value
+                          ? 'bg-blue-500 text-white'
+                          : 'border hover:bg-white/5'
+                      }`}
+                      style={maxDownloads !== option.value ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    <AlertCircle className="w-4 h-4 inline mr-1" />
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              {/* 操作按钮 */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleStartUpload}
+                  disabled={uploading}
+                  className="flex-1 px-4 py-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {uploading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Upload className="w-4 h-4" />
+                      </motion.div>
+                      上传中...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      开始上传
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           ) : (
             // 上传区域
             <div className="space-y-4">
@@ -293,20 +448,11 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                     className="w-16 h-16 rounded-full flex items-center justify-center"
                     style={{ background: 'var(--color-glass-hover)' }}
                   >
-                    {uploading ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      >
-                        <Upload className="w-8 h-8 text-blue-500" />
-                      </motion.div>
-                    ) : (
-                      <Upload className="w-8 h-8 text-blue-500" />
-                    )}
+                    <Upload className="w-8 h-8 text-blue-500" />
                   </div>
                   <div>
                     <p className="font-medium" style={{ color: 'var(--color-text)' }}>
-                      {uploading ? '上传中...' : '点击或拖拽文件到此处'}
+                      点击或拖拽文件到此处
                     </p>
                     <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
                       支持任意文件类型，单文件最大 100MB
