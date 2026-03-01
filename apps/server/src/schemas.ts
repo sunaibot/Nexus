@@ -133,6 +133,14 @@ export const changePasswordSchema = z.object({
     .max(100, '密码不能超过100字符'),
 })
 
+export const changeUsernameSchema = z.object({
+  currentPassword: z.string().min(1, '当前密码不能为空'),
+  newUsername: z.string()
+    .min(2, '用户名至少2个字符')
+    .max(50, '用户名不能超过50字符')
+    .regex(/^[a-zA-Z0-9_\-\u4e00-\u9fa5]+$/, '用户名只能包含字母、数字、下划线、连字符和中文'),
+})
+
 // ========== 元数据相关 Schema ==========
 
 export const metadataSchema = z.object({

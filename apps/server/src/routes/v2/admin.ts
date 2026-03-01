@@ -14,7 +14,7 @@ import {
   generateToken,
   getSessionTimeout
 } from '../../middleware/index.js'
-import { validateBody, loginSchema, changePasswordSchema } from '../../schemas.js'
+import { validateBody, loginSchema, changePasswordSchema, changeUsernameSchema } from '../../schemas.js'
 
 const router = Router()
 
@@ -163,6 +163,90 @@ router.post('/change-password', authMiddleware, validateBody(changePasswordSchem
     })
     console.error('修改密码失败:', error)
     res.status(500).json({ error: '修改密码失败' })
+  }
+})
+
+// 修改用户名
+router.post('/change-username', authMiddleware, validateBody(changeUsernameSchema), async (req: Request, res: Response) => {
+  const user = (req as any).user
+  const ip = (req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '') as string
+  const userAgent = (req.headers['user-agent'] || '') as string
+  
+  try {
+    const { currentPassword, newUsername } = req.body
+    
+    const dbUser = queryOne('SELECT * FROM users WHERE id = ?', [user.id])
+    
+    if (!dbUser) {
+      logAudit({
+        userId: user.id,
+        username: user.username,
+        action: 'CHANGE_USERNAME_FAILED',
+        resourceType: 'auth',
+        details: { reason: 'user_not_found' },
+        ip,
+        userAgent
+      })
+      return res.status(404).json({ error: '用户不存在' })
+    }
+    
+    const isValidPassword = await verifyPassword(currentPassword, dbUser.password)
+    if (!isValidPassword) {
+      logAudit({
+        userId: user.id,
+        username: user.username,
+        action: 'CHANGE_USERNAME_FAILED',
+        resourceType: 'auth',
+        details: { reason: 'wrong_current_password' },
+        ip,
+        userAgent
+      })
+      return res.status(401).json({ error: '当前密码错误' })
+    }
+    
+    // 检查新用户名是否已存在
+    const existingUser = queryOne('SELECT * FROM users WHERE username = ? AND id != ?', [newUsername, user.id])
+    if (existingUser) {
+      logAudit({
+        userId: user.id,
+        username: user.username,
+        action: 'CHANGE_USERNAME_FAILED',
+        resourceType: 'auth',
+        details: { reason: 'username_exists', newUsername },
+        ip,
+        userAgent
+      })
+      return res.status(409).json({ error: '用户名已被使用' })
+    }
+    
+    const now = new Date().toISOString()
+    
+    // 修改用户名
+    run('UPDATE users SET username = ?, updatedAt = ? WHERE id = ?', [newUsername, now, user.id])
+    
+    logAudit({
+      userId: user.id,
+      username: newUsername,
+      action: 'CHANGE_USERNAME_SUCCESS',
+      resourceType: 'auth',
+      details: { oldUsername: user.username, newUsername },
+      ip,
+      userAgent
+    })
+    
+    res.json({ success: true, message: '用户名修改成功', newUsername })
+  } catch (error) {
+    logAudit({
+      userId: user?.id || null,
+      username: user?.username || null,
+      action: 'CHANGE_USERNAME_ERROR',
+      resourceType: 'auth',
+      details: { error: String(error) },
+      ip,
+      userAgent
+    })
+    console.error('修改用户名失败:', error)
+    res.status(500).json({ error: '修改用户名失败' })
   }
 })
 

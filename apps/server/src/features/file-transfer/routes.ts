@@ -33,12 +33,52 @@ router.post('/upload', optionalAuthMiddleware, async (req, res) => {
 })
 
 /**
- * 下载文件 - 公开接口
- * GET /api/file-transfers/download/:extractCode
+ * 验证提取码 - 公开接口
+ * POST /api/file-transfers/extract
+ * 验证提取码并返回文件信息（不增加下载次数）
  */
-router.get('/download/:extractCode', async (req, res) => {
-  const { extractCode } = req.params
-  const result = await fileTransferService.download(extractCode, req.ip || 'unknown')
+router.post('/extract', async (req, res) => {
+  const { extractCode, password } = req.body
+
+  if (!extractCode) {
+    return res.status(400).json({ success: false, error: '请输入提取码' })
+  }
+
+  const result = await fileTransferService.verifyExtractCode(
+    extractCode.toUpperCase(),
+    password,
+    req.ip || 'unknown'
+  )
+
+  if (!result.success || !result.file) {
+    return res.status(404).json({ success: false, error: result.error || '文件不存在或已过期' })
+  }
+
+  // 只返回必要的文件信息，不包含敏感字段
+  const file = result.file
+  res.json({
+    success: true,
+    data: {
+      fileName: file.fileName,
+      fileSize: file.fileSize,
+      fileType: file.fileType,
+      expiresAt: file.expiresAt,
+      maxDownloads: file.maxDownloads,
+      currentDownloads: file.currentDownloads,
+      hasPassword: !!file.extractPassword,
+      downloadToken: file.downloadToken,
+    }
+  })
+})
+
+/**
+ * 下载文件 - 公开接口
+ * GET /api/file-transfers/download/:downloadToken
+ * 使用 downloadToken 而非 extractCode，增加安全性
+ */
+router.get('/download/:downloadToken', async (req, res) => {
+  const { downloadToken } = req.params
+  const result = await fileTransferService.downloadByToken(downloadToken, req.ip || 'unknown')
 
   if (!result.success || !result.file) {
     return res.status(404).json({ success: false, error: result.error })
@@ -50,8 +90,23 @@ router.get('/download/:extractCode', async (req, res) => {
   try {
     const fs = await import('fs')
     const path = await import('path')
-    const uploadsDir = path.join(process.cwd(), 'uploads')
+    const { getFileTransferSettings } = await import('../../db/settings.js')
+    
+    // 获取设置中的存储路径
+    const settings = getFileTransferSettings()
+    const storagePath = settings?.uploadPath || './uploads'
+    const uploadsDir = storagePath.startsWith('/') 
+      ? storagePath 
+      : path.join(process.cwd(), storagePath)
+    
     const filePath = path.resolve(uploadsDir, file.filePath)
+    
+    // 调试日志
+    console.log('[Download Debug] Storage path:', storagePath)
+    console.log('[Download Debug] Uploads dir:', uploadsDir)
+    console.log('[Download Debug] File path from DB:', file.filePath)
+    console.log('[Download Debug] Resolved file path:', filePath)
+    console.log('[Download Debug] File exists:', fs.existsSync(filePath))
     
     // 安全检查：确保文件路径在允许目录内
     if (!filePath.startsWith(uploadsDir)) {
@@ -60,6 +115,7 @@ router.get('/download/:extractCode', async (req, res) => {
     }
 
     if (!fs.existsSync(filePath)) {
+      console.error('[Download Error] File not found:', filePath)
       return res.status(404).json({ success: false, error: '文件不存在' })
     }
 
@@ -244,6 +300,166 @@ router.get(
     const stats = await fileTransferRepository.getStats()
 
     res.json({ success: true, data: stats })
+  }
+)
+
+/**
+ * 获取可用存储路径列表 - 需要管理员权限
+ * GET /api/file-transfers/storage-paths
+ * 返回推荐的存储路径列表，适配Docker环境
+ */
+router.get(
+  '/storage-paths',
+  authMiddleware,
+  requireRole(UserRole.ADMIN),
+  async (req, res) => {
+    const fs = await import('fs')
+    const path = await import('path')
+
+    // 获取当前工作目录
+    const cwd = process.cwd()
+    const isDocker = fs.existsSync('/.dockerenv') || fs.existsSync('/proc/self/cgroup')
+
+    // 构建推荐路径列表
+    const suggestedPaths = [
+      {
+        value: './uploads',
+        label: '默认目录 (./uploads)',
+        description: '应用目录下的uploads文件夹',
+        recommended: !isDocker
+      },
+      {
+        value: '/data/uploads',
+        label: '数据卷 (/data/uploads)',
+        description: 'Docker数据卷挂载点，推荐用于Docker部署',
+        recommended: isDocker
+      },
+      {
+        value: '/tmp/uploads',
+        label: '临时目录 (/tmp/uploads)',
+        description: '系统临时目录，重启后可能丢失',
+        recommended: false
+      }
+    ]
+
+    // 检查每个路径是否存在、可写
+    const pathsWithStatus = await Promise.all(
+      suggestedPaths.map(async (p) => {
+        try {
+          const fullPath = p.value.startsWith('/') ? p.value : path.join(cwd, p.value)
+          const exists = fs.existsSync(fullPath)
+          let writable = false
+
+          if (exists) {
+            // 检查是否可写
+            try {
+              fs.accessSync(fullPath, fs.constants.W_OK)
+              writable = true
+            } catch {
+              writable = false
+            }
+          } else {
+            // 尝试创建目录
+            try {
+              fs.mkdirSync(fullPath, { recursive: true })
+              writable = true
+            } catch {
+              writable = false
+            }
+          }
+
+          return {
+            ...p,
+            fullPath,
+            exists,
+            writable,
+            usable: writable
+          }
+        } catch (error) {
+          return {
+            ...p,
+            fullPath: p.value.startsWith('/') ? p.value : path.join(cwd, p.value),
+            exists: false,
+            writable: false,
+            usable: false
+          }
+        }
+      })
+    )
+
+    // 获取当前使用的路径
+    const { fileTransferRepository } = await import('./repository.js')
+    const settings = await fileTransferRepository.getSettings()
+    const currentPath = settings?.uploadPath || './uploads'
+
+    res.json({
+      success: true,
+      data: {
+        isDocker,
+        currentPath,
+        paths: pathsWithStatus
+      }
+    })
+  }
+)
+
+/**
+ * 验证存储路径 - 需要管理员权限
+ * POST /api/file-transfers/validate-path
+ */
+router.post(
+  '/validate-path',
+  authMiddleware,
+  requireRole(UserRole.ADMIN),
+  async (req, res) => {
+    const { path: customPath } = req.body
+    const fs = await import('fs')
+    const path = await import('path')
+
+    if (!customPath) {
+      return res.status(400).json({ success: false, error: '请提供路径' })
+    }
+
+    try {
+      const fullPath = customPath.startsWith('/') ? customPath : path.join(process.cwd(), customPath)
+      const exists = fs.existsSync(fullPath)
+      let writable = false
+      let created = false
+
+      if (exists) {
+        try {
+          fs.accessSync(fullPath, fs.constants.W_OK)
+          writable = true
+        } catch {
+          writable = false
+        }
+      } else {
+        try {
+          fs.mkdirSync(fullPath, { recursive: true })
+          writable = true
+          created = true
+        } catch (error) {
+          writable = false
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          path: customPath,
+          fullPath,
+          exists,
+          writable,
+          created,
+          usable: writable
+        }
+      })
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: '路径验证失败: ' + (error as Error).message
+      })
+    }
   }
 )
 

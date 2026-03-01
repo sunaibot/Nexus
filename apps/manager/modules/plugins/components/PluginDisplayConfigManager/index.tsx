@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
 import { useToast } from '../../../../components/admin/Toast'
-import type { Plugin } from '../../../../lib/api-client'
+import type { UnifiedPlugin } from '../../api-unified'
 import {
   fetchPluginDisplayConfig,
   updatePluginDisplayConfig,
@@ -37,7 +37,7 @@ import {
 } from '../../../../lib/plugin-display-config-api'
 
 interface PluginDisplayConfigManagerProps {
-  plugin: Plugin
+  plugin: UnifiedPlugin
   onConfigUpdate?: (config: PluginDisplayConfig) => void
 }
 

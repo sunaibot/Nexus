@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../../../lib/utils'
 import { useToast } from '../../../../components/admin/Toast'
-import type { Plugin } from '../../../../lib/api-client'
+import type { UnifiedPlugin } from '../../api-unified'
 import { getCurrentUserRole } from '../../../../lib/api-client/client'
 
 // 名言数据类型
@@ -63,8 +63,8 @@ interface QuotePluginConfig {
 }
 
 interface QuoteManagerProps {
-  plugin: Plugin
-  onPluginUpdate?: (plugin: Plugin) => void
+  plugin: UnifiedPlugin
+  onPluginUpdate?: (plugin: UnifiedPlugin) => void
 }
 
 const defaultConfig: QuotePluginConfig = {
@@ -145,7 +145,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
   const [activeTab, setActiveTab] = useState<'data' | 'config' | 'api' | 'preview'>('data')
 
   // 插件状态
-  const [isPluginEnabled, setIsPluginEnabled] = useState(plugin.isEnabled)
+  const [isPluginEnabled, setIsPluginEnabled] = useState<boolean>(!!plugin.isEnabled || false)
   const [config, setConfig] = useState<QuotePluginConfig>(() => {
     const pluginConfig = plugin.config
     return {

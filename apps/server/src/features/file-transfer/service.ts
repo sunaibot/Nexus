@@ -83,25 +83,60 @@ export class FileTransferService {
         quotas.maxFileTransferExpiry
       )
 
-      // 生成提取码和删除码
+      // 生成提取码（用户分享用）和下载token（下载链接用，不同值增加安全性）
       const extractCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+      const downloadToken = Math.random().toString(36).substring(2, 14).toUpperCase()
       const deleteCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       
-      // 创建文件记录
       // 生成提取密码和删除密码
       const extractPassword = Math.random().toString(36).substring(2, 10)
       const deletePassword = Math.random().toString(36).substring(2, 10)
+      
+      // 保存文件到磁盘
+      const fs = await import('fs')
+      const path = await import('path')
+      
+      // 使用设置中的存储路径，默认为 ./uploads
+      const storagePath = settings.uploadPath || './uploads'
+      const uploadsDir = storagePath.startsWith('/') 
+        ? storagePath 
+        : path.join(process.cwd(), storagePath)
+      
+      console.log('[Upload Debug] Storage path:', storagePath)
+      console.log('[Upload Debug] Uploads dir:', uploadsDir)
+      console.log('[Upload Debug] CWD:', process.cwd())
+      
+      // 确保上传目录存在
+      if (!fs.existsSync(uploadsDir)) {
+        console.log('[Upload Debug] Creating uploads directory:', uploadsDir)
+        fs.mkdirSync(uploadsDir, { recursive: true })
+      }
+      
+      // 生成唯一文件名（复用之前获取的fileExt）
+      const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExt || 'bin'}`
+      const fileFullPath = path.join(uploadsDir, uniqueFileName)
+      
+      console.log('[Upload Debug] File name:', uniqueFileName)
+      console.log('[Upload Debug] Full path:', fileFullPath)
+      
+      // 解码Base64并保存文件
+      const base64Data = request.fileData.replace(/^data:.*;base64,/, '')
+      const fileBuffer = Buffer.from(base64Data, 'base64')
+      fs.writeFileSync(fileFullPath, fileBuffer)
+      
+      console.log('[Upload Debug] File saved successfully:', fs.existsSync(fileFullPath))
       
       const result = await this.repository.create(
         userId,
         request.fileName,
         request.fileSize,
         request.fileType,
-        request.fileData,
+        uniqueFileName, // 存储相对路径
         extractCode,
         extractPassword,
         deleteCode,
         deletePassword,
+        downloadToken,
         actualMaxDownloads,
         actualExpiryHours
       )
@@ -131,6 +166,7 @@ export class FileTransferService {
         success: true,
         data: {
           extractCode: result.extractCode,
+          downloadToken: result.downloadToken,
           deleteCode: result.deleteCode,
           expiresAt: result.expiresAt,
           maxDownloads: actualMaxDownloads,
@@ -143,7 +179,67 @@ export class FileTransferService {
   }
 
   /**
-   * 下载文件
+   * 验证提取码（不增加下载次数）
+   * @param extractCode 提取码
+   * @param password 提取密码（如果有）
+   * @param ip 请求者IP
+   * @returns 文件信息
+   */
+  async verifyExtractCode(
+    extractCode: string,
+    password: string | undefined,
+    ip: string
+  ): Promise<{
+    success: boolean
+    file?: FileTransfer
+    error?: string
+  }> {
+    try {
+      const file = await this.repository.findByExtractCode(extractCode)
+
+      if (!file) {
+        return { success: false, error: '文件不存在或已过期' }
+      }
+
+      // 检查是否过期
+      if (Date.now() > file.expiresAt) {
+        return { success: false, error: '文件已过期' }
+      }
+
+      // 检查下载次数
+      if (file.currentDownloads >= file.maxDownloads) {
+        return { success: false, error: '下载次数已达上限' }
+      }
+
+      // 验证提取密码
+      if (file.extractPassword && file.extractPassword !== password) {
+        return { success: false, error: '提取密码错误' }
+      }
+
+      // 记录审计日志（仅验证，不下载）
+      logAudit({
+        userId: null,
+        username: null,
+        action: 'FILE_VERIFY',
+        resourceType: 'fileTransfer',
+        resourceId: extractCode,
+        details: {
+          fileName: file.fileName,
+          fileSize: file.fileSize,
+        },
+        ip,
+        userAgent: '',
+      })
+
+      return { success: true, file }
+    } catch (error) {
+      console.error('提取码验证失败:', error)
+      return { success: false, error: '验证失败' }
+    }
+  }
+
+  /**
+   * 通过提取码下载文件（用于提取码验证场景）
    * @param extractCode 提取码
    * @param ip 下载者IP
    * @returns 文件信息
@@ -183,6 +279,60 @@ export class FileTransferService {
         details: {
           fileName: file.fileName,
           fileSize: file.fileSize,
+        },
+        ip,
+        userAgent: '',
+      })
+
+      return { success: true, file }
+    } catch (error) {
+      console.error('文件下载失败:', error)
+      return { success: false, error: '下载失败' }
+    }
+  }
+
+  /**
+   * 通过下载token下载文件（用于直接链接下载，更安全）
+   * @param downloadToken 下载token
+   * @param ip 下载者IP
+   * @returns 文件信息
+   */
+  async downloadByToken(downloadToken: string, ip: string): Promise<{
+    success: boolean
+    file?: FileTransfer
+    error?: string
+  }> {
+    try {
+      const file = await this.repository.findByDownloadToken(downloadToken)
+
+      if (!file) {
+        return { success: false, error: '文件不存在或已过期' }
+      }
+
+      // 检查是否过期
+      if (Date.now() > file.expiresAt) {
+        return { success: false, error: '文件已过期' }
+      }
+
+      // 检查下载次数
+      if (file.currentDownloads >= file.maxDownloads) {
+        return { success: false, error: '下载次数已达上限' }
+      }
+
+      // 增加下载次数
+      await this.repository.incrementDownload(file.extractCode)
+
+      // 记录审计日志
+      logAudit({
+        userId: null,
+        username: null,
+        action: 'FILE_DOWNLOAD',
+        resourceType: 'fileTransfer',
+        resourceId: file.extractCode,
+        details: {
+          fileName: file.fileName,
+          fileSize: file.fileSize,
+          downloadToken,
         },
         ip,
         userAgent: '',

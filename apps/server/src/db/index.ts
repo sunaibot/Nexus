@@ -153,6 +153,7 @@ export {
   createFileTransfer,
   getFileTransferByExtractCode,
   getFileTransferByDeleteCode,
+  getFileTransferByDownloadToken,
   incrementFileTransferDownload,
   deleteFileTransfer,
   deleteFileTransferById,

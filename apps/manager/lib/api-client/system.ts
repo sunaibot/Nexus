@@ -8,7 +8,7 @@ import type {
 
 export async function getHealth(): Promise<HealthStatus> {
   const response = await request<ApiResponse<HealthStatus>>(
-    '/health',
+    '/system/health',
     { requireAuth: false }
   )
   return response.data || { status: 'error', version: 'unknown' }

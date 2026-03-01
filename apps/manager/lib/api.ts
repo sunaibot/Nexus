@@ -128,7 +128,7 @@ function setCsrfToken(token: string | null): void {
 // 刷新 CSRF Token - 发送 GET 请求获取新的 Token
 async function refreshCsrfToken(): Promise<string | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/health`, {
+    const res = await fetch(`${API_BASE}/api/v2/system/health`, {
       method: 'GET',
       credentials: 'include', // 确保发送和接收 Cookie
     })
@@ -146,7 +146,7 @@ async function refreshCsrfToken(): Promise<string | null> {
 }
 
 // 统一请求处理
-async function request<T>(
+export async function request<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
@@ -157,12 +157,14 @@ async function request<T>(
     ...(fetchOptions.headers as Record<string, string>),
   }
   
-  // 需要认证时添加 Token
+  // 需要认证时添加 Token（如果存在）
+  // 注意：管理后台使用 Session 认证，Token 是可选的
   if (requireAuth) {
     const token = getToken()
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
+    // Session 认证通过 Cookie 自动发送，不需要额外处理
   }
   
   // 非 GET 请求添加 CSRF Token
@@ -509,9 +511,20 @@ export async function adminChangePassword(
   currentPassword: string,
   newPassword: string
 ): Promise<SuccessResponse> {
-  return request<SuccessResponse>('/api/v2/users/change-password', {
+  return request<SuccessResponse>('/api/v2/admin/change-password', {
     method: 'POST',
     body: JSON.stringify({ currentPassword, newPassword }),
+    requireAuth: true,
+  })
+}
+
+export async function adminChangeUsername(
+  currentPassword: string,
+  newUsername: string
+): Promise<SuccessResponse & { newUsername?: string }> {
+  return request<SuccessResponse & { newUsername?: string }>('/api/v2/admin/change-username', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newUsername }),
     requireAuth: true,
   })
 }

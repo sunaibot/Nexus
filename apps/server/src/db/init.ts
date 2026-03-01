@@ -8,6 +8,7 @@ import fs from 'fs'
 import { setDatabase, forceSaveDatabase, getDbPath, hashPassword } from './core.js'
 import type { Database as SqlJsDatabase } from 'sql.js'
 import { createAllIndexes, analyzeQueries } from './migrations/addIndexes.js'
+import { initBuiltinPlugins } from './init-plugins.js'
 
 /**
  * 初始化数据库
@@ -43,6 +44,9 @@ export async function initDatabase(): Promise<SqlJsDatabase> {
     ensureDefaultTabs(db)
   }
   
+  // 初始化所有内置插件（新的统一插件系统）
+  initBuiltinPlugins(db)
+  
   migrateDatabase(db)
   await initFileTransferSettings(db)
   cleanupExpiredFileTransfers(db)
@@ -72,6 +76,7 @@ function createTables(db: SqlJsDatabase): void {
       email TEXT,
       role TEXT DEFAULT 'user',
       isActive INTEGER DEFAULT 1,
+      isDefaultPassword INTEGER DEFAULT 0,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     )
@@ -213,6 +218,7 @@ function createTables(db: SqlJsDatabase): void {
       extractPassword TEXT,
       deleteCode TEXT UNIQUE,
       deletePassword TEXT,
+      downloadToken TEXT UNIQUE,
       maxDownloads INTEGER DEFAULT 0,
       downloadCount INTEGER DEFAULT 0,
       expiryHours INTEGER DEFAULT 24,
@@ -564,6 +570,21 @@ function createTables(db: SqlJsDatabase): void {
     )
   `)
 
+  // 插件插槽配置表 - 管理插件在前台的显示位置
+  db.run(`
+    CREATE TABLE IF NOT EXISTS plugin_slot_configs (
+      id TEXT PRIMARY KEY,
+      pluginId TEXT NOT NULL UNIQUE,
+      slot TEXT NOT NULL DEFAULT 'hero-after',
+      orderIndex INTEGER DEFAULT 0,
+      isEnabled INTEGER DEFAULT 1,
+      config TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (pluginId) REFERENCES plugins(id) ON DELETE CASCADE
+    )
+  `)
+
   // 系统配置表
   db.run(`
     CREATE TABLE IF NOT EXISTS system_config (
@@ -816,16 +837,26 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
       }
     }
 
-    // 检查 file_transfers 表是否有 filePath 列
+    // 检查 file_transfers 表结构
     const fileTransferResult = db.exec("PRAGMA table_info(file_transfers)")
     if (fileTransferResult.length > 0) {
       const fileTransferColumns = fileTransferResult[0].values.map((row: any[]) => row[1])
-      // 如果有旧的 fileData 列，删除它并添加 filePath 列
-      if (fileTransferColumns.includes('fileData')) {
-        console.log('Migrating file_transfers table: removing fileData, adding filePath...')
-        // SQLite 不支持直接删除列，需要重建表
+      
+      // 检查是否需要重建表（列顺序不正确或缺少必要列）
+      const requiredColumns = ['filePath', 'extractPassword', 'deletePassword', 'downloadToken']
+      const needsRebuild = fileTransferColumns.includes('fileData') || 
+                           requiredColumns.some(col => !fileTransferColumns.includes(col))
+      
+      if (needsRebuild) {
+        console.log('Rebuilding file_transfers table with correct schema...')
+        
+        // 备份旧数据
+        const oldData = db.exec('SELECT * FROM file_transfers')
+        
+        // 删除旧表并创建新表
+        db.run('DROP TABLE file_transfers')
         db.run(`
-          CREATE TABLE file_transfers_new (
+          CREATE TABLE file_transfers (
             id TEXT PRIMARY KEY,
             userId TEXT,
             fileName TEXT NOT NULL,
@@ -833,7 +864,10 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
             fileType TEXT,
             filePath TEXT,
             extractCode TEXT UNIQUE,
+            extractPassword TEXT,
             deleteCode TEXT UNIQUE,
+            deletePassword TEXT,
+            downloadToken TEXT,
             maxDownloads INTEGER DEFAULT 0,
             downloadCount INTEGER DEFAULT 0,
             expiryHours INTEGER DEFAULT 24,
@@ -841,17 +875,34 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
             expiresAt INTEGER
           )
         `)
-        db.run(`
-          INSERT INTO file_transfers_new (id, userId, fileName, fileSize, fileType, extractCode, deleteCode, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt)
-          SELECT id, userId, fileName, fileSize, fileType, extractCode, deleteCode, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt
-          FROM file_transfers
-        `)
-        db.run('DROP TABLE file_transfers')
-        db.run('ALTER TABLE file_transfers_new RENAME TO file_transfers')
-        console.log('Migration completed')
-      } else if (!fileTransferColumns.includes('filePath')) {
-        console.log('Adding filePath column to file_transfers table...')
-        db.run('ALTER TABLE file_transfers ADD COLUMN filePath TEXT')
+        
+        // 恢复数据（如果存在）
+        if (oldData.length > 0 && oldData[0].values.length > 0) {
+          const oldColumns = fileTransferResult[0].values.map((row: any[]) => row[1])
+          console.log(`Migrating ${oldData[0].values.length} existing records...`)
+          
+          for (const row of oldData[0].values) {
+            const id = row[0]
+            const userId = row[1]
+            const fileName = row[2]
+            const fileSize = row[3]
+            const fileType = row[4]
+            // 根据旧列顺序获取数据
+            const extractCode = oldColumns.includes('extractCode') ? row[oldColumns.indexOf('extractCode')] : null
+            const deleteCode = oldColumns.includes('deleteCode') ? row[oldColumns.indexOf('deleteCode')] : null
+            const maxDownloads = oldColumns.includes('maxDownloads') ? row[oldColumns.indexOf('maxDownloads')] : 10
+            const downloadCount = oldColumns.includes('downloadCount') ? row[oldColumns.indexOf('downloadCount')] : 0
+            const expiryHours = oldColumns.includes('expiryHours') ? row[oldColumns.indexOf('expiryHours')] : 72
+            const createdAt = oldColumns.includes('createdAt') ? row[oldColumns.indexOf('createdAt')] : new Date().toISOString()
+            const expiresAt = oldColumns.includes('expiresAt') ? row[oldColumns.indexOf('expiresAt')] : null
+            
+            db.run(
+              'INSERT INTO file_transfers (id, userId, fileName, fileSize, fileType, filePath, extractCode, extractPassword, deleteCode, deletePassword, downloadToken, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              [id, userId, fileName, fileSize, fileType, null, extractCode, null, deleteCode, null, null, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt]
+            )
+          }
+          console.log('Migration completed')
+        }
       }
     }
     // 检查 plugins 表是否有所有需要的列
@@ -905,11 +956,10 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
  * 初始化默认数据
  */
 async function initDefaultData(db: SqlJsDatabase): Promise<void> {
-  // 创建默认管理员用户 - 使用随机生成的强密码
+  // 创建默认管理员用户 - 使用默认密码 admin123
   // 首次登录后系统会强制要求修改密码
-  const crypto = await import('crypto')
-  const randomPassword = crypto.randomBytes(16).toString('hex') // 32位随机密码
-  const adminPasswordHash = await hashPassword(randomPassword)
+  const defaultPassword = 'admin123'
+  const adminPasswordHash = await hashPassword(defaultPassword)
   const now = new Date().toISOString()
 
   db.run(
@@ -920,7 +970,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
 
   console.log('✅ Default admin user created')
   console.log('⚠️  IMPORTANT: First login requires password change')
-  console.log('🔑  Temporary password has been generated (check logs or reset if needed)')
+  console.log('🔑  Default password: admin123')
 
   // 初始化默认插件
   const defaultPlugins = [
@@ -1699,10 +1749,9 @@ async function ensureDefaultSettings(db: SqlJsDatabase): Promise<void> {
 async function ensureDefaultUser(db: SqlJsDatabase): Promise<void> {
   const result = db.exec('SELECT 1 FROM users WHERE username = ?', ['admin'])
   if (result.length === 0) {
-    // 使用随机生成的强密码，首次登录强制修改
-    const crypto = await import('crypto')
-    const randomPassword = crypto.randomBytes(16).toString('hex')
-    const adminPasswordHash = await hashPassword(randomPassword)
+    // 使用默认密码 admin123，首次登录强制修改
+    const defaultPassword = 'admin123'
+    const adminPasswordHash = await hashPassword(defaultPassword)
     const now = new Date().toISOString()
     db.run(
       `INSERT INTO users (id, username, password, email, role, isActive, isDefaultPassword, createdAt, updatedAt) 
@@ -1711,6 +1760,7 @@ async function ensureDefaultUser(db: SqlJsDatabase): Promise<void> {
     )
     console.log('✅ Default admin user created')
     console.log('⚠️  IMPORTANT: First login requires password change')
+    console.log('🔑  Default password: admin123')
   }
 }
 
@@ -1747,6 +1797,18 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       isInstalled: 1,
       visibility: 'public',
       orderIndex: 1
+    },
+    {
+      id: 'file-transfer',
+      name: '文件快传',
+      description: '文件快传插件，提供临时文件上传和分享功能',
+      version: '1.0.0',
+      author: 'Nowen Team',
+      icon: '',
+      isEnabled: 1,
+      isInstalled: 1,
+      visibility: 'public',
+      orderIndex: 2
     }
   ]
 

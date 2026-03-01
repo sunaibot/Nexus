@@ -44,6 +44,7 @@ import batchRouter from './batch.js'
 import privateModeRouter from './privateMode.js'
 import pluginsRouter from './plugins.js'
 import pluginDisplayConfigsRouter from './plugin-display-configs.js'
+import pluginSlotsRouter from './plugin-slots.js'
 import bookmarkCardStylesRouter from './bookmark-card-styles.js'
 import adminMenusRouter from './admin-menus.js'
 import securityRouter from './security.js'
@@ -60,6 +61,7 @@ import customIconsRouter from './custom-icons.js'
 import weatherRouter from './weather.js'
 import apiDocsRouter from '../api-docs.js'
 import sessionAuthRouter from './session-auth.js'
+import pluginsUnifiedRouter from './plugins-unified.js'
 
 const router = Router()
 
@@ -110,7 +112,9 @@ router.use('/ip-filters', ipFiltersRouter)
 router.use('/batch', batchRouter)
 router.use('/private-mode', privateModeRouter)
 router.use('/plugins', pluginsRouter)
+router.use('/plugins-unified', pluginsUnifiedRouter)
 router.use('/plugin-display-configs', pluginDisplayConfigsRouter)
+router.use('/plugin-slots', pluginSlotsRouter)
 router.use('/bookmark-card-styles', bookmarkCardStylesRouter)
 router.use('/admin-menus', adminMenusRouter)
 router.use('/security', securityRouter)

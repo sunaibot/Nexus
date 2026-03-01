@@ -7,6 +7,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useServiceStatus } from '../../hooks/useServiceStatus'
 import { cn } from '../../lib/utils'
 import { PrivatePasswordToggle } from '../PrivatePasswordToggle'
+import { PluginSlot } from '../../plugins'
 
 interface HeaderProps {
   onOpenCommand: () => void
@@ -141,6 +142,9 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode, isLoggedIn
             <Languages className="w-4 h-4" />
           </motion.button>
 
+          {/* Header 左侧插槽 */}
+          <PluginSlot slot="header-left" className="flex items-center gap-2" />
+
           {/* 私密书签切换 - 仅登录后显示 */}
           {isLoggedIn && (
             <PrivatePasswordToggle onVisibilityChange={onPrivateVisibilityChange} />
@@ -165,6 +169,9 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode, isLoggedIn
               <Edit3 className="w-4 h-4" />
             </motion.button>
           )}
+
+          {/* Header 右侧插槽 */}
+          <PluginSlot slot="header-right" className="flex items-center gap-2" />
 
           {/* 主题切换 */}
           <motion.button

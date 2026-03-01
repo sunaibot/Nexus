@@ -17,6 +17,7 @@ import { AdminLogin } from '../../components/AdminLogin'
 import { ForcePasswordChange } from '../../components/ForcePasswordChange'
 import { Admin } from '../Admin'
 import { TabSidebar } from '../../components/TabSidebar'
+import { PluginSlot } from '../../plugins'
 
 import { WidgetSection, ReadLaterToggle, BookmarkList, PinnedBookmark } from './components'
 
@@ -219,21 +220,23 @@ export function HomePage() {
           "pt-24 pb-12 px-4 sm:px-6 transition-all duration-300",
           tabs.length > 0 ? "ml-16" : ""
         )}>
-          <div className="max-w-6xl mx-auto">
-            {/* Hero 区域 */}
-            <HeroSection
-              formattedTime={formattedTime}
-              formattedDate={formattedDate}
-              lunarDate={lunarDate}
-              greeting={greeting}
-              weather={weather}
-              weatherLoading={weatherLoading}
-              onRefreshWeather={refreshWeather}
-              onOpenSearch={handleOpenSearch}
-            />
+          <div className="max-w-6xl mx-auto flex gap-6">
+            {/* 主内容区 */}
+            <div className="flex-1">
+              {/* Hero 区域 */}
+              <HeroSection
+                formattedTime={formattedTime}
+                formattedDate={formattedDate}
+                lunarDate={lunarDate}
+                greeting={greeting}
+                weather={weather}
+                weatherLoading={weatherLoading}
+                onRefreshWeather={refreshWeather}
+                onOpenSearch={handleOpenSearch}
+              />
 
-            {/* 插件系统 */}
-            <PluginRenderer className="my-8" />
+              {/* 插件系统 */}
+              <PluginRenderer className="my-8" />
 
             {/* 系统监控小部件 */}
             <WidgetSection 
@@ -282,6 +285,14 @@ export function HomePage() {
               bookmark={pinnedBookmark} 
               onMarkRead={handleMarkRead} 
             />
+            </div>
+
+            {/* 内容侧边栏 - 插件插槽 */}
+            <aside className="w-64 hidden lg:block">
+              <div className="sticky top-24 space-y-4">
+                <PluginSlot slot="content-sidebar" />
+              </div>
+            </aside>
           </div>
         </main>
 

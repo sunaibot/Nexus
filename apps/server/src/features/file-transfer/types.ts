@@ -6,7 +6,9 @@
 /** 文件快传记录 - 对应数据库表 */
 export interface FileTransfer {
   id: string
-  extractCode: string      // 提取码
+  extractCode: string      // 提取码（用户分享用）
+  extractPassword?: string // 提取密码（可选）
+  downloadToken: string    // 下载token（下载链接用，与提取码不同增加安全性）
   deleteCode: string       // 删除码
   fileName: string         // 文件名
   fileSize: number         // 文件大小(字节)
@@ -28,7 +30,8 @@ export interface FileTransferSettings {
   maxDownloads: number     // 默认最大下载次数
   maxExpiryHours: number   // 默认最大有效期(小时)
   adminPassword: string    // 管理密码
-  storagePath?: string     // 存储路径
+  uploadPath?: string      // 上传存储路径
+  storagePath?: string     // 存储路径（兼容旧字段）
 }
 
 /** 创建快传请求参数 */
@@ -44,6 +47,7 @@ export interface CreateFileTransferRequest {
 /** 创建快传响应 */
 export interface CreateFileTransferResponse {
   extractCode: string
+  downloadToken: string  // 下载token（用于下载链接，与提取码不同增加安全性）
   deleteCode: string
   expiresAt: number
   maxDownloads: number

@@ -25,7 +25,7 @@ import {
 import { useToast } from '../../../components/admin/Toast'
 import { themes, useTheme } from '../../../hooks/useTheme'
 import { cn } from '../../../lib/utils'
-import { fetchSettings, updateSettings, type SiteSettings, factoryReset, clearAuthStatus, adminChangePassword, exportData, importData } from '../../../lib/api'
+import { fetchSettings, updateSettings, type SiteSettings, factoryReset, clearAuthStatus, adminChangePassword, adminChangeUsername, exportData, importData } from '../../../lib/api'
 
 // 设置模块类型
  type SettingsModule = 'site' | 'widget' | 'network' | 'security' | 'data'
@@ -573,7 +573,21 @@ function SecurityModule() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  
+  // 修改用户名相关状态
+  const [usernameCurrentPassword, setUsernameCurrentPassword] = useState('')
+  const [newUsername, setNewUsername] = useState('')
+  const [showUsernamePassword, setShowUsernamePassword] = useState(false)
+  const [currentUsername, setCurrentUsername] = useState('')
+  
   const { showToast } = useToast()
+  
+  // 获取当前用户名
+  useEffect(() => {
+    const username = localStorage.getItem('admin_username') || ''
+    setCurrentUsername(username)
+    setNewUsername(username)
+  }, [])
 
   // 私密密码相关状态
   const [privatePasswordStatus, setPrivatePasswordStatus] = useState<{ hasPassword: boolean; isEnabled: boolean } | null>(null)
@@ -631,6 +645,36 @@ function SecurityModule() {
       setConfirmPassword('')
     } catch (err: any) {
       showToast('error', err.message || '密码修改失败')
+    }
+  }
+
+  // 修改用户名
+  const handleChangeUsername = async () => {
+    if (!newUsername.trim()) {
+      showToast('error', '用户名不能为空')
+      return
+    }
+    if (newUsername.length < 2) {
+      showToast('error', '用户名至少2个字符')
+      return
+    }
+    if (newUsername === currentUsername) {
+      showToast('error', '新用户名不能与当前用户名相同')
+      return
+    }
+    if (!usernameCurrentPassword) {
+      showToast('error', '请输入当前密码')
+      return
+    }
+    try {
+      const result = await adminChangeUsername(usernameCurrentPassword, newUsername.trim())
+      showToast('success', '用户名修改成功')
+      // 更新本地存储的用户名
+      localStorage.setItem('admin_username', result.newUsername || newUsername)
+      setCurrentUsername(result.newUsername || newUsername)
+      setUsernameCurrentPassword('')
+    } catch (err: any) {
+      showToast('error', err.message || '用户名修改失败')
     }
   }
 
@@ -777,6 +821,79 @@ function SecurityModule() {
 
   return (
     <div className="space-y-6">
+      {/* 修改用户名 */}
+      <div className="p-4 rounded-xl" style={{ background: 'var(--color-glass)' }}>
+        <h3 className="font-medium mb-4" style={{ color: 'var(--color-text-primary)' }}>
+          修改用户名
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              当前用户名
+            </label>
+            <input
+              type="text"
+              value={currentUsername}
+              disabled
+              className="w-full px-4 py-3 rounded-xl border bg-transparent opacity-60"
+              style={{
+                borderColor: 'var(--color-glass-border)',
+                color: 'var(--color-text-primary)'
+              }}
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              新用户名
+            </label>
+            <input
+              type="text"
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border bg-transparent"
+              style={{
+                borderColor: 'var(--color-glass-border)',
+                color: 'var(--color-text-primary)'
+              }}
+              placeholder="输入新用户名"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+              当前密码（验证身份）
+            </label>
+            <div className="relative">
+              <input
+                type={showUsernamePassword ? 'text' : 'password'}
+                value={usernameCurrentPassword}
+                onChange={(e) => setUsernameCurrentPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border bg-transparent pr-12"
+                style={{
+                  borderColor: 'var(--color-glass-border)',
+                  color: 'var(--color-text-primary)'
+                }}
+                placeholder="输入当前密码"
+              />
+              <button
+                onClick={() => setShowUsernamePassword(!showUsernamePassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                {showUsernamePassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+          <motion.button
+            onClick={handleChangeUsername}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full py-3 rounded-xl text-white font-medium"
+            style={{ background: 'var(--color-primary)' }}
+          >
+            修改用户名
+          </motion.button>
+        </div>
+      </div>
+
       {/* 修改登录密码 */}
       <div className="p-4 rounded-xl" style={{ background: 'var(--color-glass)' }}>
         <h3 className="font-medium mb-4" style={{ color: 'var(--color-text-primary)' }}>

@@ -7,6 +7,7 @@ import {
   createFileTransfer as dbCreateFileTransfer,
   getFileTransferByExtractCode as dbGetByExtractCode,
   getFileTransferByDeleteCode as dbGetByDeleteCode,
+  getFileTransferByDownloadToken as dbGetByDownloadToken,
   incrementFileTransferDownload as dbIncrementDownload,
   deleteFileTransfer as dbDeleteFileTransfer,
   getUserFileTransfers as dbGetUserFileTransfers,
@@ -59,9 +60,10 @@ export class FileTransferRepository {
     extractPassword: string,
     deleteCode: string,
     deletePassword: string,
+    downloadToken: string,
     maxDownloads: number,
     expiryHours: number
-  ): Promise<{ id: string; extractCode: string; extractPassword: string; deleteCode: string; deletePassword: string; expiresAt: number } | null> {
+  ): Promise<{ id: string; extractCode: string; extractPassword: string; deleteCode: string; deletePassword: string; downloadToken: string; expiresAt: number } | null> {
     return dbCreateFileTransfer(
       userId,
       fileName,
@@ -72,6 +74,7 @@ export class FileTransferRepository {
       extractPassword,
       deleteCode,
       deletePassword,
+      downloadToken,
       maxDownloads,
       expiryHours
     )
@@ -93,6 +96,15 @@ export class FileTransferRepository {
    */
   async findByDeleteCode(deleteCode: string): Promise<FileTransfer | null> {
     return dbGetByDeleteCode(deleteCode)
+  }
+
+  /**
+   * 通过下载token获取文件
+   * @param downloadToken 下载token
+   * @returns 文件记录
+   */
+  async findByDownloadToken(downloadToken: string): Promise<FileTransfer | null> {
+    return dbGetByDownloadToken(downloadToken)
   }
 
   /**

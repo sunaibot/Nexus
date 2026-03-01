@@ -754,6 +754,7 @@ export function createFileTransfer(
   extractPassword: string,
   deleteCode: string,
   deletePassword: string,
+  downloadToken: string,
   maxDownloads: number,
   expiryHours: number
 ) {
@@ -765,12 +766,12 @@ export function createFileTransfer(
   const expiresAt = Date.now() + expiryHours * 60 * 60 * 1000
 
   db.run(
-    'INSERT INTO file_transfers (id, userId, fileName, fileSize, fileType, filePath, extractCode, extractPassword, deleteCode, deletePassword, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)',
-    [id, userId || null, fileName, fileSize, fileType, filePath, extractCode, extractPassword, deleteCode, deletePassword, maxDownloads, expiryHours, now, expiresAt]
+    'INSERT INTO file_transfers (id, userId, fileName, fileSize, fileType, filePath, extractCode, extractPassword, deleteCode, deletePassword, downloadToken, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)',
+    [id, userId || null, fileName, fileSize, fileType, filePath, extractCode, extractPassword, deleteCode, deletePassword, downloadToken, maxDownloads, expiryHours, now, expiresAt]
   )
 
   saveDatabase()
-  return { id, extractCode, extractPassword, deleteCode, deletePassword, expiresAt }
+  return { id, extractCode, extractPassword, deleteCode, deletePassword, downloadToken, expiresAt }
 }
 
 export function getFileTransferByExtractCode(extractCode: string) {
@@ -792,12 +793,13 @@ export function getFileTransferByExtractCode(extractCode: string) {
     extractPassword: row[7],
     deleteCode: row[8],
     deletePassword: row[9],
-    maxDownloads: row[10],
-    downloadCount: row[11],
-    currentDownloads: row[11],
-    expiryHours: row[12],
-    createdAt: row[13],
-    expiresAt: row[14]
+    downloadToken: row[10],
+    maxDownloads: row[11],
+    downloadCount: row[12],
+    currentDownloads: row[12],
+    expiryHours: row[13],
+    createdAt: row[14],
+    expiresAt: row[15]
   }
 }
 
@@ -820,12 +822,42 @@ export function getFileTransferByDeleteCode(deleteCode: string) {
     extractPassword: row[7],
     deleteCode: row[8],
     deletePassword: row[9],
-    maxDownloads: row[10],
-    downloadCount: row[11],
-    currentDownloads: row[11],
-    expiryHours: row[12],
-    createdAt: row[13],
-    expiresAt: row[14]
+    downloadToken: row[10],
+    maxDownloads: row[11],
+    downloadCount: row[12],
+    currentDownloads: row[12],
+    expiryHours: row[13],
+    createdAt: row[14],
+    expiresAt: row[15]
+  }
+}
+
+export function getFileTransferByDownloadToken(downloadToken: string) {
+  const db = getDatabase()
+  if (!db) return null
+  
+  const result = db.exec('SELECT * FROM file_transfers WHERE downloadToken = ?', [downloadToken])
+  if (result.length === 0) return null
+  
+  const row = result[0].values[0]
+  return {
+    id: row[0],
+    userId: row[1],
+    fileName: row[2],
+    fileSize: row[3],
+    fileType: row[4],
+    filePath: row[5],
+    extractCode: row[6],
+    extractPassword: row[7],
+    deleteCode: row[8],
+    deletePassword: row[9],
+    downloadToken: row[10],
+    maxDownloads: row[11],
+    downloadCount: row[12],
+    currentDownloads: row[12],
+    expiryHours: row[13],
+    createdAt: row[14],
+    expiresAt: row[15]
   }
 }
 
@@ -895,12 +927,13 @@ export function getUserFileTransfers(userId: string | null) {
     extractPassword: row[7],
     deleteCode: row[8],
     deletePassword: row[9],
-    maxDownloads: row[10],
-    downloadCount: row[11],
-    currentDownloads: row[11],
-    expiryHours: row[12],
-    createdAt: row[13],
-    expiresAt: row[14]
+    downloadToken: row[10],
+    maxDownloads: row[11],
+    downloadCount: row[12],
+    currentDownloads: row[12],
+    expiryHours: row[13],
+    createdAt: row[14],
+    expiresAt: row[15]
   }))
 }
 
@@ -922,12 +955,13 @@ export function getAllFileTransfers() {
     extractPassword: row[7],
     deleteCode: row[8],
     deletePassword: row[9],
-    maxDownloads: row[10],
-    downloadCount: row[11],
-    currentDownloads: row[11],
-    expiryHours: row[12],
-    createdAt: row[13],
-    expiresAt: row[14]
+    downloadToken: row[10],
+    maxDownloads: row[11],
+    downloadCount: row[12],
+    currentDownloads: row[12],
+    expiryHours: row[13],
+    createdAt: row[14],
+    expiresAt: row[15]
   }))
 }
 
