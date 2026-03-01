@@ -102,6 +102,7 @@ curl -X GET "http://localhost:3000/api/v2/bookmarks" \
 | **SessionAuth** | Session 认证 | [查看文档](./modules/session-auth.md) |
 | **Permissions** | 权限管理 | [查看文档](./modules/permissions.md) |
 | **CategoriesEnhanced** | 增强分类 | [查看文档](./modules/categories-enhanced.md) |
+| **Tabs** | 快速导航标签 | [查看文档](./modules/tabs.md) |
 
 ## 🔐 认证机制
 

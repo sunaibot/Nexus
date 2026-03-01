@@ -16,6 +16,7 @@ import { PluginRenderer } from '../../components/plugin-system'
 import { AdminLogin } from '../../components/AdminLogin'
 import { ForcePasswordChange } from '../../components/ForcePasswordChange'
 import { Admin } from '../Admin'
+import { TabSidebar } from '../../components/TabSidebar'
 
 import { WidgetSection, ReadLaterToggle, BookmarkList, PinnedBookmark } from './components'
 
@@ -29,6 +30,9 @@ export function HomePage() {
     bookmarks,
     categories,
     customIcons,
+    tabs,
+    activeTabId,
+    filteredCategories,
     filteredBookmarks,
     readLaterBookmarks,
     pinnedBookmark,
@@ -83,6 +87,13 @@ export function HomePage() {
     updateCategory,
     deleteCategory,
     reorderCategories,
+
+    // Tab 操作
+    switchTab,
+    addTab,
+    updateTab,
+    deleteTab,
+    reorderTabs,
 
     // 图标操作
     addCustomIcon,
@@ -176,6 +187,24 @@ export function HomePage() {
       {hasWallpaper && <div style={overlayStyle} />}
 
       <ErrorBoundary>
+        {/* Tab 侧边栏 */}
+        {tabs.length > 0 && (
+          <TabSidebar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabChange={switchTab}
+            onAddTab={() => {
+              // TODO: 打开添加 Tab 弹窗
+              console.log('添加 Tab')
+            }}
+            onManageTabs={() => {
+              // TODO: 打开管理 Tab 弹窗
+              console.log('管理 Tab')
+            }}
+            isEditMode={isEditMode}
+          />
+        )}
+
         <Header
           onOpenCommand={() => setShowCommandPalette(true)}
           onToggleEditMode={() => isLoggedIn && setIsEditMode(!isEditMode)}
@@ -186,7 +215,10 @@ export function HomePage() {
           onPrivateVisibilityChange={setShowPrivateBookmarks}
         />
 
-        <main className="pt-24 pb-12 px-4 sm:px-6">
+        <main className={cn(
+          "pt-24 pb-12 px-4 sm:px-6 transition-all duration-300",
+          tabs.length > 0 ? "ml-16" : ""
+        )}>
           <div className="max-w-6xl mx-auto">
             {/* Hero 区域 */}
             <HeroSection
@@ -229,7 +261,7 @@ export function HomePage() {
             {/* 书签列表 */}
             <BookmarkList
               bookmarks={filteredBookmarks}
-              categories={categories}
+              categories={filteredCategories}
               isLoading={isLoading}
               isEditMode={isEditMode}
               isLoggedIn={isLoggedIn}

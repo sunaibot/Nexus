@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
+import { Tab } from '../types'
 import {
   fetchBookmarks,
   fetchCategories,
@@ -11,6 +12,11 @@ import {
   updateCategory as updateCategoryApi,
   deleteCategory as deleteCategoryApi,
   reorderCategories as reorderCategoriesApi,
+  fetchTabs,
+  createTab,
+  updateTab,
+  deleteTab,
+  reorderTabs,
 } from '../lib/api-client'
 import * as customIconsApi from '../lib/api-client/custom-icons'
 
@@ -19,6 +25,7 @@ interface LoadingState {
   bookmarks: boolean
   categories: boolean
   icons: boolean
+  tabs: boolean
 }
 
 // 错误状态类型
@@ -26,6 +33,7 @@ interface ErrorState {
   bookmarks: string | null
   categories: string | null
   icons: string | null
+  tabs: string | null
 }
 
 export function useBookmarkStore() {
@@ -33,6 +41,8 @@ export function useBookmarkStore() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [customIcons, setCustomIcons] = useState<CustomIcon[]>([])
+  const [tabs, setTabs] = useState<Tab[]>([])
+  const [activeTabId, setActiveTabId] = useState<string | null>(null)
 
   // 加载状态
   const [isLoading, setIsLoading] = useState(true)
@@ -40,6 +50,7 @@ export function useBookmarkStore() {
     bookmarks: false,
     categories: false,
     icons: false,
+    tabs: false,
   })
 
   // 错误状态
@@ -48,6 +59,7 @@ export function useBookmarkStore() {
     bookmarks: null,
     categories: null,
     icons: null,
+    tabs: null,
   })
 
   // 其他状态
@@ -119,17 +131,119 @@ export function useBookmarkStore() {
     }
   }, [setLoading, setErrorFor])
 
+  // 加载 Tabs
+  const loadTabs = useCallback(async () => {
+    setLoading('tabs', true)
+    setErrorFor('tabs', null)
+    try {
+      const tabsData = await fetchTabs()
+      setTabs(tabsData)
+      // 如果没有选中的 Tab，选择默认 Tab 或第一个
+      if (!activeTabId && tabsData.length > 0) {
+        const defaultTab = tabsData.find(t => t.isDefault) || tabsData[0]
+        setActiveTabId(defaultTab.id)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '加载 Tab 失败'
+      setErrorFor('tabs', errorMessage)
+      console.error('加载 Tab 失败:', err)
+    } finally {
+      setLoading('tabs', false)
+    }
+  }, [activeTabId, setLoading, setErrorFor])
+
   // 初始加载数据
   useEffect(() => {
     loadData()
     loadCustomIcons()
-  }, [loadData, loadCustomIcons])
+    loadTabs()
+  }, [loadData, loadCustomIcons, loadTabs])
 
   // 刷新数据（导入后调用）
   const refreshData = useCallback(async () => {
     await loadData()
     await loadCustomIcons()
-  }, [loadData, loadCustomIcons])
+    await loadTabs()
+  }, [loadData, loadCustomIcons, loadTabs])
+
+  // ========== Tab 操作 ==========
+
+  // 切换 Tab
+  const switchTab = useCallback((tabId: string) => {
+    setActiveTabId(tabId)
+  }, [])
+
+  // 添加 Tab
+  const addTab = useCallback(async (tab: Omit<Tab, 'id' | 'orderIndex' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newTab = await createTab({
+        name: tab.name,
+        icon: tab.icon,
+        color: tab.color,
+        categoryIds: tab.categories?.map(c => c.id),
+      })
+      setTabs(prev => [...prev, newTab])
+      return newTab
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '添加 Tab 失败'
+      console.error('添加 Tab 失败:', err)
+      throw new Error(errorMessage)
+    }
+  }, [])
+
+  // 更新 Tab
+  const updateTabFunc = useCallback(async (id: string, updates: Partial<Tab>) => {
+    try {
+      const updated = await updateTab(id, {
+        name: updates.name,
+        icon: updates.icon,
+        color: updates.color,
+        categoryIds: updates.categories?.map(c => c.id),
+        isDefault: updates.isDefault,
+      })
+      setTabs(prev => prev.map(t => t.id === id ? updated : t))
+      return updated
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '更新 Tab 失败'
+      console.error('更新 Tab 失败:', err)
+      throw new Error(errorMessage)
+    }
+  }, [])
+
+  // 删除 Tab
+  const deleteTabFunc = useCallback(async (id: string) => {
+    try {
+      await deleteTab(id)
+      setTabs(prev => prev.filter(t => t.id !== id))
+      // 如果删除的是当前选中的 Tab，切换到第一个
+      if (activeTabId === id) {
+        const remaining = tabs.filter(t => t.id !== id)
+        if (remaining.length > 0) {
+          setActiveTabId(remaining[0].id)
+        }
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '删除 Tab 失败'
+      console.error('删除 Tab 失败:', err)
+      throw new Error(errorMessage)
+    }
+  }, [activeTabId, tabs])
+
+  // 重排序 Tab
+  const reorderTabsFunc = useCallback(async (reorderedTabs: Tab[]) => {
+    try {
+      const items = reorderedTabs.map((t, index) => ({
+        id: t.id,
+        orderIndex: index,
+      }))
+      await reorderTabs(items)
+      setTabs(reorderedTabs.map((t, index) => ({ ...t, orderIndex: index })))
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '重排序失败'
+      console.error('Tab 重排序失败:', err)
+      throw new Error(errorMessage)
+    }
+  }, [])
 
   // ========== 书签操作 ==========
 
@@ -348,6 +462,8 @@ export function useBookmarkStore() {
     bookmarks,
     categories,
     customIcons,
+    tabs,
+    activeTabId,
 
     // 状态
     isLoading,
@@ -370,6 +486,13 @@ export function useBookmarkStore() {
     updateCategory,
     deleteCategory,
     reorderCategories,
+
+    // Tab 操作
+    switchTab,
+    addTab,
+    updateTab: updateTabFunc,
+    deleteTab: deleteTabFunc,
+    reorderTabs: reorderTabsFunc,
 
     // 图标操作
     addCustomIcon,

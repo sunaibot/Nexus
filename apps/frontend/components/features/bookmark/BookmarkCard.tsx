@@ -121,7 +121,7 @@ export function BookmarkCard({
       }}
       // 2. 视觉层：使用 vibe-card 全局能量类
       className={cn(
-        'vibe-card vibe-card--glow group cursor-pointer h-full',
+        'vibe-card vibe-card--glow group cursor-pointer h-full relative',
         isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
       style={cardStyle}
@@ -179,9 +179,15 @@ export function BookmarkCard({
       {/* 私密书签标识 - 右下角 */}
       {bookmark.visibility === 'private' && (
         <div className="absolute bottom-3 right-3 z-10">
-          <div className="p-1.5 rounded-full bg-purple-500/20 backdrop-blur-sm">
+          <div className="p-1.5 rounded-full bg-purple-500/20 backdrop-blur-sm border border-purple-500/30">
             <Eye className="w-3.5 h-3.5 text-purple-400" />
           </div>
+        </div>
+      )}
+      {/* 调试：显示 visibility 值 */}
+      {isEditMode && (
+        <div className="absolute bottom-3 left-3 z-10 text-[10px] text-gray-400 bg-black/50 px-1 rounded">
+          {bookmark.visibility || 'no-visibility'}
         </div>
       )}
 

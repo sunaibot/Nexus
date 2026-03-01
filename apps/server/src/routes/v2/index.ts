@@ -9,6 +9,7 @@ import { apiCacheMiddleware, invalidateCache, cacheConfigs, cacheStatsHandler, c
 // ========== 核心功能路由 ==========
 import bookmarksRouter from './bookmarks.js'
 import categoriesRouter from './categories.js'
+import tabsRouter from './tabs.js'
 import usersRouter from './users.js'
 import adminRouter from './admin.js'
 import authRouter from './auth.js'
@@ -76,6 +77,7 @@ router.use('/quotes', publicApiLimiter, quotesRouter)
 // ========== 核心功能 ==========
 router.use('/bookmarks', bookmarksRouter)
 router.use('/categories', categoriesRouter)
+router.use('/tabs', tabsRouter)
 router.use('/users', usersRouter)
 router.use('/admin', adminRouter)
 

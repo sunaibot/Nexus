@@ -51,3 +51,11 @@ export type {
   AuthStatus,
   RegisterParams,
 } from './user'
+
+// Tab 相关类型
+export type {
+  Tab,
+  CreateTabParams,
+  UpdateTabParams,
+  ReorderTabItem,
+} from './tab'

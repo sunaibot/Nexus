@@ -286,6 +286,18 @@ export {
   type Quote,
 } from './quotes'
 
+// Tab API
+export {
+  fetchTabs,
+  fetchCurrentTab,
+  fetchTabById,
+  createTab,
+  updateTab,
+  deleteTab,
+  reorderTabs,
+  tabsApi,
+} from './tabs'
+
 // RSS订阅 API
 export {
   fetchRssFeeds,
@@ -308,6 +320,7 @@ export {
 import { authApi } from './auth'
 import { bookmarksApi } from './bookmarks'
 import { categoriesApi } from './categories'
+import { tabsApi } from './tabs'
 import { systemApi } from './system'
 import { dockConfigsApi } from './dock-configs'
 import { frontendNavApi } from './frontend-nav'
@@ -347,6 +360,7 @@ export default {
   auth: authApi,
   bookmarks: bookmarksApi,
   categories: categoriesApi,
+  tabs: tabsApi,
   system: systemApi,
   dockConfigs: dockConfigsApi,
   frontendNav: frontendNavApi,

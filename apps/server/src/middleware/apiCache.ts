@@ -291,5 +291,11 @@ export const cacheConfigs = {
   quotes: {
     ttl: 3600000,
     tags: ['quotes']
+  },
+
+  // Tab 列表缓存（5分钟）
+  tabs: {
+    ttl: 300000,
+    tags: ['tabs']
   }
 }

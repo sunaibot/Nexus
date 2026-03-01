@@ -45,6 +45,30 @@ export const reorderBookmarksSchema = z.object({
   })).min(1, '重排序列表不能为空'),
 })
 
+// ========== Tab 相关 Schema ==========
+
+export const createTabSchema = z.object({
+  name: z.string().min(1, 'Tab 名称不能为空').max(50, 'Tab 名称不能超过50字符'),
+  icon: z.string().max(50).optional().nullable(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '颜色必须是有效的十六进制颜色值').optional().nullable(),
+  categoryIds: z.array(z.string()).optional(),
+})
+
+export const updateTabSchema = z.object({
+  name: z.string().min(1, 'Tab 名称不能为空').max(50, 'Tab 名称不能超过50字符').optional(),
+  icon: z.string().max(50).optional().nullable(),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '颜色必须是有效的十六进制颜色值').optional().nullable(),
+  categoryIds: z.array(z.string()).optional(),
+  isDefault: z.boolean().optional(),
+})
+
+export const reorderTabsSchema = z.object({
+  items: z.array(z.object({
+    id: z.string().min(1, 'ID 不能为空'),
+    orderIndex: z.number().int().min(0),
+  })).min(1, '重排序列表不能为空'),
+})
+
 // ========== 分类相关 Schema ==========
 
 export const createCategorySchema = z.object({

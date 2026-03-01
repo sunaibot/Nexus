@@ -40,6 +40,7 @@ export async function initDatabase(): Promise<SqlJsDatabase> {
     await ensureDefaultSettings(db)
     await ensureDefaultUser(db)
     await ensureDefaultPluginsAndMenus(db)
+    ensureDefaultTabs(db)
   }
   
   migrateDatabase(db)
@@ -127,6 +128,34 @@ function createTables(db: SqlJsDatabase): void {
       parentId TEXT,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Tab 表（快速导航标签）
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tabs (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      icon TEXT,
+      color TEXT,
+      orderIndex INTEGER DEFAULT 0,
+      isDefault INTEGER DEFAULT 0,
+      userId TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // Tab 和分类的关联表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tab_categories (
+      tabId TEXT NOT NULL,
+      categoryId TEXT NOT NULL,
+      orderIndex INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (tabId, categoryId),
+      FOREIGN KEY (tabId) REFERENCES tabs(id) ON DELETE CASCADE,
+      FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE CASCADE
     )
   `)
 
@@ -1093,6 +1122,95 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
 
   console.log('✅ Default categories created')
 
+  // 初始化默认 Tab（快速导航）
+  const defaultTabs = [
+    {
+      id: 'tab-home',
+      name: '主页',
+      icon: 'Home',
+      color: '#3B82F6',
+      orderIndex: 0,
+      isDefault: 1,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-dev',
+      name: '编程',
+      icon: 'Code',
+      color: '#10B981',
+      orderIndex: 1,
+      isDefault: 0,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-ai',
+      name: 'AI',
+      icon: 'Bot',
+      color: '#8B5CF6',
+      orderIndex: 2,
+      isDefault: 0,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-knowledge',
+      name: '知识',
+      icon: 'BookOpen',
+      color: '#F59E0B',
+      orderIndex: 3,
+      isDefault: 0,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-tools',
+      name: '工具',
+      icon: 'Wrench',
+      color: '#EC4899',
+      orderIndex: 4,
+      isDefault: 0,
+      userId: 'admin'
+    }
+  ]
+
+  for (const tab of defaultTabs) {
+    db.run(
+      `INSERT INTO tabs (id, name, icon, color, orderIndex, isDefault, userId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [tab.id, tab.name, tab.icon, tab.color, tab.orderIndex, tab.isDefault, tab.userId, now, now]
+    )
+  }
+
+  console.log('✅ Default tabs created')
+
+  // 初始化 Tab 和分类的关联
+  const defaultTabCategories = [
+    // 主页 Tab - 包含所有分类
+    { tabId: 'tab-home', categoryId: 'cat-tools', orderIndex: 0 },
+    { tabId: 'tab-home', categoryId: 'cat-dev', orderIndex: 1 },
+    { tabId: 'tab-home', categoryId: 'cat-design', orderIndex: 2 },
+    { tabId: 'tab-home', categoryId: 'cat-learn', orderIndex: 3 },
+    { tabId: 'tab-home', categoryId: 'cat-entertainment', orderIndex: 4 },
+    // 编程 Tab - 只包含开发资源
+    { tabId: 'tab-dev', categoryId: 'cat-dev', orderIndex: 0 },
+    // AI Tab - 包含工具和学习资料
+    { tabId: 'tab-ai', categoryId: 'cat-tools', orderIndex: 0 },
+    { tabId: 'tab-ai', categoryId: 'cat-learn', orderIndex: 1 },
+    // 知识 Tab - 包含学习资料和设计灵感
+    { tabId: 'tab-knowledge', categoryId: 'cat-learn', orderIndex: 0 },
+    { tabId: 'tab-knowledge', categoryId: 'cat-design', orderIndex: 1 },
+    // 工具 Tab - 只包含常用工具
+    { tabId: 'tab-tools', categoryId: 'cat-tools', orderIndex: 0 }
+  ]
+
+  for (const tc of defaultTabCategories) {
+    db.run(
+      `INSERT INTO tab_categories (tabId, categoryId, orderIndex, createdAt)
+       VALUES (?, ?, ?, ?)`,
+      [tc.tabId, tc.categoryId, tc.orderIndex, now]
+    )
+  }
+
+  console.log('✅ Default tab categories created')
+
   // 初始化默认审计日志
   const defaultAuditLogs = [
     {
@@ -1823,6 +1941,109 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
 
   // 确保默认书签卡片样式预设存在
   ensureDefaultBookmarkCardStyles(db, now)
+
+  // 确保默认Tab存在
+  ensureDefaultTabs(db)
+}
+
+/**
+ * 确保默认Tab存在
+ */
+function ensureDefaultTabs(db: SqlJsDatabase): void {
+  const now = new Date().toISOString()
+
+  // 检查是否已有Tab
+  const tabsExist = db.exec('SELECT 1 FROM tabs LIMIT 1')
+  if (tabsExist.length > 0) {
+    return
+  }
+
+  console.log('📝 Creating default tabs...')
+
+  // 初始化默认 Tab（快速导航）
+  const defaultTabs = [
+    {
+      id: 'tab-home',
+      name: '主页',
+      icon: 'Home',
+      color: '#3B82F6',
+      orderIndex: 0,
+      isDefault: 1,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-dev',
+      name: '编程',
+      icon: 'Code',
+      color: '#10B981',
+      orderIndex: 1,
+      isDefault: 0,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-ai',
+      name: 'AI',
+      icon: 'Bot',
+      color: '#8B5CF6',
+      orderIndex: 2,
+      isDefault: 0,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-knowledge',
+      name: '知识',
+      icon: 'BookOpen',
+      color: '#F59E0B',
+      orderIndex: 3,
+      isDefault: 0,
+      userId: 'admin'
+    },
+    {
+      id: 'tab-tools',
+      name: '工具',
+      icon: 'Wrench',
+      color: '#EC4899',
+      orderIndex: 4,
+      isDefault: 0,
+      userId: 'admin'
+    }
+  ]
+
+  for (const tab of defaultTabs) {
+    db.run(
+      `INSERT INTO tabs (id, name, icon, color, orderIndex, isDefault, userId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [tab.id, tab.name, tab.icon, tab.color, tab.orderIndex, tab.isDefault, tab.userId, now, now]
+    )
+  }
+
+  console.log('✅ Default tabs created')
+
+  // 获取所有分类
+  const categoriesResult = db.exec('SELECT id FROM categories')
+  const categoryIds: string[] = []
+  if (categoriesResult.length > 0 && categoriesResult[0].values) {
+    for (const row of categoriesResult[0].values) {
+      categoryIds.push(row[0] as string)
+    }
+  }
+
+  // 如果没有分类，则不创建关联
+  if (categoryIds.length === 0) {
+    return
+  }
+
+  // 初始化 Tab 和分类的关联 - 主页 Tab 包含所有分类
+  let orderIndex = 0
+  for (const categoryId of categoryIds) {
+    db.run(
+      `INSERT INTO tab_categories (tabId, categoryId, orderIndex, createdAt)
+       VALUES (?, ?, ?, ?)`,
+      ['tab-home', categoryId, orderIndex++, now]
+    )
+  }
+
+  console.log('✅ Default tab-category associations created')
 }
 
 /**

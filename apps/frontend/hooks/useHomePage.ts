@@ -18,6 +18,8 @@ export function useHomePage() {
     bookmarks,
     categories,
     customIcons,
+    tabs,
+    activeTabId,
     isLoading,
     addBookmark,
     updateBookmark,
@@ -32,6 +34,11 @@ export function useHomePage() {
     addCustomIcon,
     deleteCustomIcon,
     refreshData,
+    switchTab,
+    addTab,
+    updateTab,
+    deleteTab,
+    reorderTabs,
   } = useBookmarkStore()
 
   // 认证状态
@@ -122,17 +129,46 @@ export function useHomePage() {
     return bookmarks.find(b => b.isPinned) || null
   }, [bookmarks])
 
-  // 过滤后的书签（仅稍后阅读模式）
+  // 根据当前 Tab 过滤分类
+  const filteredCategories = useMemo(() => {
+    if (!activeTabId) return categories
+    const activeTab = tabs.find(t => t.id === activeTabId)
+    if (!activeTab || !activeTab.categories) return categories
+    // 获取 Tab 关联的分类 ID 列表
+    const tabCategoryIds = activeTab.categories.map(c => c.id)
+    // 返回包含这些分类的书签
+    return categories.filter(c => tabCategoryIds.includes(c.id))
+  }, [categories, tabs, activeTabId])
+
+  // 过滤后的书签（根据 Tab 和稍后阅读模式）
   const filteredBookmarks = useMemo(() => {
-    if (showReadLaterOnly) {
-      return readLaterBookmarks
+    let result = bookmarks
+    
+    // 根据 Tab 过滤
+    if (activeTabId) {
+      const activeTab = tabs.find(t => t.id === activeTabId)
+      if (activeTab && activeTab.categories) {
+        const tabCategoryIds = activeTab.categories.map(c => c.id)
+        result = result.filter(b => {
+          // 如果书签没有分类，显示在第一个 Tab 或默认 Tab
+          if (!b.category) {
+            return activeTab.isDefault || tabs[0]?.id === activeTabId
+          }
+          return tabCategoryIds.includes(b.category)
+        })
+      }
     }
-    return bookmarks.filter(b => {
+    
+    if (showReadLaterOnly) {
+      return result.filter(b => b.isReadLater)
+    }
+    
+    return result.filter(b => {
       // 私密书签过滤
       const matchesPrivate = b.visibility !== 'private' || showPrivateBookmarks
       return matchesPrivate
     })
-  }, [bookmarks, readLaterBookmarks, showReadLaterOnly, showPrivateBookmarks])
+  }, [bookmarks, tabs, activeTabId, showReadLaterOnly, showPrivateBookmarks])
 
   // 事件处理
   const handleLogin = useCallback(async (username: string) => {
@@ -187,6 +223,9 @@ export function useHomePage() {
     bookmarks,
     categories,
     customIcons,
+    tabs,
+    activeTabId,
+    filteredCategories,
     filteredBookmarks,
     readLaterBookmarks,
     pinnedBookmark,
@@ -243,6 +282,13 @@ export function useHomePage() {
     updateCategory,
     deleteCategory,
     reorderCategories,
+
+    // Tab 操作
+    switchTab,
+    addTab,
+    updateTab,
+    deleteTab,
+    reorderTabs,
 
     // 图标操作
     addCustomIcon,
