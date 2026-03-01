@@ -155,7 +155,7 @@ export function AddBookmarkModal({
     setFavicon('')
 
     try {
-      const metadata = await metadataApi.parse(inputUrl, i18n.language)
+      const metadata = await metadataApi.fetch(inputUrl)
       
       if (metadata.error) {
         throw new Error(metadata.error)

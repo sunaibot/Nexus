@@ -35,6 +35,7 @@ import {
   X,
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
+import { Quote } from '../lib/api-client/quotes'
 import { cn, presetIcons } from '../lib/utils'
 import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, fetchQuotes, updateQuotes } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
@@ -307,10 +308,16 @@ function AdminContent() {
       }
     }).catch(console.error)
 
-    fetchQuotes().then(data => {
-      setQuotes(data.quotes)
-      setUseDefaultQuotes(data.useDefaultQuotes)
-    }).catch(console.error)
+    fetchQuotes().then((data: Quote[]) => {
+      // 将 Quote[] 转换为字符串数组
+      const quoteTexts = data.map(q => `${q.text} —— ${q.author}`)
+      setQuotes(quoteTexts)
+      setUseDefaultQuotes(false)
+    }).catch(() => {
+      // 如果获取失败，使用默认名言
+      setQuotes([])
+      setUseDefaultQuotes(true)
+    })
   }, [])
 
   // 更新名言
