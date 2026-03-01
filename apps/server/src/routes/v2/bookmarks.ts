@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { generateId, logAudit, setPrivateBookmarkPassword, verifyPrivateBookmarkPassword, removePrivateBookmarkPassword, getPrivateBookmarkPassword } from '../../db/index.js'
+import { generateId, logAudit } from '../../db/index.js'
 import { queryAll, queryOne, run, booleanize } from '../../utils/index.js'
 import { authMiddleware, adminMiddleware, optionalAuthMiddleware, apiCacheMiddleware, invalidateCache, cacheConfigs } from '../../middleware/index.js'
 import {
@@ -72,6 +72,8 @@ function buildBookmarkQuery(user: any, visibility?: string, includePublic?: bool
 
   return { query, params }
 }
+
+// ========== 列表路由（无参数）==========
 
 // 获取书签列表（支持三种权限模型）- 带缓存
 router.get('/', optionalAuthMiddleware, apiCacheMiddleware(cacheConfigs.bookmarks), asyncHandler(async (req, res) => {
@@ -240,6 +242,57 @@ router.patch('/reorder', authMiddleware, validateBody(reorderBookmarksSchema), a
   return successResponse(res, { success: true })
 }))
 
+// ========== 具体子路由（必须在 /:id 之前定义）==========
+
+// 切换书签可见性状态
+router.patch('/:id/visibility', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
+  const user = (req as any).user
+  const { ip, userAgent } = getClientInfo(req)
+  const resourceId = normalizeId(req.params.id)
+  const { visibility } = req.body as { visibility: Visibility }
+  const now = new Date().toISOString()
+
+  if (!['public', 'personal', 'private'].includes(visibility)) {
+    return errorResponse(res, '无效的可见性类型', 400)
+  }
+
+  // 管理员可以修改所有书签，普通用户只能修改自己的书签
+  let bookmark
+  if (user.role === 'admin') {
+    bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [resourceId])
+  } else {
+    bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
+  }
+
+  if (!bookmark) {
+    return errorResponse(res, '书签不存在', 404)
+  }
+
+  // 管理员可以更新所有书签，普通用户只能更新自己的书签
+  if (user.role === 'admin') {
+    run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ?', [visibility, now, resourceId])
+  } else {
+    run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ? AND userId = ?', [visibility, now, resourceId, user.id])
+  }
+
+  const updated = queryOne('SELECT * FROM bookmarks WHERE id = ?', [resourceId])
+
+  logAudit({
+    userId: user.id,
+    username: user.username,
+    action: 'CHANGE_VISIBILITY',
+    resourceType: 'bookmark',
+    resourceId: resourceId,
+    details: { title: updated?.title, visibility },
+    ip,
+    userAgent
+  })
+
+  return successResponse(res, booleanize(updated))
+}))
+
+// ========== 通用资源路由（必须在具体子路由之后）==========
+
 // 获取单个书签
 router.get('/:id', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
   const user = (req as any).user
@@ -310,7 +363,6 @@ router.delete('/:id', authMiddleware, validateParams(idParamSchema), invalidateC
     return errorResponse(res, '书签不存在', 404)
   }
 
-  removePrivateBookmarkPassword(resourceId)
   run('DELETE FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
 
   logAudit({
@@ -325,173 +377,6 @@ router.delete('/:id', authMiddleware, validateParams(idParamSchema), invalidateC
   })
 
   return successResponse(res, null, 204)
-}))
-
-// 设置书签私密密码
-router.post('/:id/password', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
-  const user = (req as any).user
-  const { ip, userAgent } = getClientInfo(req)
-  const resourceId = normalizeId(req.params.id)
-  const { password } = req.body
-
-  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-  if (!bookmark) {
-    return errorResponse(res, '书签不存在', 404)
-  }
-
-  await setPrivateBookmarkPassword(resourceId, password)
-  run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ?', ['private', new Date().toISOString(), resourceId])
-
-  logAudit({
-    userId: user?.id || null,
-    username: user?.username || null,
-    action: 'SET_PRIVATE_PASSWORD',
-    resourceType: 'bookmark',
-    resourceId: resourceId,
-    details: { title: bookmark.title },
-    ip,
-    userAgent
-  })
-
-  return successResponse(res, { success: true })
-}))
-
-// 验证书签私密密码
-router.post('/:id/password/verify', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
-  const resourceId = normalizeId(req.params.id)
-  const { password } = req.body
-
-  const isValid = await verifyPrivateBookmarkPassword(resourceId, password)
-  return successResponse(res, { valid: isValid })
-}))
-
-// 移除书签私密密码
-router.delete('/:id/password', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
-  const user = (req as any).user
-  const { ip, userAgent } = getClientInfo(req)
-  const resourceId = normalizeId(req.params.id)
-
-  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-  if (!bookmark) {
-    return errorResponse(res, '书签不存在', 404)
-  }
-
-  removePrivateBookmarkPassword(resourceId)
-  run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ?', ['personal', new Date().toISOString(), resourceId])
-
-  logAudit({
-    userId: user?.id || null,
-    username: user?.username || null,
-    action: 'REMOVE_PRIVATE_PASSWORD',
-    resourceType: 'bookmark',
-    resourceId: resourceId,
-    details: { title: bookmark.title },
-    ip,
-    userAgent
-  })
-
-  return successResponse(res, { success: true })
-}))
-
-// 切换书签可见性状态
-router.patch('/:id/visibility', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
-  const user = (req as any).user
-  const { ip, userAgent } = getClientInfo(req)
-  const resourceId = normalizeId(req.params.id)
-  const { visibility } = req.body as { visibility: Visibility }
-  const now = new Date().toISOString()
-
-  if (!['public', 'personal', 'private'].includes(visibility)) {
-    return errorResponse(res, '无效的可见性类型', 400)
-  }
-
-  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-
-  if (!bookmark) {
-    return errorResponse(res, '书签不存在', 404)
-  }
-
-  run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ? AND userId = ?', [visibility, now, resourceId, user.id])
-
-  const updated = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-
-  logAudit({
-    userId: user.id,
-    username: user.username,
-    action: 'CHANGE_VISIBILITY',
-    resourceType: 'bookmark',
-    resourceId: resourceId,
-    details: { title: updated?.title, visibility },
-    ip,
-    userAgent
-  })
-
-  return successResponse(res, booleanize(updated))
-}))
-
-// 检查书签是否有私密密码
-router.get('/:id/password', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
-  const user = (req as any).user
-  const resourceId = normalizeId(req.params.id)
-
-  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-  if (!bookmark) {
-    return errorResponse(res, '书签不存在', 404)
-  }
-
-  const passwordData = getPrivateBookmarkPassword(resourceId)
-  return successResponse(res, { hasPassword: !!passwordData })
-}))
-
-// 切换书签私密状态（兼容前端调用）
-router.patch('/:id/private', authMiddleware, validateParams(idParamSchema), asyncHandler(async (req, res) => {
-  const user = (req as any).user
-  const { ip, userAgent } = getClientInfo(req)
-  const resourceId = normalizeId(req.params.id)
-  const { password, isPrivate } = req.body
-  const now = new Date().toISOString()
-
-  const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-  if (!bookmark) {
-    return errorResponse(res, '书签不存在', 404)
-  }
-
-  if (isPrivate) {
-    // 设置为私密
-    if (password) {
-      await setPrivateBookmarkPassword(resourceId, password)
-    }
-    run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ? AND userId = ?', ['private', now, resourceId, user.id])
-    
-    logAudit({
-      userId: user.id,
-      username: user.username,
-      action: 'SET_PRIVATE',
-      resourceType: 'bookmark',
-      resourceId: resourceId,
-      details: { title: bookmark.title, hasPassword: !!password },
-      ip,
-      userAgent
-    })
-  } else {
-    // 取消私密
-    removePrivateBookmarkPassword(resourceId)
-    run('UPDATE bookmarks SET visibility = ?, updatedAt = ? WHERE id = ? AND userId = ?', ['personal', now, resourceId, user.id])
-    
-    logAudit({
-      userId: user.id,
-      username: user.username,
-      action: 'REMOVE_PRIVATE',
-      resourceType: 'bookmark',
-      resourceId: resourceId,
-      details: { title: bookmark.title },
-      ip,
-      userAgent
-    })
-  }
-
-  const updated = queryOne('SELECT * FROM bookmarks WHERE id = ? AND userId = ?', [resourceId, user.id])
-  return successResponse(res, booleanize(updated))
 }))
 
 export default router

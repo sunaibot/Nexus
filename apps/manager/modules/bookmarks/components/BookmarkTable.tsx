@@ -41,8 +41,7 @@ interface BookmarkTableProps {
   onTogglePin?: (bookmark: Bookmark) => Promise<boolean>
   onToggleReadLater?: (bookmark: Bookmark) => Promise<boolean>
   onChangeVisibility?: (bookmark: Bookmark, visibility: 'public' | 'personal' | 'private') => Promise<boolean>
-  onSetPassword?: (id: string) => void
-  onRemovePassword?: (id: string) => Promise<boolean>
+  onRemovePrivate?: (id: string) => Promise<boolean>
   onCheckSingleLink?: (bookmark: Bookmark) => void
 }
 
@@ -62,8 +61,7 @@ export function BookmarkTable({
   onTogglePin,
   onToggleReadLater,
   onChangeVisibility,
-  onSetPassword,
-  onRemovePassword,
+  onRemovePrivate,
   onCheckSingleLink,
 }: BookmarkTableProps) {
   const { t } = useTranslation()

@@ -13,7 +13,7 @@ export interface AdminContextValue {
   
   // 导航操作
   onBack: () => void
-  onLogout: () => void
+  onLogout: () => void | Promise<void>
   
   // 书签操作
   addBookmark: () => void

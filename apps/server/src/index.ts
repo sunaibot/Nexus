@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import session from 'express-session'
 import { initDatabase, cleanupExpiredFileTransfers } from './db/index.js'
 import { generalLimiter, errorHandler, notFoundHandler, requestLogger, sqlInjectionDetector, contentTypeValidator, doubleSubmitCsrf, refererCheck, autoAuditMiddleware, errorLogMiddleware } from './middleware/index.js'
 import cookieParser from 'cookie-parser'
@@ -78,6 +79,21 @@ app.use(requestLogger)
 // SQL注入检测
 app.use(sqlInjectionDetector)
 
+// Session 配置
+const isDevEnv = process.env.NODE_ENV === 'development'
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'nowen-session-secret-dev-only',
+  resave: false,
+  saveUninitialized: false,
+  name: 'nowen.sid',
+  cookie: {
+    secure: false, // 开发环境不使用 HTTPS
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24小时
+    sameSite: 'lax' // 使用 lax 允许同站不同端口
+  }
+}))
+
 // 内容类型验证（API路由）
 app.use('/api', contentTypeValidator(['application/json', 'multipart/form-data', 'application/x-www-form-urlencoded']))
 
@@ -99,6 +115,10 @@ app.use(doubleSubmitCsrf({
     '/api/v2/users/login',
     '/api/v2/users/register',
     '/api/v2/admin/login',
+    // Session 认证路由
+    '/api/v2/session-auth/admin/login',
+    '/api/v2/session-auth/admin/verify',
+    '/api/v2/session-auth/admin/logout',
     // 公开数据接口
     '/api/v2/bookmarks/public',
     '/api/v2/quotes/random',

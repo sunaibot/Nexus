@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { authMiddleware } from '../../middleware/index.js'
+import { optionalAuthMiddleware } from '../../middleware/index.js'
 import { successResponse, errorResponse } from '../utils/routeHelpers.js'
 
 const router = Router()
@@ -26,7 +26,7 @@ router.get('/random', (req: Request, res: Response) => {
 })
 
 // 获取名言列表
-router.get('/', authMiddleware, (req: Request, res: Response) => {
+router.get('/', optionalAuthMiddleware, (req: Request, res: Response) => {
   try {
     return successResponse(res, [])
   } catch (error) {

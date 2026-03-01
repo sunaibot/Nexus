@@ -5,9 +5,6 @@ import {
   updateBookmark,
   deleteBookmark,
   changeBookmarkVisibility,
-  setPrivateBookmarkPassword,
-  removePrivateBookmarkPassword,
-  verifyPrivateBookmarkPassword,
   type PaginationParams,
   type PaginatedResponse,
   type UpdateBookmarkParams,
@@ -145,39 +142,27 @@ export function useBookmarks(options: UseBookmarksOptions = {}) {
     }
   }, [refresh])
 
-  const handleSetPassword = useCallback(async (id: string, password: string) => {
+  const handleSetPrivate = useCallback(async (id: string) => {
     try {
-      await setPrivateBookmarkPassword(id, password)
       await changeBookmarkVisibility(id, 'private')
       refresh()
       return true
     } catch (err: any) {
-      setError(err.message || '设置密码失败')
+      setError(err.message || '设置私密失败')
       return false
     }
   }, [refresh])
 
-  const handleRemovePassword = useCallback(async (id: string) => {
+  const handleRemovePrivate = useCallback(async (id: string) => {
     try {
-      await removePrivateBookmarkPassword(id)
       await changeBookmarkVisibility(id, 'personal')
       refresh()
       return true
     } catch (err: any) {
-      setError(err.message || '移除密码失败')
+      setError(err.message || '移除私密失败')
       return false
     }
   }, [refresh])
-
-  const handleVerifyPassword = useCallback(async (id: string, password: string) => {
-    try {
-      const result = await verifyPrivateBookmarkPassword(id, password)
-      return result.valid
-    } catch (err: any) {
-      setError(err.message || '验证密码失败')
-      return false
-    }
-  }, [])
 
   const checkLinkHealth = useCallback(async (url: string): Promise<LinkHealth> => {
     const startTime = Date.now()
@@ -281,9 +266,8 @@ export function useBookmarks(options: UseBookmarksOptions = {}) {
     updateBookmark: handleUpdateBookmark,
     deleteBookmark: handleDeleteBookmark,
     changeVisibility: handleChangeVisibility,
-    setPassword: handleSetPassword,
-    removePassword: handleRemovePassword,
-    verifyPassword: handleVerifyPassword,
+    setPrivate: handleSetPrivate,
+    removePrivate: handleRemovePrivate,
     checkLinkHealth,
     checkSingleLink,
     checkAllLinks,

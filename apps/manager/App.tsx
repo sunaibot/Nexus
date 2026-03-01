@@ -47,6 +47,7 @@ function App() {
   }, [isLoggedIn, refreshData])
 
   const handleLogin = async (username: string, requirePasswordChange?: boolean) => {
+    setForceLogin(false) // 登录成功后重置 forceLogin
     handleAdminLogin(username, requirePasswordChange)
   }
 

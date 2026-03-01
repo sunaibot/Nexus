@@ -4,6 +4,11 @@ export const API_BASE = getApiBase()
 
 import type { Bookmark, Category } from '../types/bookmark'
 import { ApiError, NetworkError, getHttpErrorMessage } from './error-handling'
+import { setCookie, deleteCookie, getCookie } from './cookie-utils'
+
+// Cookie 名称常量（与前台保持一致）
+const TOKEN_COOKIE = 'auth_token'
+const USER_COOKIE = 'auth_user'
 
 // ========== API 类型定义 ==========
 
@@ -476,7 +481,7 @@ export async function adminLogin(username: string, password: string): Promise<Lo
     method: 'POST',
     body: JSON.stringify({ username, password }),
   })
-  
+
   // 保存登录状态
   if (data.success && data.token) {
     localStorage.setItem('admin_authenticated', 'true')
@@ -490,18 +495,13 @@ export async function adminLogin(username: string, password: string): Promise<Lo
     } else {
       localStorage.removeItem('admin_require_password_change')
     }
-    
+
     // 同时设置 Cookie，用于前后台共享登录状态
-    // 设置 Cookie 有效期为 24 小时
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toUTCString()
-    // 设置 domain 为 localhost 以支持跨端口共享
-    const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
-    document.cookie = `admin_authenticated=true; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
-    document.cookie = `admin_username=${encodeURIComponent(data.user.username)}; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
-    document.cookie = `token=${encodeURIComponent(data.token)}; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
-    document.cookie = `admin_login_time=${Date.now()}; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+    // 使用与前台一致的 Cookie 名称
+    setCookie(TOKEN_COOKIE, data.token, 7, 'Lax')
+    setCookie(USER_COOKIE, JSON.stringify(data.user), 7, 'Lax')
   }
-  
+
   return data
 }
 
@@ -544,11 +544,38 @@ export interface AuthStatus {
 
 // 验证登录状态
 export function checkAuthStatus(): AuthStatus {
-  const authenticated = localStorage.getItem('admin_authenticated')
-  const loginTime = localStorage.getItem('admin_login_time')
-  const username = localStorage.getItem('admin_username')
+  // 优先从 localStorage 读取
+  let authenticated = localStorage.getItem('admin_authenticated')
+  let loginTime = localStorage.getItem('admin_login_time')
+  let username = localStorage.getItem('admin_username')
+  let token = localStorage.getItem('token')
   const requirePasswordChange = localStorage.getItem('admin_require_password_change') === 'true'
-  
+
+  // 如果 localStorage 没有，尝试从 Cookie 读取（支持从其他端口登录）
+  if (!token) {
+    token = getCookie(TOKEN_COOKIE)
+    const userStr = getCookie(USER_COOKIE)
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        username = user.username || user.name || null
+        authenticated = 'true'
+        loginTime = Date.now().toString()
+
+        // 同步到 localStorage
+        localStorage.setItem('token', token)
+        localStorage.setItem('admin_username', username || '')
+        localStorage.setItem('admin_authenticated', 'true')
+        localStorage.setItem('admin_login_time', loginTime)
+        if (user.role) {
+          localStorage.setItem('admin_role', user.role)
+        }
+      } catch {
+        // Cookie 解析失败
+      }
+    }
+  }
+
   if (authenticated === 'true' && loginTime) {
     // 登录有效期 24 小时
     const isValid = Date.now() - parseInt(loginTime) < 24 * 60 * 60 * 1000
@@ -556,7 +583,7 @@ export function checkAuthStatus(): AuthStatus {
       return { isValid: true, username, requirePasswordChange }
     }
   }
-  
+
   // 已过期，清除登录状态
   clearAuthStatus()
   return { isValid: false, username: null }
@@ -570,15 +597,10 @@ export function clearAuthStatus(): void {
   localStorage.removeItem('token')
   localStorage.removeItem('admin_username')
   localStorage.removeItem('admin_require_password_change')
-  
-  // 同时清除 Cookie（用于前后台共享登录状态）
-  const expires = 'Thu, 01 Jan 1970 00:00:00 GMT'
-  // 设置 domain 为 localhost 以支持跨端口清除
-  const domain = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname
-  document.cookie = `admin_authenticated=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
-  document.cookie = `admin_username=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
-  document.cookie = `token=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
-  document.cookie = `admin_login_time=; expires=${expires}; path=/; domain=${domain}; SameSite=Lax`
+
+  // 清除 Cookie（使用与前台一致的 Cookie 名称）
+  deleteCookie(TOKEN_COOKIE)
+  deleteCookie(USER_COOKIE)
 }
 
 // 清除密码变更标志
@@ -1211,51 +1233,18 @@ export const healthCheckApi = {
   check: checkBookmarksHealth,
 }
 
-// ========== 私密书签密码保护 API ==========
-
-export async function setPrivateBookmarkPassword(bookmarkId: string, password: string): Promise<SuccessResponse> {
-  return request<SuccessResponse>(`/api/bookmarks/${bookmarkId}/password`, {
-    method: 'POST',
-    body: JSON.stringify({ password }),
-    requireAuth: true,
-  })
-}
-
-export async function verifyPrivateBookmarkPassword(bookmarkId: string, password: string): Promise<{ valid: boolean }> {
-  return request<{ valid: boolean }>(`/api/bookmarks/${bookmarkId}/password/verify`, {
-    method: 'POST',
-    body: JSON.stringify({ password }),
-    requireAuth: true,
-  })
-}
-
-export async function removePrivateBookmarkPassword(bookmarkId: string): Promise<SuccessResponse> {
-  return request<SuccessResponse>(`/api/bookmarks/${bookmarkId}/password`, {
-    method: 'DELETE',
-    requireAuth: true,
-  })
-}
-
-export async function checkPrivateBookmarkHasPassword(bookmarkId: string): Promise<{ hasPassword: boolean }> {
-  return request<{ hasPassword: boolean }>(`/api/bookmarks/${bookmarkId}/password`, {
-    requireAuth: true,
-  })
-}
+// ========== 书签可见性 API ==========
 
 export async function changeBookmarkVisibility(bookmarkId: string, visibility: 'public' | 'personal' | 'private'): Promise<Bookmark> {
-  return request<Bookmark>(`/api/bookmarks/${bookmarkId}/visibility`, {
+  return request<Bookmark>(`/api/v2/bookmarks/${bookmarkId}/visibility`, {
     method: 'PATCH',
     body: JSON.stringify({ visibility }),
     requireAuth: true,
   })
 }
 
-export const privateBookmarkApi = {
-  setPassword: setPrivateBookmarkPassword,
-  verifyPassword: verifyPrivateBookmarkPassword,
-  removePassword: removePrivateBookmarkPassword,
-  checkHasPassword: checkPrivateBookmarkHasPassword,
-  changeVisibility: changeBookmarkVisibility,
+export const bookmarkVisibilityApi = {
+  change: changeBookmarkVisibility,
 }
 
 // 重新导出类型供外部使用

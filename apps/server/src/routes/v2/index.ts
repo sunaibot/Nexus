@@ -58,11 +58,15 @@ import statsRouter from './stats.js'
 import customIconsRouter from './custom-icons.js'
 import weatherRouter from './weather.js'
 import apiDocsRouter from '../api-docs.js'
+import sessionAuthRouter from './session-auth.js'
 
 const router = Router()
 
 // ========== 认证路由（兼容前端调用） ==========
 router.use('/auth', authRouter)
+
+// ========== Session 认证路由（新的基于 Session 的认证） ==========
+router.use('/session-auth', sessionAuthRouter)
 
 // ========== 公开API（使用宽松限流） ==========
 router.use('/bookmarks/public', publicApiLimiter, bookmarksRouter)

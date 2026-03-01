@@ -1,12 +1,65 @@
+export interface WidgetVisibility {
+  systemMonitor?: boolean
+  hardwareIdentity?: boolean
+  vitalSigns?: boolean
+  networkTelemetry?: boolean
+  processMatrix?: boolean
+  dockMiniMonitor?: boolean
+  mobileTicker?: boolean
+}
+
+export interface MenuVisibility {
+  languageToggle?: boolean
+  themeToggle?: boolean
+}
+
+export interface WallpaperSettings {
+  enabled?: boolean
+  source?: 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels'
+  imageData?: string
+  imageUrl?: string
+  blur?: number
+  overlay?: number
+}
+
+export interface ThemeColors {
+  iconPrimary?: string
+  iconSecondary?: string
+  iconMuted?: string
+  buttonPrimaryBg?: string
+  buttonPrimaryText?: string
+  buttonSecondaryBg?: string
+  buttonSecondaryText?: string
+}
+
+export interface NetworkEnvConfig {
+  internalSuffixes: string[]
+  internalIPs: string[]
+  localhostNames: string[]
+}
+
 export interface SiteSettings {
-  siteName: string
+  siteName?: string
+  siteTitle?: string
   siteDescription?: string
+  siteFavicon?: string
   logo?: string
   favicon?: string
   theme?: 'light' | 'dark' | 'auto'
+  themeId?: string
   primaryColor?: string
   enableRegistration?: boolean
   enablePrivateMode?: boolean
+  enableBeamAnimation?: boolean
+  enableLiteMode?: boolean
+  enableWeather?: boolean
+  enableLunar?: boolean
+  footerText?: string
+  widgetVisibility?: WidgetVisibility
+  menuVisibility?: MenuVisibility
+  wallpaper?: WallpaperSettings
+  themeColors?: ThemeColors
+  networkEnv?: NetworkEnvConfig
 }
 
 export interface ServiceMonitor {

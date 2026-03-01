@@ -114,22 +114,6 @@ export async function changeBookmarkVisibility(
   return response.data!
 }
 
-export async function toggleBookmarkPrivate(
-  id: string,
-  password?: string
-): Promise<Bookmark> {
-  const response = await request<ApiResponse<Bookmark>>(
-    `/v2/bookmarks/${id}/private`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({ password }),
-      requireAuth: true,
-    }
-  )
-  invalidateCache('bookmarks:*')
-  return response.data!
-}
-
 export async function reorderBookmarks(
   items: ReorderItem[]
 ): Promise<void> {
@@ -162,7 +146,6 @@ export const bookmarksApi = {
   update: updateBookmark,
   delete: deleteBookmark,
   changeVisibility: changeBookmarkVisibility,
-  togglePrivate: toggleBookmarkPrivate,
   reorder: reorderBookmarks,
 }
 

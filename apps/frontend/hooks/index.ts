@@ -65,3 +65,13 @@ export {
   useNetworkStatus,
   useRenderCount,
 } from './usePerformance'
+
+// 领域 Hooks（新业务逻辑）
+export * from './domain'
+
+// 记忆化选择器
+export {
+  useBookmarkSelectors,
+  useCategorySelectors,
+  useFilteredBookmarks,
+} from './useMemoizedSelectors'

@@ -107,3 +107,13 @@ export {
   API_PERMISSIONS,
   getApiPermissions
 } from './permission.js'
+
+// ========== Session 认证 ==========
+export {
+  sessionAuthMiddleware,
+  optionalSessionAuthMiddleware,
+  adminSessionMiddleware,
+  loginSession,
+  logoutSession,
+  getSessionUser
+} from './sessionAuth.js'

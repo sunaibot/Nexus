@@ -100,8 +100,19 @@ function verifyNewFormatToken(token: string): { userId: string; timestamp: numbe
 
 // ========== 认证中间件 ==========
 
-// Token 验证中间件（必须登录）
+// Token 验证中间件（必须登录）- 同时支持 Token 和 Session 认证
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
+  // 首先检查 Session 认证（新的认证方式）
+  if (req.session && req.session.userId) {
+    (req as any).user = {
+      id: req.session.userId,
+      username: req.session.username,
+      role: req.session.role
+    }
+    return next()
+  }
+
+  // 回退到 Token 认证（兼容旧的认证方式）
   const authHeader = req.headers.authorization
   
   // 生产环境不记录敏感日志

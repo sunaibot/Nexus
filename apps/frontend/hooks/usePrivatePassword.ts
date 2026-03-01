@@ -13,7 +13,7 @@ import {
   deletePrivatePassword,
   type PrivatePasswordStatus,
 } from '../lib/api-client'
-import { getAuthToken } from '../lib/api-client/client'
+import { checkSessionAuthStatusAsync } from '../lib/api-client/session-auth'
 
 interface UsePrivatePasswordReturn {
   // 状态
@@ -67,9 +67,9 @@ export function usePrivatePassword(): UsePrivatePasswordReturn {
 
   // 获取私密密码状态
   const refreshStatus = useCallback(async () => {
-    // 检查是否有登录token，没有则不获取
-    const token = getAuthToken()
-    if (!token) {
+    // 检查是否已登录（使用 Session 认证）
+    const authStatus = await checkSessionAuthStatusAsync()
+    if (!authStatus.isValid) {
       setStatus(null)
       return
     }

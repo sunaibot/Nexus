@@ -33,7 +33,6 @@ export {
   updateBookmark,
   deleteBookmark,
   changeBookmarkVisibility,
-  toggleBookmarkPrivate,
   reorderBookmarks,
   fetchMetadata,
   bookmarksApi,

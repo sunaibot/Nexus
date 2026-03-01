@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Lock, Eye, EyeOff, ArrowLeft, Shield, KeyRound, User } from 'lucide-react'
 import { BorderBeam } from './ui/advanced-effects'
-import { adminLogin, isDemoMode } from '../lib/api'
+import { sessionAdminLogin } from '../lib/session-auth'
+import { isDemoMode } from '../lib/api'
 import { getErrorMessage } from '../lib/error-handling'
 
 interface AdminLoginProps {
@@ -34,8 +35,12 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
     setError('')
     
     try {
-      const result = await adminLogin(username, password)
-      onLogin(result.user.username, result.requirePasswordChange)
+      const result = await sessionAdminLogin(username, password)
+      if (result.success && result.user) {
+        onLogin(result.user.username, result.requirePasswordChange)
+      } else {
+        throw new Error(result.error || '登录失败')
+      }
     } catch (err: any) {
       console.error('[AdminLogin] Full error:', err)
       console.error('[AdminLogin] Error type:', typeof err)

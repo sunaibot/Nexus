@@ -7,7 +7,7 @@ import { adminChangePassword, clearPasswordChangeFlag } from '../lib/api'
 interface ForcePasswordChangeProps {
   username: string
   onSuccess: () => void
-  onLogout: () => void
+  onLogout: () => void | Promise<void>
 }
 
 export function ForcePasswordChange({ username, onSuccess, onLogout }: ForcePasswordChangeProps) {

@@ -425,11 +425,11 @@ export function AnalyticsCard({ onShowToast }: AnalyticsCardProps) {
                     'bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-all',
                     'group cursor-pointer'
                   )}
-                  onClick={() => window.open(getBookmarkUrl(visit.bookmark, isInternal), '_blank')}
+                  onClick={() => visit.bookmark && window.open(getBookmarkUrl(visit.bookmark, isInternal), '_blank')}
                 >
                   {/* 图标 */}
                   <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-white/10 flex items-center justify-center overflow-hidden">
-                    {visit.bookmark.favicon ? (
+                    {visit.bookmark?.favicon ? (
                       <img
                         src={visit.bookmark.favicon}
                         alt=""
@@ -446,10 +446,10 @@ export function AnalyticsCard({ onShowToast }: AnalyticsCardProps) {
                   {/* 信息 */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {visit.bookmark.title}
+                      {visit.bookmark?.title || '未知书签'}
                     </p>
                     <p className="text-xs text-gray-400 dark:text-white/40 truncate">
-                      {visit.bookmark.url}
+                      {visit.bookmark?.url || visit.bookmarkUrl || '-'}
                     </p>
                   </div>
 

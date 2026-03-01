@@ -73,7 +73,7 @@ export interface BookmarkCardStyle {
  * 获取当前用户的样式配置
  */
 export async function fetchCurrentBookmarkCardStyle(): Promise<BookmarkCardStyle> {
-  return request<BookmarkCardStyle>('/api/v2/bookmark-card-styles/current')
+  return request<BookmarkCardStyle>('/v2/bookmark-card-styles/current')
 }
 
 /**

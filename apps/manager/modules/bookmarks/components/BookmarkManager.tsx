@@ -65,7 +65,7 @@ export function BookmarkManager({
     updateBookmark,
     deleteBookmark: deleteBookmarkHook,
     changeVisibility,
-    removePassword,
+    removePrivate,
     checkSingleLink,
     checkAllLinks,
     deleteDeadLinks,
@@ -120,15 +120,15 @@ export function BookmarkManager({
     return success
   }, [changeVisibility, showToast])
 
-  const handleRemovePassword = useCallback(async (bookmarkId: string) => {
-    const success = await removePassword(bookmarkId)
+  const handleRemovePrivate = useCallback(async (bookmarkId: string) => {
+    const success = await removePrivate(bookmarkId)
     if (success) {
-      showToast('success', '密码已移除')
+      showToast('success', '私密已移除')
     } else {
-      showToast('error', '移除密码失败')
+      showToast('error', '移除私密失败')
     }
     return success
-  }, [removePassword, showToast])
+  }, [removePrivate, showToast])
 
   const handleDeleteDeadLinks = useCallback(async () => {
     const result = await deleteDeadLinks()
@@ -302,7 +302,7 @@ export function BookmarkManager({
         onTogglePin={handleTogglePin}
         onToggleReadLater={handleToggleReadLater}
         onChangeVisibility={handleChangeVisibility}
-        onRemovePassword={handleRemovePassword}
+        onRemovePrivate={handleRemovePrivate}
         onCheckSingleLink={checkSingleLink}
       />
     </div>

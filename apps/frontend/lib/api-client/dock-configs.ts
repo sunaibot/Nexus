@@ -51,7 +51,7 @@ export interface UpdateDockConfigRequest {
  * 获取当前用户的 Dock 配置
  */
 export async function fetchDockConfigs(): Promise<DockConfig[]> {
-  return request<DockConfig[]>('/api/v2/dock-configs', {
+  return request<DockConfig[]>('/v2/dock-configs', {
     requireAuth: false,
   })
 }
@@ -60,7 +60,7 @@ export async function fetchDockConfigs(): Promise<DockConfig[]> {
  * 获取单个 Dock 配置
  */
 export async function fetchDockConfigById(id: string): Promise<DockConfig> {
-  return request<DockConfig>(`/api/v2/dock-configs/${id}`, {
+  return request<DockConfig>(`/v2/dock-configs/${id}`, {
     requireAuth: false,
   })
 }
@@ -71,7 +71,7 @@ export async function fetchDockConfigById(id: string): Promise<DockConfig> {
 export async function createDockConfig(
   data: CreateDockConfigRequest
 ): Promise<DockConfig> {
-  return request<DockConfig>('/api/v2/dock-configs', {
+  return request<DockConfig>('/v2/dock-configs', {
     method: 'POST',
     body: JSON.stringify(data),
     requireAuth: true,
@@ -106,7 +106,7 @@ export async function deleteDockConfig(id: string): Promise<void> {
  * 重新排序 Dock 配置（管理员）
  */
 export async function reorderDockConfigs(ids: string[]): Promise<void> {
-  return request<void>('/api/v2/dock-configs/reorder', {
+  return request<void>('/v2/dock-configs/reorder', {
     method: 'POST',
     body: JSON.stringify({ ids }),
     requireAuth: true,

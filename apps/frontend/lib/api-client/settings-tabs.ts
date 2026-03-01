@@ -45,7 +45,7 @@ export interface UpdateSettingsTabRequest {
  * 获取当前用户的 Settings Tabs 配置
  */
 export async function fetchSettingsTabs(): Promise<SettingsTab[]> {
-  return request<SettingsTab[]>('/api/v2/settings-tabs', {
+  return request<SettingsTab[]>('/v2/settings-tabs', {
     requireAuth: false,
   })
 }
@@ -54,7 +54,7 @@ export async function fetchSettingsTabs(): Promise<SettingsTab[]> {
  * 获取所有 Settings Tabs（管理员）
  */
 export async function fetchAllSettingsTabs(): Promise<SettingsTab[]> {
-  return request<SettingsTab[]>('/api/v2/settings-tabs/all', {
+  return request<SettingsTab[]>('/v2/settings-tabs/all', {
     requireAuth: true,
   })
 }
@@ -74,7 +74,7 @@ export async function fetchSettingsTabById(id: string): Promise<SettingsTab> {
 export async function createSettingsTab(
   data: CreateSettingsTabRequest
 ): Promise<SettingsTab> {
-  return request<SettingsTab>('/api/v2/settings-tabs', {
+  return request<SettingsTab>('/v2/settings-tabs', {
     method: 'POST',
     body: JSON.stringify(data),
     requireAuth: true,
@@ -109,7 +109,7 @@ export async function deleteSettingsTab(id: string): Promise<void> {
  * 重新排序 Settings Tabs（管理员）
  */
 export async function reorderSettingsTabs(ids: string[]): Promise<void> {
-  return request<void>('/api/v2/settings-tabs/reorder', {
+  return request<void>('/v2/settings-tabs/reorder', {
     method: 'POST',
     body: JSON.stringify({ ids }),
     requireAuth: true,

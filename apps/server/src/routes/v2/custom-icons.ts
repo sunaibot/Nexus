@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { authMiddleware } from '../../middleware/index.js'
+import { authMiddleware, optionalAuthMiddleware } from '../../middleware/index.js'
 import { successResponse, errorResponse } from '../utils/routeHelpers.js'
 import { queryAll, queryOne, run, generateId } from '../../utils/index.js'
 
@@ -22,7 +22,7 @@ export interface CustomIcon {
 }
 
 // 获取所有自定义图标（公开 + 用户自己的）
-router.get('/', authMiddleware, (req: Request, res: Response) => {
+router.get('/', optionalAuthMiddleware, (req: Request, res: Response) => {
   try {
     const user = (req as any).user
     

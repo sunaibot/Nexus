@@ -31,7 +31,6 @@ export {
   updateBookmark,
   deleteBookmark,
   changeBookmarkVisibility,
-  toggleBookmarkPrivate,
   reorderBookmarks,
   fetchMetadata,
   bookmarksApi,
@@ -282,6 +281,7 @@ export {
 export {
   fetchRandomQuote,
   fetchQuotes,
+  updateQuotes,
   quotesApi,
   type Quote,
 } from './quotes'
@@ -324,6 +324,8 @@ import { notificationsApi } from './notifications'
 import { sharesApi } from './shares'
 import { quotesApi } from './quotes'
 import { rssApi } from './rss'
+import { dataManagementApi } from './data-management'
+import { healthCheckApi } from './health-check'
 
 // 缓存管理
 export {
@@ -361,4 +363,33 @@ export default {
   shares: sharesApi,
   quotes: quotesApi,
   rss: rssApi,
+  dataManagement: dataManagementApi,
+  healthCheck: healthCheckApi,
 }
+
+// 健康检查 API
+export {
+  checkBookmarksHealth,
+  getHealthStatus,
+  healthCheckApi,
+  type HealthStatus,
+} from './health-check'
+
+// 数据管理 API
+export {
+  exportAllData,
+  importAllData,
+  factoryReset,
+  dataManagementApi,
+} from './data-management'
+
+// Session 认证 API
+export {
+  sessionAdminLogin,
+  sessionAdminLogout,
+  checkSessionAuthStatus,
+  checkSessionAuthStatusAsync,
+  clearSessionAuthStatus,
+  sessionAuthApi,
+  type SessionAuthStatus,
+} from './session-auth'

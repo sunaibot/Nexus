@@ -36,7 +36,7 @@ interface AdminSidebarProps {
   activeTab: TabType
   onTabChange: (tab: TabType) => void
   onBack: () => void
-  onLogout: () => void
+  onLogout: () => void | Promise<void>
 }
 
 const iconMap: Record<string, LucideIcon> = {
@@ -552,9 +552,9 @@ export function AdminSidebar({
           </motion.button>
 
           <motion.button
-            onClick={() => {
+            onClick={async () => {
               if (confirm(t('admin.logout_confirm'))) {
-                onLogout()
+                await onLogout()
               }
             }}
             whileHover={{ scale: 1.01, color: '#f87171', background: 'rgba(239, 68, 68, 0.06)' }}
@@ -711,9 +711,9 @@ export function AdminSidebar({
                 </motion.button>
 
                 <motion.button
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm(t('admin.logout_confirm'))) {
-                      onLogout()
+                      await onLogout()
                     }
                     setMobileMenuOpen(false)
                   }}

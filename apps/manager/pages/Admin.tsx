@@ -36,7 +36,7 @@ export interface AdminProps {
   customIcons: CustomIcon[]
   username: string
   onBack: () => void
-  onLogout: () => void
+  onLogout: () => void | Promise<void>
   onAddBookmark: () => void
   onEditBookmark: (bookmark: Bookmark) => void
   onDeleteBookmark: (id: string) => void

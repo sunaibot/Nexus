@@ -21,6 +21,7 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "express": "^4.21.2",
+    "express-session": "^1.19.0",
     "lunr": "^2.3.9",
     "nodemailer": "^8.0.1",
     "sql.js": "^1.11.0",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/express-session": "^1.18.2",
     "@types/lunr": "^2.3.7",
     "@types/node": "^22.19.11",
     "cross-env": "^7.0.3",

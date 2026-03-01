@@ -36,11 +36,26 @@ export async function fetchQuotes(): Promise<Quote[]> {
 }
 
 /**
+ * 更新名言列表（本地存储）
+ * 由于后端没有提供更新接口，此函数仅更新本地状态
+ */
+export async function updateQuotes(
+  quotes: string[],
+  useDefault: boolean
+): Promise<{ success: boolean }> {
+  // 本地存储名言设置
+  localStorage.setItem('custom_quotes', JSON.stringify(quotes))
+  localStorage.setItem('use_default_quotes', JSON.stringify(useDefault))
+  return { success: true }
+}
+
+/**
  * 名言 API 对象
  */
 export const quotesApi = {
   fetchRandom: fetchRandomQuote,
   fetchAll: fetchQuotes,
+  update: updateQuotes,
 }
 
 export default quotesApi

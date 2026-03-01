@@ -55,7 +55,7 @@ export interface UpdateFrontendNavItemRequest {
  * 获取当前用户的导航配置（树形结构）
  */
 export async function fetchFrontendNavItems(): Promise<FrontendNavItem[]> {
-  return request<FrontendNavItem[]>('/api/v2/frontend-nav', {
+  return request<FrontendNavItem[]>('/v2/frontend-nav', {
     requireAuth: false,
   })
 }
@@ -64,7 +64,7 @@ export async function fetchFrontendNavItems(): Promise<FrontendNavItem[]> {
  * 获取扁平化的导航列表（管理员）
  */
 export async function fetchFrontendNavItemsFlat(): Promise<FrontendNavItem[]> {
-  return request<FrontendNavItem[]>('/api/v2/frontend-nav/flat', {
+  return request<FrontendNavItem[]>('/v2/frontend-nav/flat', {
     requireAuth: true,
   })
 }
@@ -84,7 +84,7 @@ export async function fetchFrontendNavItemById(id: string): Promise<FrontendNavI
 export async function createFrontendNavItem(
   data: CreateFrontendNavItemRequest
 ): Promise<FrontendNavItem> {
-  return request<FrontendNavItem>('/api/v2/frontend-nav', {
+  return request<FrontendNavItem>('/v2/frontend-nav', {
     method: 'POST',
     body: JSON.stringify(data),
     requireAuth: true,
@@ -122,7 +122,7 @@ export async function reorderFrontendNavItems(
   parentId: string | null,
   ids: string[]
 ): Promise<void> {
-  return request<void>('/api/v2/frontend-nav/reorder', {
+  return request<void>('/v2/frontend-nav/reorder', {
     method: 'POST',
     body: JSON.stringify({ parentId, ids }),
     requireAuth: true,

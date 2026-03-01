@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { authMiddleware } from '../../middleware/index.js'
+import { authMiddleware, optionalAuthMiddleware } from '../../middleware/index.js'
 import { successResponse, errorResponse } from '../utils/routeHelpers.js'
 
 const router = Router()
@@ -96,7 +96,7 @@ function formatTime(timestamp: number): string {
 }
 
 // 获取天气数据
-router.get('/', authMiddleware, async (req: Request, res: Response) => {
+router.get('/', optionalAuthMiddleware, async (req: Request, res: Response) => {
   try {
     const { lat, lon, city } = req.query
     
