@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react'
-import { X, Upload, File, Copy, Check, Download, AlertCircle, Settings, Clock, DownloadIcon } from 'lucide-react'
+import { X, Upload, File, Copy, Check, Download, AlertCircle, Clock, DownloadIcon, Edit2, Check as CheckIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { request } from '@/lib/api-legacy'
 
@@ -16,8 +16,8 @@ interface UploadResult {
   maxDownloads: number
 }
 
-// 有效期选项
-const EXPIRY_OPTIONS = [
+// 有效期预设选项
+const EXPIRY_PRESETS = [
   { value: 1, label: '1小时' },
   { value: 6, label: '6小时' },
   { value: 24, label: '24小时' },
@@ -25,8 +25,8 @@ const EXPIRY_OPTIONS = [
   { value: 168, label: '7天' },
 ]
 
-// 下载次数选项
-const DOWNLOAD_OPTIONS = [
+// 下载次数预设选项
+const DOWNLOAD_PRESETS = [
   { value: 1, label: '1次' },
   { value: 5, label: '5次' },
   { value: 10, label: '10次' },
@@ -46,6 +46,11 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
   const [showSettings, setShowSettings] = useState(false)
   const [expiryHours, setExpiryHours] = useState(24)
   const [maxDownloads, setMaxDownloads] = useState(10)
+  // 自定义输入状态
+  const [customExpiry, setCustomExpiry] = useState('')
+  const [customDownloads, setCustomDownloads] = useState('')
+  const [isCustomExpiry, setIsCustomExpiry] = useState(false)
+  const [isCustomDownloads, setIsCustomDownloads] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -138,6 +143,28 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
     setShowSettings(false)
     setExpiryHours(24)
     setMaxDownloads(10)
+    setCustomExpiry('')
+    setCustomDownloads('')
+    setIsCustomExpiry(false)
+    setIsCustomDownloads(false)
+  }
+
+  // 处理自定义有效期输入
+  const handleCustomExpirySubmit = () => {
+    const value = parseInt(customExpiry)
+    if (value && value > 0 && value <= 720) {
+      setExpiryHours(value)
+      setIsCustomExpiry(false)
+    }
+  }
+
+  // 处理自定义下载次数输入
+  const handleCustomDownloadsSubmit = () => {
+    const value = parseInt(customDownloads)
+    if (value && value > 0 && value <= 1000) {
+      setMaxDownloads(value)
+      setIsCustomDownloads(false)
+    }
   }
 
   const handleCopyLink = useCallback(() => {
@@ -167,6 +194,10 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
     setShowSettings(false)
     setExpiryHours(24)
     setMaxDownloads(10)
+    setCustomExpiry('')
+    setCustomDownloads('')
+    setIsCustomExpiry(false)
+    setIsCustomDownloads(false)
   }, [])
 
   const handleDownload = useCallback(() => {
@@ -342,22 +373,75 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                 <label className="flex items-center gap-2 text-sm mb-3" style={{ color: 'var(--color-text)' }}>
                   <Clock className="w-4 h-4" />
                   有效期
+                  <span className="text-xs opacity-60">(最多720小时/30天)</span>
                 </label>
-                <div className="grid grid-cols-5 gap-2">
-                  {EXPIRY_OPTIONS.map((option) => (
+                <div className="grid grid-cols-5 gap-2 mb-2">
+                  {EXPIRY_PRESETS.map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setExpiryHours(option.value)}
+                      onClick={() => {
+                        setExpiryHours(option.value)
+                        setIsCustomExpiry(false)
+                      }}
                       className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                        expiryHours === option.value
+                        expiryHours === option.value && !isCustomExpiry
                           ? 'bg-blue-500 text-white'
                           : 'border hover:bg-white/5'
                       }`}
-                      style={expiryHours !== option.value ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
+                      style={expiryHours !== option.value || isCustomExpiry ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
                     >
                       {option.label}
                     </button>
                   ))}
+                </div>
+                {/* 自定义有效期输入 */}
+                <div className="flex items-center gap-2">
+                  {isCustomExpiry ? (
+                    <>
+                      <input
+                        type="number"
+                        value={customExpiry}
+                        onChange={(e) => setCustomExpiry(e.target.value)}
+                        placeholder="小时"
+                        min="1"
+                        max="720"
+                        className="flex-1 px-3 py-2 rounded-lg border text-sm"
+                        style={{ 
+                          background: 'var(--color-glass-hover)',
+                          borderColor: 'var(--color-glass-border)',
+                          color: 'var(--color-text)'
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleCustomExpirySubmit}
+                        className="px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      >
+                        <CheckIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsCustomExpiry(false)
+                          setCustomExpiry('')
+                        }}
+                        className="px-3 py-2 rounded-lg border hover:bg-white/10 transition-colors"
+                        style={{ borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setIsCustomExpiry(true)}
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm transition-all flex items-center justify-center gap-1 ${
+                        isCustomExpiry ? 'bg-blue-500 text-white' : 'hover:bg-white/5'
+                      }`}
+                      style={!isCustomExpiry ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      {isCustomExpiry ? `${expiryHours}小时` : '自定义'}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -366,22 +450,75 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                 <label className="flex items-center gap-2 text-sm mb-3" style={{ color: 'var(--color-text)' }}>
                   <DownloadIcon className="w-4 h-4" />
                   下载次数
+                  <span className="text-xs opacity-60">(最多1000次)</span>
                 </label>
-                <div className="grid grid-cols-6 gap-2">
-                  {DOWNLOAD_OPTIONS.map((option) => (
+                <div className="grid grid-cols-6 gap-2 mb-2">
+                  {DOWNLOAD_PRESETS.map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setMaxDownloads(option.value)}
+                      onClick={() => {
+                        setMaxDownloads(option.value)
+                        setIsCustomDownloads(false)
+                      }}
                       className={`px-3 py-2 rounded-lg text-sm transition-all ${
-                        maxDownloads === option.value
+                        maxDownloads === option.value && !isCustomDownloads
                           ? 'bg-blue-500 text-white'
                           : 'border hover:bg-white/5'
                       }`}
-                      style={maxDownloads !== option.value ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
+                      style={maxDownloads !== option.value || isCustomDownloads ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
                     >
                       {option.label}
                     </button>
                   ))}
+                </div>
+                {/* 自定义下载次数输入 */}
+                <div className="flex items-center gap-2">
+                  {isCustomDownloads ? (
+                    <>
+                      <input
+                        type="number"
+                        value={customDownloads}
+                        onChange={(e) => setCustomDownloads(e.target.value)}
+                        placeholder="次数"
+                        min="1"
+                        max="1000"
+                        className="flex-1 px-3 py-2 rounded-lg border text-sm"
+                        style={{ 
+                          background: 'var(--color-glass-hover)',
+                          borderColor: 'var(--color-glass-border)',
+                          color: 'var(--color-text)'
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleCustomDownloadsSubmit}
+                        className="px-3 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                      >
+                        <CheckIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsCustomDownloads(false)
+                          setCustomDownloads('')
+                        }}
+                        className="px-3 py-2 rounded-lg border hover:bg-white/10 transition-colors"
+                        style={{ borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setIsCustomDownloads(true)}
+                      className={`flex-1 px-3 py-2 rounded-lg border text-sm transition-all flex items-center justify-center gap-1 ${
+                        isCustomDownloads ? 'bg-blue-500 text-white' : 'hover:bg-white/5'
+                      }`}
+                      style={!isCustomDownloads ? { borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' } : {}}
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      {isCustomDownloads ? `${maxDownloads}次` : '自定义'}
+                    </button>
+                  )}
                 </div>
               </div>
 
