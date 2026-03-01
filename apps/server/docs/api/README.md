@@ -98,13 +98,18 @@ curl -X GET "http://localhost:3000/api/v2/bookmarks" \
 | **ServiceMonitors** | 服务监控 | [查看文档](./modules/service-monitors.md) |
 | **CustomMetrics** | 自定义指标 | [查看文档](./modules/custom-metrics.md) |
 | **IpFilters** | IP过滤 | [查看文档](./modules/ip-filters.md) |
-| **PrivateMode** | 私有模式 | [查看文档](./modules/private-mode.md) |
+| **PrivatePassword** | 私密密码管理 | [查看文档](./modules/private-password.md) |
+| **SessionAuth** | Session 认证 | [查看文档](./modules/session-auth.md) |
 | **Permissions** | 权限管理 | [查看文档](./modules/permissions.md) |
 | **CategoriesEnhanced** | 增强分类 | [查看文档](./modules/categories-enhanced.md) |
 
 ## 🔐 认证机制
 
-### 获取 Token
+NOWEN 支持两种认证方式：**JWT Token** 和 **Session 认证**
+
+### 方式一：JWT Token（默认）
+
+#### 获取 Token
 
 ```http
 POST /api/v2/auth/login
@@ -116,12 +121,42 @@ Content-Type: application/json
 }
 ```
 
-### 使用 Token
+#### 使用 Token
 
 ```http
 GET /api/v2/bookmarks
 Authorization: Bearer <token>
 ```
+
+### 方式二：Session 认证（推荐用于同域部署）
+
+Session 认证适用于前端和管理后台部署在同一域名下的场景，可以实现跨端登录状态共享。
+
+#### 管理员登录
+
+```http
+POST /api/v2/session-auth/admin/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "your-password"
+}
+```
+
+#### 检查登录状态
+
+```http
+GET /api/v2/session-auth/status
+```
+
+#### 登出
+
+```http
+POST /api/v2/session-auth/admin/logout
+```
+
+> 📚 详细文档：[Session Auth 模块](./modules/session-auth.md)
 
 ## ⚠️ 错误处理
 

@@ -256,7 +256,53 @@
 
 ---
 
-### 14. 获取用户统计
+### 14. 修改书签可见性
+
+**PATCH** `/api/v2/bookmarks/:id/visibility`
+
+> 修改书签的可见性状态（public/personal/private）
+
+#### 路径参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | string | ✅ | 书签ID |
+
+#### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| visibility | string | ✅ | 可见性: public/personal/private |
+
+#### 请求示例
+
+```json
+{
+  "visibility": "private"
+}
+```
+
+#### 响应示例
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "bm-123",
+    "visibility": "private",
+    "updatedAt": "2025-03-01T12:00:00Z"
+  }
+}
+```
+
+#### 权限说明
+
+- 普通用户只能修改自己的书签
+- 管理员可以修改所有书签
+
+---
+
+### 15. 获取用户统计
 
 **GET** `/api/v2/bookmarks/stats`
 
@@ -278,7 +324,7 @@
 
 ---
 
-### 15. 增加点击次数
+### 16. 增加点击次数
 
 **POST** `/api/v2/bookmarks/:id/click`
 
