@@ -227,7 +227,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
       if (response.ok) {
         setIsPluginEnabled(!isPluginEnabled)
         showToast('success', isPluginEnabled ? '插件已禁用' : '插件已启用')
-        onPluginUpdate?.({ ...plugin, isEnabled: !isPluginEnabled })
+        onPluginUpdate?.({ ...plugin, isEnabled: !isPluginEnabled ? 1 : 0 })
       } else if (response.status === 403) {
         showToast('error', '需要管理员权限')
       }

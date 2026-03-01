@@ -46,8 +46,12 @@ export async function request<T>(
   const { requireAuth = false, ...fetchOptions } = options
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...((fetchOptions.headers as Record<string, string>) || {}),
+  }
+
+  // 只有在有请求体时才设置 Content-Type
+  if (fetchOptions.body && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
   }
 
   if (requireAuth) {
