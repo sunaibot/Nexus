@@ -392,4 +392,124 @@ router.delete('/folders/:id', authMiddleware, validateParams(idParamSchema), (re
   }
 })
 
+// ========== 管理员接口 ==========
+
+// 获取所有笔记（管理员）
+router.get('/all', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    
+    // 检查是否是管理员
+    if (user.role !== 'admin') {
+      return errorResponse(res, '无权限访问', 403)
+    }
+    
+    const notes = queryAll('SELECT * FROM notes ORDER BY updatedAt DESC')
+    return successResponse(res, notes)
+  } catch (error) {
+    console.error('获取所有笔记失败:', error)
+    return errorResponse(res, '获取所有笔记失败')
+  }
+})
+
+// 获取所有文件夹（管理员）
+router.get('/folders/all', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    
+    // 检查是否是管理员
+    if (user.role !== 'admin') {
+      return errorResponse(res, '无权限访问', 403)
+    }
+    
+    const folders = queryAll('SELECT * FROM note_folders ORDER BY orderIndex ASC, createdAt DESC')
+    return successResponse(res, folders)
+  } catch (error) {
+    console.error('获取所有文件夹失败:', error)
+    return errorResponse(res, '获取所有文件夹失败')
+  }
+})
+
+// 管理员删除任意笔记
+router.delete('/admin/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    const { id } = req.params
+    
+    // 检查是否是管理员
+    if (user.role !== 'admin') {
+      return errorResponse(res, '无权限访问', 403)
+    }
+    
+    // 获取笔记信息用于日志
+    const existing = queryOne('SELECT * FROM notes WHERE id = ?', [id])
+    if (!existing) {
+      return errorResponse(res, '笔记不存在', 404)
+    }
+    
+    run('DELETE FROM notes WHERE id = ?', [id])
+    
+    // 记录删除笔记日志
+    logAudit({
+      userId: user.id,
+      username: user.username,
+      action: 'DELETE_NOTE_ADMIN',
+      resourceType: 'note',
+      resourceId: String(id),
+      details: { title: existing.title, ownerId: existing.userId },
+      ip: String(req.ip || 'unknown'),
+      userAgent: String(req.headers['user-agent'] || ''),
+      riskLevel: 'medium'
+    })
+    
+    return successResponse(res, { id })
+  } catch (error) {
+    console.error('删除笔记失败:', error)
+    return errorResponse(res, '删除笔记失败')
+  }
+})
+
+// 管理员删除任意文件夹
+router.delete('/folders/admin/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    const { id } = req.params
+    
+    // 检查是否是管理员
+    if (user.role !== 'admin') {
+      return errorResponse(res, '无权限访问', 403)
+    }
+    
+    // 获取文件夹信息用于日志
+    const existing = queryOne('SELECT * FROM note_folders WHERE id = ?', [id])
+    if (!existing) {
+      return errorResponse(res, '文件夹不存在', 404)
+    }
+    
+    // 将该文件夹下的笔记移动到根目录
+    run('UPDATE notes SET folderId = NULL WHERE folderId = ?', [id])
+    
+    // 删除文件夹
+    run('DELETE FROM note_folders WHERE id = ?', [id])
+    
+    // 记录删除文件夹日志
+    logAudit({
+      userId: user.id,
+      username: user.username,
+      action: 'DELETE_NOTE_FOLDER_ADMIN',
+      resourceType: 'note_folder',
+      resourceId: String(id),
+      details: { name: existing.name, ownerId: existing.userId },
+      ip: String(req.ip || 'unknown'),
+      userAgent: String(req.headers['user-agent'] || ''),
+      riskLevel: 'medium'
+    })
+    
+    return successResponse(res, { id })
+  } catch (error) {
+    console.error('删除文件夹失败:', error)
+    return errorResponse(res, '删除文件夹失败')
+  }
+})
+
 export default router

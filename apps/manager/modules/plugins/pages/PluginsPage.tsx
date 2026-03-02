@@ -13,6 +13,7 @@ import { useToast } from '../../../components/admin/Toast'
 import type { UnifiedPlugin } from '../api-unified'
 import QuoteManager from '../components/QuoteManager/index'
 import FileTransferManager from '../components/FileTransferManager/index'
+import NotesManager from '../components/NotesManager/index'
 import SlotConfigManager from '../components/SlotConfigManager/index'
 import PluginDisplayConfigManager from '../components/PluginDisplayConfigManager'
 import { UnifiedPluginManager } from '../components/UnifiedPluginManager'
@@ -123,7 +124,22 @@ export default function PluginsPage() {
               />
             </motion.div>
           )}
-          {activeTab === 'data' && managingPlugin.id !== 'quotes' && managingPlugin.id !== 'file-transfer' && (
+          {activeTab === 'data' && managingPlugin.id === 'notes' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <NotesManager
+                plugin={managingPlugin}
+                onPluginUpdate={(updated) => {
+                  setManagingPlugin(updated)
+                }}
+              />
+            </motion.div>
+          )}
+          {activeTab === 'data' && managingPlugin.id !== 'quotes' && managingPlugin.id !== 'file-transfer' && managingPlugin.id !== 'notes' && (
             <motion.div
               key="data"
               initial={{ opacity: 0, y: 20 }}
