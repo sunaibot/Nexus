@@ -158,75 +158,411 @@ cd apps/server && npm run start
 
 ---
 
-## 🐳 NAS 部署指南（Docker）
+## 🐳 Docker Compose 部署指南
 
 ### 适用场景
 - **飞牛 NAS**、**群晖 NAS**、**威联通 NAS** 等家用存储设备
 - 希望一键部署、自动运行的用户
 - 需要数据持久化和备份的用户
 
-### 快速部署步骤
+---
 
-#### 1. 准备工作
+### 📋 部署前准备
+
+#### 1. 确认 Docker 环境
+
+确保您的 NAS 已安装 Docker 和 Docker Compose：
 
 ```bash
-# 克隆项目
-git clone https://github.com/sunaibot/Nexus.git
-cd Nexus
+# 检查 Docker 版本
+docker --version
 
-# 复制环境变量配置文件
-cp .env.example .env
+# 检查 Docker Compose 版本
+docker-compose --version
 ```
 
-#### 2. 修改环境变量（重要！）
+#### 2. 创建项目目录
+
+在 NAS 上创建项目存放目录：
+
+**飞牛 NAS 示例：**
+```bash
+# 通过 SSH 登录飞牛 NAS
+ssh root@你的飞牛IP
+
+# 创建项目目录
+mkdir -p /vol1/1000/docker/nexus
+cd /vol1/1000/docker/nexus
+```
+
+**群晖 NAS 示例：**
+```bash
+# 通过 SSH 登录群晖
+ssh admin@你的群晖IP
+
+# 创建项目目录
+mkdir -p /volume1/docker/nexus
+cd /volume1/docker/nexus
+```
+
+---
+
+### 🚀 详细部署步骤
+
+#### 步骤 1：下载项目文件
+
+**方式一：使用 Git 克隆（推荐）**
+
+```bash
+# 进入项目目录
+cd /vol1/1000/docker/nexus  # 飞牛 NAS 示例路径
+
+# 克隆项目
+git clone https://github.com/sunaibot/Nexus.git .
+```
+
+**方式二：手动下载上传**
+
+1. 在电脑上下载项目 ZIP 文件：`https://github.com/sunaibot/Nexus/archive/refs/heads/main.zip`
+2. 解压 ZIP 文件
+3. 通过 NAS 文件管理器上传到 `/vol1/1000/docker/nexus` 目录
+
+#### 步骤 2：配置环境变量
+
+复制示例配置文件：
+
+```bash
+cp .env.example .env
+```
 
 编辑 `.env` 文件，修改以下关键配置：
 
 ```env
+# ============================================
 # ⚠️ 必须修改：安全密钥（使用强随机字符串）
 # 生成方法: openssl rand -base64 32
-JWT_SECRET=your-random-secret-key-here
-SESSION_SECRET=your-different-random-secret-here
+# ============================================
+JWT_SECRET=your-random-secret-key-here-min-32-chars
+SESSION_SECRET=your-different-random-secret-key-here
 
+# ============================================
 # 端口配置（建议修改默认端口，避免冲突）
-SERVER_PORT=8787
-FRONTEND_PORT=5173
-MANAGER_PORT=5174
+# ============================================
+# 飞牛 NAS 建议使用以下端口
+SERVER_PORT=18787
+FRONTEND_PORT=15173
+MANAGER_PORT=15174
 
-# 数据存储路径（NAS 用户建议修改为绝对路径）
-# 示例：飞牛 NAS
+# ============================================
+# 数据存储路径（必须修改为绝对路径）
+# ============================================
+# 飞牛 NAS 示例
 DATA_PATH=/vol1/1000/docker/nexus/data
-# 示例：群晖 NAS
+
+# 群晖 NAS 示例
 # DATA_PATH=/volume1/docker/nexus/data
+
+# 威联通 NAS 示例
+# DATA_PATH=/share/Container/nexus/data
+
+# ============================================
+# 其他配置
+# ============================================
+NODE_ENV=production
+LOG_LEVEL=info
 ```
 
-#### 3. 启动服务
+#### 步骤 3：创建数据目录
 
 ```bash
-# 启动所有服务
+# 创建数据存储目录
+mkdir -p /vol1/1000/docker/nexus/data
+
+# 设置目录权限（确保 Docker 容器可以读写）
+chmod 755 /vol1/1000/docker/nexus/data
+```
+
+#### 步骤 4：启动服务
+
+```bash
+# 进入项目目录
+cd /vol1/1000/docker/nexus
+
+# 拉取镜像并启动服务（首次启动需要下载镜像，可能需要几分钟）
 docker-compose up -d
+
+# 查看服务启动状态
+docker-compose ps
+
+# 查看实时日志（按 Ctrl+C 退出）
+docker-compose logs -f
+```
+
+**启动成功标志：**
+```
+Name                Command               State           Ports
+-------------------------------------------------------------------------
+nexus-frontend     nginx -g daemon off;             Up      0.0.0.0:15173->80/tcp
+nexus-manager      nginx -g daemon off;             Up      0.0.0.0:15174->80/tcp
+nexus-server       node dist/index.js               Up      0.0.0.0:18787->8787/tcp
+```
+
+#### 步骤 5：访问服务
+
+服务启动后，通过浏览器访问：
+
+| 服务 | 访问地址 | 说明 |
+|------|----------|------|
+| **前端界面** | `http://你的NAS-IP:15173` | 用户导航主页 |
+| **管理后台** | `http://你的NAS-IP:15174` | 管理员界面 |
+| **API 服务** | `http://你的NAS-IP:18787` | 后端 API |
+
+**默认管理员账号：**
+- 用户名：`admin`
+- 密码：`admin123`
+
+⚠️ **重要**：首次登录后请立即修改默认密码！
+
+---
+
+### 🐮 飞牛 NAS 专属部署指南
+
+#### 飞牛 NAS 特点
+- 基于 Debian 的 Linux 系统
+- 默认 Docker 已安装
+- 文件路径以 `/vol1/` 开头
+
+#### 飞牛 NAS 完整部署命令
+
+```bash
+# 1. 通过 SSH 登录飞牛 NAS（默认端口 22）
+ssh root@你的飞牛IP地址
+
+# 2. 创建并进入项目目录
+mkdir -p /vol1/1000/docker/nexus
+cd /vol1/1000/docker/nexus
+
+# 3. 克隆项目
+git clone https://github.com/sunaibot/Nexus.git .
+
+# 4. 复制并编辑环境变量
+cp .env.example .env
+
+# 5. 使用 sed 快速修改配置（或手动编辑）
+# 生成随机密钥
+JWT_SECRET=$(openssl rand -base64 32)
+SESSION_SECRET=$(openssl rand -base64 32)
+
+# 修改 .env 文件
+sed -i "s|JWT_SECRET=.*|JWT_SECRET=${JWT_SECRET}|g" .env
+sed -i "s|SESSION_SECRET=.*|SESSION_SECRET=${SESSION_SECRET}|g" .env
+sed -i "s|SERVER_PORT=.*|SERVER_PORT=18787|g" .env
+sed -i "s|FRONTEND_PORT=.*|FRONTEND_PORT=15173|g" .env
+sed -i "s|MANAGER_PORT=.*|MANAGER_PORT=15174|g" .env
+sed -i "s|DATA_PATH=.*|DATA_PATH=/vol1/1000/docker/nexus/data|g" .env
+
+# 6. 创建数据目录
+mkdir -p /vol1/1000/docker/nexus/data
+
+# 7. 启动服务
+docker-compose up -d
+
+# 8. 查看日志确认启动成功
+docker-compose logs -f
+```
+
+#### 飞牛 NAS 文件管理器操作
+
+如果不熟悉命令行，可以通过飞牛 NAS 的 Web 界面操作：
+
+1. **打开文件管理器** → 进入 `docker` 文件夹
+2. **创建文件夹** → 新建 `nexus` 文件夹
+3. **上传文件** → 将下载的项目文件上传到 `nexus` 文件夹
+4. **编辑配置文件** → 右键点击 `.env` 文件 → 编辑
+5. **打开终端** → 在 `nexus` 文件夹右键 → 在终端中打开
+6. **执行命令** → 输入 `docker-compose up -d`
+
+---
+
+### 🔧 常用管理命令
+
+```bash
+# 查看服务状态
+docker-compose ps
 
 # 查看日志
 docker-compose logs -f
 
+# 查看特定服务日志
+docker-compose logs -f nexus-server
+
+# 重启服务
+docker-compose restart
+
+# 重启特定服务
+docker-compose restart nexus-server
+
 # 停止服务
 docker-compose down
+
+# 停止并删除数据卷（谨慎使用！）
+docker-compose down -v
+
+# 更新到最新版本
+git pull
+docker-compose down
+docker-compose up -d --build
 ```
 
-#### 4. 访问服务
+---
 
-- **前端界面**：`http://你的NAS-IP:5173`
-- **管理后台**：`http://你的NAS-IP:5174`
-- **API 服务**：`http://你的NAS-IP:8787`
+### 💾 数据备份与恢复
 
-### NAS 专属配置建议
+#### 自动备份脚本
+
+创建备份脚本 `/vol1/1000/docker/nexus/backup.sh`：
+
+```bash
+#!/bin/bash
+
+# 备份目录
+BACKUP_DIR="/vol1/1000/docker/nexus/backups"
+DATA_DIR="/vol1/1000/docker/nexus/data"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# 创建备份目录
+mkdir -p ${BACKUP_DIR}
+
+# 停止服务
+cd /vol1/1000/docker/nexus
+docker-compose down
+
+# 备份数据
+tar -czvf ${BACKUP_DIR}/nexus_backup_${DATE}.tar.gz ${DATA_DIR}
+
+# 重新启动服务
+docker-compose up -d
+
+# 删除 30 天前的备份
+find ${BACKUP_DIR} -name "nexus_backup_*.tar.gz" -mtime +30 -delete
+
+echo "备份完成: ${BACKUP_DIR}/nexus_backup_${DATE}.tar.gz"
+```
+
+设置定时任务（飞牛 NAS）：
+```bash
+# 添加执行权限
+chmod +x /vol1/1000/docker/nexus/backup.sh
+
+# 编辑 crontab
+crontab -e
+
+# 添加每天凌晨 3 点自动备份
+0 3 * * * /vol1/1000/docker/nexus/backup.sh >> /vol1/1000/docker/nexus/backup.log 2>&1
+```
+
+#### 手动备份
+
+```bash
+# 停止服务
+docker-compose down
+
+# 备份数据目录
+tar -czvf nexus-backup-$(date +%Y%m%d).tar.gz ./data
+
+# 启动服务
+docker-compose up -d
+```
+
+#### 恢复数据
+
+```bash
+# 停止服务
+docker-compose down
+
+# 解压备份文件
+tar -xzvf nexus-backup-20240101.tar.gz
+
+# 确保数据目录权限正确
+chmod 755 ./data
+
+# 启动服务
+docker-compose up -d
+```
+
+---
+
+### 🛡️ 安全建议
+
+1. **修改默认密码**
+   - 首次登录后立即修改管理员密码
+   - 密码长度建议 12 位以上，包含大小写字母、数字和特殊字符
+
+2. **使用强密钥**
+   - 务必修改 `JWT_SECRET` 和 `SESSION_SECRET`
+   - 使用 `openssl rand -base64 32` 生成强随机字符串
+
+3. **修改默认端口**
+   - 避免使用默认端口（5173, 5174, 8787）
+   - 使用高位端口（15000-65000 范围）
+
+4. **配置防火墙**
+   - 只开放必要的端口
+   - 限制访问来源 IP
+
+5. **启用 HTTPS（推荐）**
+   ```yaml
+   # 在 docker-compose.yml 中添加反向代理
+   # 或使用 Nginx Proxy Manager 等工具
+   ```
+
+6. **定期更新**
+   - 定期执行 `git pull` 获取最新版本
+   - 关注安全更新
+
+---
+
+### ❓ 常见问题
+
+**Q: 容器启动失败，提示端口被占用？**  
+A: 修改 `.env` 文件中的端口配置，使用其他未被占用的端口。
+
+**Q: 提示权限错误，无法写入数据？**  
+A: 执行 `chmod 755 /vol1/1000/docker/nexus/data` 设置目录权限。
+
+**Q: 如何更新到最新版本？**  
+A: 执行 `git pull && docker-compose down && docker-compose up -d --build`
+
+**Q: 忘记管理员密码怎么办？**  
+A: 进入容器执行重置命令：
+```bash
+docker exec -it nexus-server sh
+cd /app && npx tsx scripts/reset-admin.ts
+```
+
+**Q: 数据库文件在哪里？**  
+A: 数据库存储在 `DATA_PATH` 指定的目录中，默认是 `./data/zen-garden.db`
+
+**Q: 如何查看容器日志？**  
+A: 执行 `docker-compose logs -f` 查看实时日志，或 `docker-compose logs -f nexus-server` 查看特定服务日志。
+
+---
+
+### 📊 Docker 服务说明
+
+| 服务 | 容器名称 | 默认端口 | 资源限制 | 说明 |
+|------|----------|----------|----------|------|
+| 后端服务 | nexus-server | 8787 | CPU: 1.0, 内存: 512M | API 和数据处理 |
+| 前端界面 | nexus-frontend | 5173 | CPU: 0.5, 内存: 128M | 用户导航页 |
+| 管理后台 | nexus-manager | 5174 | CPU: 0.5, 内存: 128M | 管理员界面 |
+
+---
+
+### 🌐 NAS 专属配置参考
 
 #### 飞牛 NAS
 ```env
-# 数据路径示例
 DATA_PATH=/vol1/1000/docker/nexus/data
-
-# 建议端口（避免与飞牛默认服务冲突）
 SERVER_PORT=18787
 FRONTEND_PORT=15173
 MANAGER_PORT=15174
@@ -234,10 +570,7 @@ MANAGER_PORT=15174
 
 #### 群晖 NAS
 ```env
-# 数据路径示例
 DATA_PATH=/volume1/docker/nexus/data
-
-# 建议端口
 SERVER_PORT=28787
 FRONTEND_PORT=25173
 MANAGER_PORT=25174
@@ -245,10 +578,7 @@ MANAGER_PORT=25174
 
 #### 威联通 NAS
 ```env
-# 数据路径示例
 DATA_PATH=/share/Container/nexus/data
-
-# 建议端口
 SERVER_PORT=38787
 FRONTEND_PORT=35173
 MANAGER_PORT=35174
