@@ -31,7 +31,7 @@ console.log(`
   Environment: ${NODE_ENV}
   Port: ${PORT}
   Debug Mode: ${isDev ? 'ON' : 'OFF'}
-========================================`
+========================================
   Security Config:
   - Filter Sensitive Info: ${env.FILTER_SENSITIVE_INFO ? 'ON' : 'OFF'}
   - System Audit Log: ${env.ENABLE_SYSTEM_AUDIT ? 'ON' : 'OFF'}

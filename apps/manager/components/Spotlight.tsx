@@ -30,7 +30,7 @@ interface CommandResult {
   title: string
   subtitle?: string
   icon?: React.ReactNode
-  favicon?: string
+  favicon?: string | null
   action: () => void
 }
 

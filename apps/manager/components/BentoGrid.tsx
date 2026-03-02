@@ -250,7 +250,7 @@ export function BentoGrid({
                 <div className="flex items-center gap-3">
                   <div 
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: category.color }}
+                    style={{ backgroundColor: category.color || undefined }}
                   />
                   <h2 
                     className="text-xl font-medium"

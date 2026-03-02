@@ -5,7 +5,7 @@ import { Search, Command } from 'lucide-react';
 import { Button as MovingBorderButton } from '../ui/moving-border';
 
 interface SearchHintProps {
-  isLiteMode: boolean;
+  isLiteMode?: boolean;
   onOpenSearch: () => void;
 }
 

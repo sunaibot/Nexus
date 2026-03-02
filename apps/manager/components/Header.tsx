@@ -14,7 +14,7 @@ interface HeaderProps {
 export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderProps) {
   const { t, i18n } = useTranslation()
   const { formattedTime, formattedDate } = useTime()
-  const { isDark, toggleTheme } = useTheme()
+  const { isDark, toggleDarkMode } = useTheme()
 
   // 切换语言：在 'en' 和 'zh' 之间循环
   const toggleLanguage = () => {
@@ -112,7 +112,7 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderPr
 
           {/* 主题切换 */}
           <motion.button
-            onClick={toggleTheme}
+            onClick={() => toggleDarkMode()}
             className={cn(
               'p-2.5 rounded-xl',
               'bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10',

@@ -256,7 +256,7 @@ export function BookmarkGrid({
                   className={cn(
                     'p-2 rounded-lg glass'
                   )}
-                  style={{ color: category.color }}
+                  style={{ color: category.color || undefined }}
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: 'spring', stiffness: 400 }}
                 >

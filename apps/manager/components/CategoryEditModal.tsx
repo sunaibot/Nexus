@@ -232,7 +232,7 @@ export function CategoryEditModal({
                               style={{
                                 background: icon === iconName ? color + '20' : 'transparent',
                                 color: icon === iconName ? color : 'var(--color-text-secondary)',
-                                ringColor: color,
+                                ['--tw-ring-color' as string]: color,
                               }}
                               title={iconName}
                             >
@@ -273,8 +273,8 @@ export function CategoryEditModal({
                       )}
                       style={{ 
                         backgroundColor: c,
-                        ringColor: 'var(--color-text-primary)',
-                        ringOffsetColor: 'var(--color-bg-secondary)',
+                        ['--tw-ring-color' as string]: 'var(--color-text-primary)',
+                        ['--tw-ring-offset-color' as string]: 'var(--color-bg-secondary)',
                       }}
                     />
                   ))}

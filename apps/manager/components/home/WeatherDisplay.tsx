@@ -5,7 +5,7 @@ import { WeatherData, getWeatherIcon } from '../../hooks/useWeather';
 
 interface WeatherDisplayProps {
   weather: WeatherData | null;
-  loading: boolean;
+  loading?: boolean;
   onRefresh: () => void;
 }
 

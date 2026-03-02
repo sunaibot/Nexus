@@ -41,7 +41,7 @@ export function WallpaperSettingsCard({
 }: WallpaperSettingsCardProps) {
   const { t } = useTranslation()
   const [isDragging, setIsDragging] = useState(false)
-  const [activeSource, setActiveSource] = useState<'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels'>(
+  const [activeSource, setActiveSource] = useState<'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels' | 'preset'>(
     settings.wallpaper?.source || 'upload'
   )
   const [galleryLoading, setGalleryLoading] = useState(false)

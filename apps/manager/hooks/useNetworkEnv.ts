@@ -60,7 +60,7 @@ export function useNetworkEnv() {
  * - 其他情况 → 使用外网链接
  */
 export function getBookmarkUrl(
-  bookmark: { url: string; internalUrl?: string },
+  bookmark: { url: string; internalUrl?: string | null },
   isInternal: boolean
 ): string {
   if (isInternal && bookmark.internalUrl) {
