@@ -145,10 +145,8 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode, isLoggedIn
           {/* Header 左侧插槽 */}
           <PluginSlot slot="header-left" className="flex items-center gap-2" />
 
-          {/* 私密书签切换 - 仅登录后显示 */}
-          {isLoggedIn && (
-            <PrivatePasswordToggle onVisibilityChange={onPrivateVisibilityChange} />
-          )}
+          {/* 私密书签切换 - 对认证用户显示 */}
+          <PrivatePasswordToggle onVisibilityChange={onPrivateVisibilityChange} />
 
           {/* 编辑模式切换 - 仅登录后显示 */}
           {isLoggedIn && (
