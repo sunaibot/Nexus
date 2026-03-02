@@ -281,9 +281,11 @@ export {
 export {
   fetchRandomQuote,
   fetchQuotes,
+  fetchQuotesSettings,
   updateQuotes,
   quotesApi,
   type Quote,
+  type QuotesSettings,
 } from './quotes'
 
 // Tab API

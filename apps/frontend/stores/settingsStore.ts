@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { fetchSettings as fetchSettingsFromApi, updateSettings, fetchQuotes, SiteSettings } from '../lib/api'
+import { fetchSettings as fetchSettingsFromApi, updateSettings, fetchQuotesSettings, SiteSettings } from '../lib/api'
 import { setActiveQuotes } from '../data/quotes'
 
 // 默认站点设置
@@ -71,10 +71,11 @@ export const useSettingsStore = create<SettingsState>()(
         set({ isLoading: true, error: null })
         try {
           console.log('[SettingsStore] Fetching settings from API...')
-          const [settings, quotes] = await Promise.all([
-            fetchSettingsFromApi(),
-            fetchQuotes().catch(() => null),
-          ])
+ // 加载设置和语录
+        const [settings, quotes] = await Promise.all([
+          fetchSettingsFromApi(),
+          fetchQuotesSettings().catch(() => null),
+        ])
           console.log('[SettingsStore] Settings fetched:', settings)
 
           // 应用站点设置

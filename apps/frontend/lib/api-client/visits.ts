@@ -195,11 +195,27 @@ export function trackVisitBeacon(bookmarkId: string): boolean {
 }
 
 /**
+ * 清除所有访问记录
+ */
+export async function clearAllVisits(): Promise<{ cleared: boolean; count: number }> {
+  const response = await request<{ success: boolean; data: { cleared: boolean; count: number } }>('/v2/visits/clear', {
+    method: 'POST',
+    requireAuth: true,
+  })
+  return response.data
+}
+
+/**
  * 访问记录 API 对象
  */
 export const visitsApi = {
   track: trackVisit,
   trackBeacon: trackVisitBeacon,
+  stats: fetchVisitStats,
+  top: fetchTopBookmarks,
+  trend: fetchVisitTrends,
+  recent: fetchRecentVisits,
+  clear: clearAllVisits,
   fetchStats: fetchVisitStats,
   fetchTopBookmarks,
   fetchTrends: fetchVisitTrends,

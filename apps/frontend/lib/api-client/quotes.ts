@@ -15,6 +15,12 @@ export interface Quote {
   updatedAt?: string
 }
 
+// 名言设置接口
+export interface QuotesSettings {
+  quotes: string[]
+  useDefaultQuotes: boolean
+}
+
 /**
  * 获取随机名言
  */
@@ -33,6 +39,27 @@ export async function fetchQuotes(): Promise<Quote[]> {
     requireAuth: true,
   })
   return response.data
+}
+
+/**
+ * 获取名言设置（包含列表和是否使用默认设置）
+ */
+export async function fetchQuotesSettings(): Promise<QuotesSettings> {
+  try {
+    const quotes = await fetchQuotes()
+    // 将 Quote[] 转换为字符串数组
+    const quoteTexts = quotes.map(q => `${q.text} —— ${q.author}`)
+    return {
+      quotes: quoteTexts,
+      useDefaultQuotes: false,
+    }
+  } catch {
+    // 如果获取失败，返回空数组和默认设置
+    return {
+      quotes: [],
+      useDefaultQuotes: true,
+    }
+  }
 }
 
 /**
@@ -55,6 +82,7 @@ export async function updateQuotes(
 export const quotesApi = {
   fetchRandom: fetchRandomQuote,
   fetchAll: fetchQuotes,
+  fetchSettings: fetchQuotesSettings,
   update: updateQuotes,
 }
 

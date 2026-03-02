@@ -81,6 +81,7 @@ export {
 // 名言
 export {
   fetchQuotes,
+  fetchQuotesSettings,
   updateQuotes,
 } from './api-client/quotes'
 
