@@ -103,13 +103,11 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'files' | 'stats' | 'settings'>('files')
 
-  const API_BASE = 'http://localhost:8787'
-
   // 加载文件列表
   const loadFiles = useCallback(async () => {
     setIsLoading(true)
     try {
-      const res = await fetch(`${API_BASE}/api/v2/file-transfers/all`, {
+      const res = await fetch(`/api/v2/file-transfers/all`, {
         credentials: 'include'
       })
       if (!res.ok) throw new Error('获取文件列表失败')
@@ -127,7 +125,7 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
   // 加载统计
   const loadStats = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v2/file-transfers/stats`, {
+      const res = await fetch(`/api/v2/file-transfers/stats`, {
         credentials: 'include'
       })
       if (!res.ok) throw new Error('获取统计失败')
@@ -143,7 +141,7 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
   // 加载设置
   const loadSettings = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v2/file-transfers/settings`, {
+      const res = await fetch(`/api/v2/file-transfers/settings`, {
         credentials: 'include'
       })
       if (!res.ok) throw new Error('获取设置失败')
@@ -167,7 +165,7 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
     if (!confirm('确定要删除这个文件吗？')) return
     
     try {
-      const res = await fetch(`${API_BASE}/api/v2/file-transfers/${deleteCode}`, {
+      const res = await fetch(`/api/v2/file-transfers/${deleteCode}`, {
         method: 'DELETE',
         credentials: 'include'
       })

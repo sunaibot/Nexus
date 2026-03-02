@@ -62,14 +62,12 @@ export default function SlotConfigManager({ plugin }: SlotConfigManagerProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
 
-  const API_BASE = 'http://localhost:8787'
-
   // 加载插槽配置
   const loadAssignments = useCallback(async () => {
     setIsLoading(true)
     try {
       // 获取所有插件的插槽配置
-      const res = await fetch(`${API_BASE}/api/v2/plugin-slots`, {
+      const res = await fetch(`/api/v2/plugin-slots`, {
         credentials: 'include'
       })
       
@@ -98,7 +96,7 @@ export default function SlotConfigManager({ plugin }: SlotConfigManagerProps) {
   const handleSave = async (slotId: string) => {
     setIsSaving(true)
     try {
-      const res = await fetch(`${API_BASE}/api/v2/plugin-slots/${plugin.id}`, {
+      const res = await fetch(`/api/v2/plugin-slots/${plugin.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -123,7 +121,7 @@ export default function SlotConfigManager({ plugin }: SlotConfigManagerProps) {
   // 切换启用状态
   const handleToggle = async (enabled: boolean) => {
     try {
-      const res = await fetch(`${API_BASE}/api/v2/plugin-slots/${plugin.id}/toggle`, {
+      const res = await fetch(`/api/v2/plugin-slots/${plugin.id}/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
