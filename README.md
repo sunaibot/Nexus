@@ -158,6 +158,157 @@ cd apps/server && npm run start
 
 ---
 
+## 🐳 NAS 部署指南（Docker）
+
+### 适用场景
+- **飞牛 NAS**、**群晖 NAS**、**威联通 NAS** 等家用存储设备
+- 希望一键部署、自动运行的用户
+- 需要数据持久化和备份的用户
+
+### 快速部署步骤
+
+#### 1. 准备工作
+
+```bash
+# 克隆项目
+git clone https://github.com/sunaibot/Nexus.git
+cd Nexus
+
+# 复制环境变量配置文件
+cp .env.example .env
+```
+
+#### 2. 修改环境变量（重要！）
+
+编辑 `.env` 文件，修改以下关键配置：
+
+```env
+# ⚠️ 必须修改：安全密钥（使用强随机字符串）
+# 生成方法: openssl rand -base64 32
+JWT_SECRET=your-random-secret-key-here
+SESSION_SECRET=your-different-random-secret-here
+
+# 端口配置（建议修改默认端口，避免冲突）
+SERVER_PORT=8787
+FRONTEND_PORT=5173
+MANAGER_PORT=5174
+
+# 数据存储路径（NAS 用户建议修改为绝对路径）
+# 示例：飞牛 NAS
+DATA_PATH=/vol1/1000/docker/nexus/data
+# 示例：群晖 NAS
+# DATA_PATH=/volume1/docker/nexus/data
+```
+
+#### 3. 启动服务
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+#### 4. 访问服务
+
+- **前端界面**：`http://你的NAS-IP:5173`
+- **管理后台**：`http://你的NAS-IP:5174`
+- **API 服务**：`http://你的NAS-IP:8787`
+
+### NAS 专属配置建议
+
+#### 飞牛 NAS
+```env
+# 数据路径示例
+DATA_PATH=/vol1/1000/docker/nexus/data
+
+# 建议端口（避免与飞牛默认服务冲突）
+SERVER_PORT=18787
+FRONTEND_PORT=15173
+MANAGER_PORT=15174
+```
+
+#### 群晖 NAS
+```env
+# 数据路径示例
+DATA_PATH=/volume1/docker/nexus/data
+
+# 建议端口
+SERVER_PORT=28787
+FRONTEND_PORT=25173
+MANAGER_PORT=25174
+```
+
+#### 威联通 NAS
+```env
+# 数据路径示例
+DATA_PATH=/share/Container/nexus/data
+
+# 建议端口
+SERVER_PORT=38787
+FRONTEND_PORT=35173
+MANAGER_PORT=35174
+```
+
+### Docker 服务说明
+
+| 服务 | 容器名称 | 默认端口 | 资源限制 | 说明 |
+|------|----------|----------|----------|------|
+| 后端服务 | nexus-server | 8787 | CPU: 1.0, 内存: 512M | API 和数据处理 |
+| 前端界面 | nexus-frontend | 5173 | CPU: 0.5, 内存: 128M | 用户导航页 |
+| 管理后台 | nexus-manager | 5174 | CPU: 0.5, 内存: 128M | 管理员界面 |
+
+### 数据备份与恢复
+
+#### 备份数据
+```bash
+# 备份数据目录
+tar -czvf nexus-backup-$(date +%Y%m%d).tar.gz ./data
+
+# 或使用 NAS 的备份功能
+```
+
+#### 恢复数据
+```bash
+# 停止服务
+docker-compose down
+
+# 恢复数据
+tar -xzvf nexus-backup-20240101.tar.gz
+
+# 重启服务
+docker-compose up -d
+```
+
+### 安全建议
+
+1. **修改默认密码**：首次登录后立即修改管理员密码
+2. **使用强密钥**：务必修改 JWT_SECRET 和 SESSION_SECRET
+3. **修改默认端口**：避免使用默认端口，减少被扫描风险
+4. **配置防火墙**：只开放必要的端口
+5. **启用 HTTPS**：建议使用反向代理（如 Nginx Proxy Manager）启用 HTTPS
+6. **定期备份**：设置自动备份任务，保护数据安全
+
+### 常见问题
+
+**Q: 容器启动失败怎么办？**  
+A: 检查日志 `docker-compose logs`，常见问题包括端口冲突、权限不足、内存不足等。
+
+**Q: 如何更新到最新版本？**  
+A: 执行 `git pull` 拉取最新代码，然后 `docker-compose up -d --build` 重新构建。
+
+**Q: 数据存储在哪里？**  
+A: 数据存储在 `DATA_PATH` 指定的目录中，默认是 `./data`，建议修改为 NAS 的持久化存储路径。
+
+**Q: 如何修改端口？**  
+A: 编辑 `.env` 文件修改端口配置，然后执行 `docker-compose up -d` 重启服务。
+
+---
+
 ## 📝 配置说明
 
 ### 环境变量
