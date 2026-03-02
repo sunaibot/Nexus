@@ -48,8 +48,6 @@ interface NotesManagerProps {
   onPluginUpdate: (plugin: UnifiedPlugin) => void
 }
 
-const API_BASE = 'http://localhost:8787'
-
 const COLORS = [
   { name: 'yellow', bg: 'bg-yellow-500/20', border: 'border-yellow-500/30', text: 'text-yellow-200' },
   { name: 'blue', bg: 'bg-blue-500/20', border: 'border-blue-500/30', text: 'text-blue-200' },
@@ -61,7 +59,7 @@ const COLORS = [
 
 // API 函数
 async function fetchAllNotes(): Promise<Note[]> {
-  const res = await fetch(`${API_BASE}/api/v2/notes/all`, {
+  const res = await fetch(`/api/v2/notes/all`, {
     credentials: 'include'
   })
   if (!res.ok) throw new Error('获取笔记失败')
@@ -70,7 +68,7 @@ async function fetchAllNotes(): Promise<Note[]> {
 }
 
 async function fetchAllFolders(): Promise<Folder[]> {
-  const res = await fetch(`${API_BASE}/api/v2/notes/folders/all`, {
+  const res = await fetch(`/api/v2/notes/folders/all`, {
     credentials: 'include'
   })
   if (!res.ok) throw new Error('获取文件夹失败')
@@ -79,7 +77,7 @@ async function fetchAllFolders(): Promise<Folder[]> {
 }
 
 async function deleteNote(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/v2/notes/admin/${id}`, {
+  const res = await fetch(`/api/v2/notes/admin/${id}`, {
     method: 'DELETE',
     credentials: 'include'
   })
@@ -87,7 +85,7 @@ async function deleteNote(id: string): Promise<void> {
 }
 
 async function deleteFolder(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/v2/notes/folders/admin/${id}`, {
+  const res = await fetch(`/api/v2/notes/folders/admin/${id}`, {
     method: 'DELETE',
     credentials: 'include'
   })
