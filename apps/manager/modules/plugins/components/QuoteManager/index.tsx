@@ -180,10 +180,8 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
       const params = new URLSearchParams()
       if (searchQuery) params.set('search', searchQuery)
 
-      const response = await fetch(`/api/quotes?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const response = await fetch(`/api/v2/quotes?${params.toString()}`, {
+        credentials: 'include'
       })
       const result = await response.json()
 
@@ -215,12 +213,12 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
     }
 
     try {
-      const response = await fetch(`/api/v2/plugins/${plugin.id}`, {
+      const response = await fetch(`/api/v2/plugins-unified/${plugin.id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ isEnabled: !isPluginEnabled })
       })
 
@@ -239,12 +237,12 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
   // 保存配置
   const handleSaveConfig = async () => {
     try {
-      const response = await fetch(`/api/v2/plugins/${plugin.id}`, {
+      const response = await fetch(`/api/v2/plugins-unified/${plugin.id}`, {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({ config })
       })
 
@@ -305,15 +303,15 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
     }
 
     try {
-      const url = editingQuote ? `/api/quotes/${editingQuote.id}` : '/api/quotes'
+      const url = editingQuote ? `/api/v2/quotes/${editingQuote.id}` : '/api/v2/quotes'
       const method = editingQuote ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify(data)
       })
 
@@ -337,11 +335,9 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
     if (!confirm(`确定要删除这条名言吗？\n\n"${quote.content.substring(0, 50)}..."`)) return
 
     try {
-      const response = await fetch(`/api/quotes/${quote.id}`, {
+      const response = await fetch(`/api/v2/quotes/${quote.id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        credentials: 'include'
       })
 
       const result = await response.json()
@@ -360,13 +356,9 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
   // 切换启用状态
   const handleToggleActive = async (quote: Quote) => {
     try {
-      const response = await fetch(`/api/quotes/${quote.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ isActive: !quote.isActive })
+      const response = await fetch(`/api/v2/quotes/${quote.id}/toggle`, {
+        method: 'PATCH',
+        credentials: 'include'
       })
 
       const result = await response.json()
@@ -411,19 +403,19 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
   // API示例代码
   const apiExamples = {
     getAll: `// 获取所有名言
-fetch('${config.apiEndpoint}')
+fetch('/api/v2/quotes')
   .then(res => res.json())
   .then(data => console.log(data))`,
     getRandom: `// 获取随机名言
-fetch('${config.apiEndpoint}/random')
+fetch('/api/v2/quotes/random')
   .then(res => res.json())
   .then(data => console.log(data))`,
     getDaily: `// 获取每日名言
-fetch('${config.apiEndpoint}/daily')
+fetch('/api/v2/quotes/daily')
   .then(res => res.json())
   .then(data => console.log(data))`,
     getByCategory: `// 按分类获取名言
-fetch('${config.apiEndpoint}?category=inspiration')
+fetch('/api/v2/quotes?category=inspiration')
   .then(res => res.json())
   .then(data => console.log(data))`
   }

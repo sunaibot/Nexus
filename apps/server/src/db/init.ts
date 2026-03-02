@@ -798,6 +798,109 @@ function createTables(db: SqlJsDatabase): void {
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
     )
   `)
+
+  // 公告表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      type TEXT DEFAULT 'announcement',
+      priority TEXT DEFAULT 'normal',
+      targetRoles TEXT DEFAULT '["all"]',
+      targetUsers TEXT,
+      startAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      endAt TEXT,
+      isPublished INTEGER DEFAULT 0,
+      publishedAt TEXT,
+      publishedBy TEXT,
+      readCount INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // 通知表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      type TEXT DEFAULT 'system',
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      priority TEXT DEFAULT 'normal',
+      isRead INTEGER DEFAULT 0,
+      readAt TEXT,
+      data TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
+
+  // 通知配置表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS notification_configs (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      enabled INTEGER DEFAULT 1,
+      config TEXT DEFAULT '{}',
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(userId, channel)
+    )
+  `)
+
+  // WebDAV配置表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS webdav_configs (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      protocol TEXT DEFAULT 'webdav',
+      serverUrl TEXT NOT NULL,
+      username TEXT NOT NULL,
+      password TEXT NOT NULL,
+      remotePath TEXT DEFAULT '/bookmarks',
+      syncDirection TEXT DEFAULT 'bidirectional',
+      autoSync INTEGER DEFAULT 0,
+      syncInterval INTEGER DEFAULT 60,
+      enabled INTEGER DEFAULT 1,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // WebDAV同步历史表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS webdav_sync_history (
+      id TEXT PRIMARY KEY,
+      configId TEXT NOT NULL,
+      direction TEXT,
+      status TEXT,
+      totalItems INTEGER DEFAULT 0,
+      syncedItems INTEGER DEFAULT 0,
+      errors TEXT,
+      startedAt TEXT,
+      completedAt TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (configId) REFERENCES webdav_configs(id) ON DELETE CASCADE
+    )
+  `)
+
+  // 公告阅读记录表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS announcement_reads (
+      id TEXT PRIMARY KEY,
+      announcementId TEXT NOT NULL,
+      userId TEXT NOT NULL,
+      readAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (announcementId) REFERENCES announcements(id) ON DELETE CASCADE,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(announcementId, userId)
+    )
+  `)
 }
 
 /**
@@ -1809,6 +1912,30 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       isInstalled: 1,
       visibility: 'public',
       orderIndex: 2
+    },
+    {
+      id: 'webdav',
+      name: 'WebDAV同步',
+      description: 'WebDAV同步插件，支持书签数据同步到WebDAV服务器',
+      version: '1.0.0',
+      author: 'Nexus Team',
+      icon: '',
+      isEnabled: 1,
+      isInstalled: 1,
+      visibility: 'public',
+      orderIndex: 3
+    },
+    {
+      id: 'notifications',
+      name: '通知中心',
+      description: '通知中心插件，提供系统通知和公告管理功能',
+      version: '1.0.0',
+      author: 'Nexus Team',
+      icon: '',
+      isEnabled: 1,
+      isInstalled: 1,
+      visibility: 'public',
+      orderIndex: 4
     }
   ]
 

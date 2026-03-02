@@ -1001,7 +1001,13 @@ export function getFileTransferSettings() {
     maxFileSize: 100 * 1024 * 1024, // 100MB
     maxExpiryHours: 72, // 默认72小时
     maxDownloads: 10,
-    allowedFileTypes: ['*'], // 允许所有文件类型
+    // 安全：默认只允许常见文档和图片类型，禁止可执行文件
+    allowedFileTypes: [
+      'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', // 图片
+      'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', // 文档
+      'zip', 'rar', '7z', 'tar', 'gz', // 压缩包
+      'mp3', 'mp4', 'avi', 'mov', 'wmv', // 音视频
+    ],
     uploadPath: './uploads' // 默认上传目录
   }
   

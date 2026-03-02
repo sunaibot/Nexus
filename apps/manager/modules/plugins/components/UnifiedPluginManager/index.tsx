@@ -194,8 +194,6 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
   const [plugins, setPlugins] = useState<UnifiedPlugin[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'slots'>('list')
-  const [selectedPlugin, setSelectedPlugin] = useState<UnifiedPlugin | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     loadPlugins()
@@ -314,10 +312,7 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
                       plugin={plugin}
                       onToggle={() => handleToggleEnable(plugin)}
                       onDelete={() => handleDelete(plugin)}
-                      onConfigure={() => {
-                        setSelectedPlugin(plugin)
-                        setIsEditing(true)
-                      }}
+                      onConfigure={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
                       onManageData={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
                     />
                   ))}
@@ -338,16 +333,13 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
                   <div className="grid gap-3">
                     {customPlugins.map(plugin => (
                       <PluginCard
-                        key={plugin.id}
-                        plugin={plugin}
-                        onToggle={() => handleToggleEnable(plugin)}
-                        onDelete={() => handleDelete(plugin)}
-                        onConfigure={() => {
-                          setSelectedPlugin(plugin)
-                          setIsEditing(true)
-                        }}
-                        onManageData={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
-                      />
+                      key={plugin.id}
+                      plugin={plugin}
+                      onToggle={() => handleToggleEnable(plugin)}
+                      onDelete={() => handleDelete(plugin)}
+                      onConfigure={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
+                      onManageData={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
+                    />
                     ))}
                   </div>
                 )}
@@ -422,7 +414,7 @@ interface PluginCardProps {
   plugin: UnifiedPlugin
   onToggle: () => void
   onDelete: () => void
-  onConfigure: () => void
+  onConfigure?: () => void
   onManageData?: () => void
 }
 
@@ -503,17 +495,19 @@ function PluginCard({ plugin, onToggle, onDelete, onConfigure, onManageData }: P
         >
           {plugin.isEnabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
         </button>
-        <button
-          onClick={onConfigure}
-          className="p-2 rounded-lg transition-colors"
-          style={{
-            background: 'var(--color-glass-hover)',
-            color: 'var(--color-text-muted)'
-          }}
-          title="配置"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+        {onConfigure && (
+          <button
+            onClick={onConfigure}
+            className="p-2 rounded-lg transition-colors"
+            style={{
+              background: 'var(--color-glass-hover)',
+              color: 'var(--color-text-muted)'
+            }}
+            title="配置"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        )}
         {!plugin.isBuiltin && (
           <button
             onClick={onDelete}

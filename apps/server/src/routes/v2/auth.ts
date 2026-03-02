@@ -4,7 +4,7 @@
  */
 
 import { Router, Request, Response } from 'express'
-import { authMiddleware, adminMiddleware, generateToken } from '../../middleware/auth.js'
+import { authMiddleware, adminMiddleware, generateToken, authLimiter } from '../../middleware/auth.js'
 import { hashPassword, verifyPassword, logAudit, generateId } from '../../db/index.js'
 import { queryOne, run } from '../../utils/index.js'
 import { saveTokenToDb, deleteTokenFromDb, getSessionTimeout } from '../../middleware/auth.js'
@@ -27,7 +27,7 @@ interface User {
 // ========== 管理员认证 ==========
 
 // 管理员登录 - 兼容 /auth/admin/login
-router.post('/admin/login', async (req: Request, res: Response) => {
+router.post('/admin/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body
     const clientIp = req.ip || 'unknown'

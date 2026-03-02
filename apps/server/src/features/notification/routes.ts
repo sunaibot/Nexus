@@ -1,21 +1,22 @@
 /**
- * 通知系统路由模块
+ * 通知系统路由模块 - V2 API
  * 支持多通道通知
+ * 路径前缀: /api/v2/notifications
  */
 
 import { Router } from 'express'
 import { authMiddleware } from '../../middleware/index.js'
 import { notificationService } from './service.js'
 import { NotificationChannel, NotificationType, NotificationPriority } from './types.js'
-import { queryAll, runQuery, generateId } from '../../utils/index.js'
+import { queryAll, queryOne, runQuery, generateId } from '../../utils/index.js'
 
 const router = Router()
 
 /**
  * 获取用户通知列表
- * GET /api/notifications
+ * GET /api/v2/notifications
  */
-router.get('/notifications', authMiddleware, (req, res) => {
+router.get('/', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
     const unreadOnly = req.query.unreadOnly === 'true'
@@ -46,9 +47,9 @@ router.get('/notifications', authMiddleware, (req, res) => {
 
 /**
  * 获取未读通知数量
- * GET /api/notifications/unread-count
+ * GET /api/v2/notifications/unread-count
  */
-router.get('/notifications/unread-count', authMiddleware, (req, res) => {
+router.get('/unread-count', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
     const count = notificationService.getUnreadCount(user.id)
@@ -65,9 +66,9 @@ router.get('/notifications/unread-count', authMiddleware, (req, res) => {
 
 /**
  * 标记通知为已读
- * PUT /api/notifications/:id/read
+ * PATCH /api/v2/notifications/:id/read
  */
-router.put('/notifications/:id/read', authMiddleware, (req, res) => {
+router.patch('/:id/read', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
@@ -87,13 +88,13 @@ router.put('/notifications/:id/read', authMiddleware, (req, res) => {
 
 /**
  * 标记所有通知为已读
- * PUT /api/notifications/read-all
+ * PATCH /api/v2/notifications/read-all
  */
-router.put('/notifications/read-all', authMiddleware, (req, res) => {
+router.patch('/read-all', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
 
-    const success = notificationService.markAllAsRead(user.id)
+    notificationService.markAllAsRead(user.id)
 
     res.json({ success: true })
   } catch (error) {
@@ -104,9 +105,9 @@ router.put('/notifications/read-all', authMiddleware, (req, res) => {
 
 /**
  * 删除通知
- * DELETE /api/notifications/:id
+ * DELETE /api/v2/notifications/:id
  */
-router.delete('/notifications/:id', authMiddleware, (req, res) => {
+router.delete('/:id', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
@@ -126,9 +127,9 @@ router.delete('/notifications/:id', authMiddleware, (req, res) => {
 
 /**
  * 创建通知（管理员接口）
- * POST /api/notifications
+ * POST /api/v2/notifications
  */
-router.post('/notifications', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const user = (req as any).user
     const { type, title, content, priority, channels, data } = req.body
@@ -162,9 +163,9 @@ router.post('/notifications', authMiddleware, async (req, res) => {
 
 /**
  * 获取通知配置
- * GET /api/notifications/configs
+ * GET /api/v2/notifications/configs
  */
-router.get('/notifications/configs', authMiddleware, (req, res) => {
+router.get('/configs', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
 
@@ -185,9 +186,9 @@ router.get('/notifications/configs', authMiddleware, (req, res) => {
 
 /**
  * 保存通知配置
- * POST /api/notifications/configs
+ * POST /api/v2/notifications/configs
  */
-router.post('/notifications/configs', authMiddleware, (req, res) => {
+router.post('/configs', authMiddleware, (req, res) => {
   try {
     const user = (req as any).user
     const { channel, enabled, config } = req.body
@@ -231,9 +232,9 @@ router.post('/notifications/configs', authMiddleware, (req, res) => {
 
 /**
  * 获取支持的渠道列表
- * GET /api/notifications/channels
+ * GET /api/v2/notifications/channels
  */
-router.get('/notifications/channels', authMiddleware, (req, res) => {
+router.get('/channels', authMiddleware, (req, res) => {
   try {
     const channels = [
       { value: NotificationChannel.WEB, name: '站内通知', description: '在网站内显示通知' },

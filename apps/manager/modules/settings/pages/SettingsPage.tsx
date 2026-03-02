@@ -186,8 +186,9 @@ function LivePreview({ settings }: { settings: Partial<SiteSettings> }) {
           <div
             className="mt-4 pt-3 text-center text-[10px] border-t relative z-10"
             style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}
-            dangerouslySetInnerHTML={{ __html: settings.footerInfo }}
-          />
+          >
+            {settings.footerInfo}
+          </div>
         )}
       </div>
     </div>

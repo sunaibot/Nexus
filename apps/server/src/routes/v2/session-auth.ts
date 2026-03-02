@@ -8,6 +8,7 @@ import { sessionAuthMiddleware, adminSessionMiddleware, loginSession, logoutSess
 import { hashPassword, verifyPassword, logAudit, generateId } from '../../db/index.js'
 import { queryOne, run } from '../../utils/index.js'
 import { isLocked, recordFailedAttempt, clearLock } from '../../utils/securityLock.js'
+import { authLimiter } from '../../middleware/index.js'
 
 const router = Router()
 
@@ -21,7 +22,7 @@ interface User {
 }
 
 // 管理员登录 - 使用 Session
-router.post('/admin/login', async (req: Request, res: Response) => {
+router.post('/admin/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body
     const clientIp = req.ip || 'unknown'

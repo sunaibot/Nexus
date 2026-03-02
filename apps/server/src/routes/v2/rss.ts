@@ -86,6 +86,28 @@ router.delete('/feeds/:id', (req, res) => {
   }
 })
 
+// 刷新订阅源
+router.post('/feeds/:id/refresh', (req, res) => {
+  try {
+    const { id } = req.params
+    const feed = getRssFeed(id)
+    if (!feed) {
+      return errorResponse(res, '订阅源不存在', 404)
+    }
+    
+    // 更新最后获取时间
+    updateRssFeed(id, { lastFetchAt: new Date().toISOString() })
+    
+    // 这里可以添加实际的 RSS 抓取逻辑
+    // 目前仅更新时间戳作为示例
+    
+    return successResponse(res, { refreshed: true })
+  } catch (error) {
+    console.error('Refresh feed error:', error)
+    return errorResponse(res, '刷新订阅源失败')
+  }
+})
+
 router.get('/articles', (req, res) => {
   try {
     const { feedId, unreadOnly } = req.query

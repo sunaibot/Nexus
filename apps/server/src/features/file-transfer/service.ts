@@ -59,8 +59,30 @@ export class FileTransferService {
 
       // 检查文件类型
       const fileExt = request.fileName.split('.').pop()?.toLowerCase() || ''
+      
+      // 安全检查：禁止危险文件类型
+      const dangerousExts = [
+        'exe', 'dll', 'bat', 'cmd', 'sh', 'bin',
+        'php', 'php3', 'php4', 'php5', 'phtml',
+        'jsp', 'jspx', 'war', 'ear',
+        'asp', 'aspx', 'ascx', 'ashx',
+        'py', 'pyc', 'pyo', 'rb', 'pl', 'cgi',
+        'htaccess', 'htpasswd',
+        'js', 'vbs', 'wsf', 'wsh',
+        'jar', 'class', 'so', 'o',
+      ]
+      if (dangerousExts.includes(fileExt)) {
+        return { success: false, error: '禁止上传可执行文件或脚本文件' }
+      }
+      
+      // 检查是否允许的文件类型
       if (!settings.allowedFileTypes.includes(fileExt) && !settings.allowedFileTypes.includes('*')) {
         return { success: false, error: '不支持的文件类型' }
+      }
+      
+      // 安全检查：文件名防止路径穿越
+      if (request.fileName.includes('/') || request.fileName.includes('\\') || request.fileName.includes('..')) {
+        return { success: false, error: '非法文件名' }
       }
 
       // 检查用户配额

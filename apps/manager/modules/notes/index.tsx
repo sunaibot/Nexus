@@ -128,10 +128,20 @@ async function deleteFolder(id: string): Promise<void> {
   if (!res.ok) throw new Error('删除文件夹失败')
 }
 
-// Markdown 渲染
+// HTML转义函数 - 防止XSS攻击
+function escapeHtml(text: string): string {
+  if (!text) return ''
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+// Markdown 渲染 - 安全的版本
 function renderMarkdown(text: string): string {
   if (!text) return ''
-  return text
+  // 先转义HTML，防止XSS
+  const escaped = escapeHtml(text)
+  return escaped
     .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-3 mb-2">$1</h3>')
     .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
     .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-4 mb-3">$1</h1>')

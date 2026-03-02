@@ -34,6 +34,44 @@ const updateNoteSchema = z.object({
   isArchived: z.boolean().optional(),
 })
 
+// ========== 管理员接口（必须在动态路由之前定义）==========
+
+// 获取所有笔记（管理员）
+router.get('/all', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    
+    // 检查是否是管理员
+    if (user.role !== 'admin') {
+      return errorResponse(res, '无权限访问', 403)
+    }
+    
+    const notes = queryAll('SELECT * FROM notes ORDER BY updatedAt DESC')
+    return successResponse(res, notes)
+  } catch (error) {
+    console.error('获取所有笔记失败:', error)
+    return errorResponse(res, '获取所有笔记失败')
+  }
+})
+
+// 获取所有文件夹（管理员）
+router.get('/folders/all', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user
+    
+    // 检查是否是管理员
+    if (user.role !== 'admin') {
+      return errorResponse(res, '无权限访问', 403)
+    }
+    
+    const folders = queryAll('SELECT * FROM note_folders ORDER BY orderIndex ASC, createdAt DESC')
+    return successResponse(res, folders)
+  } catch (error) {
+    console.error('获取所有文件夹失败:', error)
+    return errorResponse(res, '获取所有文件夹失败')
+  }
+})
+
 // 获取笔记列表（带用户隔离）
 router.get('/', authMiddleware, (req: Request, res: Response) => {
   try {
@@ -393,42 +431,6 @@ router.delete('/folders/:id', authMiddleware, validateParams(idParamSchema), (re
 })
 
 // ========== 管理员接口 ==========
-
-// 获取所有笔记（管理员）
-router.get('/all', authMiddleware, (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user
-    
-    // 检查是否是管理员
-    if (user.role !== 'admin') {
-      return errorResponse(res, '无权限访问', 403)
-    }
-    
-    const notes = queryAll('SELECT * FROM notes ORDER BY updatedAt DESC')
-    return successResponse(res, notes)
-  } catch (error) {
-    console.error('获取所有笔记失败:', error)
-    return errorResponse(res, '获取所有笔记失败')
-  }
-})
-
-// 获取所有文件夹（管理员）
-router.get('/folders/all', authMiddleware, (req: Request, res: Response) => {
-  try {
-    const user = (req as any).user
-    
-    // 检查是否是管理员
-    if (user.role !== 'admin') {
-      return errorResponse(res, '无权限访问', 403)
-    }
-    
-    const folders = queryAll('SELECT * FROM note_folders ORDER BY orderIndex ASC, createdAt DESC')
-    return successResponse(res, folders)
-  } catch (error) {
-    console.error('获取所有文件夹失败:', error)
-    return errorResponse(res, '获取所有文件夹失败')
-  }
-})
 
 // 管理员删除任意笔记
 router.delete('/admin/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {

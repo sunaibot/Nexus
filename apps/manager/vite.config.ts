@@ -29,6 +29,8 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: apiTarget,
           changeOrigin: true,
+          // 确保 Cookie 能够正确传递
+          cookieDomainRewrite: 'localhost',
         },
       } : undefined,
     },

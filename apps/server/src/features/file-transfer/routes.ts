@@ -13,15 +13,24 @@ import { ResourceType, PermissionAction } from '../../core/permission/types.js'
 const router = Router()
 
 /**
- * 上传文件 - 支持匿名和登录用户
+ * 上传文件 - 需要登录（安全考虑）
  * POST /api/file-transfers/upload
  */
-router.post('/upload', optionalAuthMiddleware, async (req, res) => {
+router.post('/upload', authMiddleware, async (req, res) => {
   const user = (req as any).user
+  
+  // 安全检查：确保用户已登录
+  if (!user || !user.id) {
+    return res.status(401).json({
+      success: false,
+      error: '请先登录后再上传文件'
+    })
+  }
+  
   const result = await fileTransferService.upload(
     req.body,
-    user?.id,
-    user?.role || UserRole.GUEST,
+    user.id,
+    user.role || UserRole.USER,
     req.ip || 'unknown'
   )
 
@@ -89,7 +98,7 @@ router.get('/download/:downloadToken', async (req, res) => {
   // 读取文件并返回
   try {
     const fs = await import('fs')
-    const path = await import('path')
+    const pathModule = await import('path')
     const { getFileTransferSettings } = await import('../../db/settings.js')
     
     // 获取设置中的存储路径
@@ -97,19 +106,26 @@ router.get('/download/:downloadToken', async (req, res) => {
     const storagePath = settings?.uploadPath || './uploads'
     const uploadsDir = storagePath.startsWith('/') 
       ? storagePath 
-      : path.join(process.cwd(), storagePath)
+      : pathModule.join(process.cwd(), storagePath)
     
-    const filePath = path.resolve(uploadsDir, file.filePath)
+    // 安全检查：规范化路径并防止路径穿越攻击
+    // 使用path.normalize规范化路径，然后解析为绝对路径
+    const normalizedFilePath = pathModule.normalize(file.filePath).replace(/^(\.\.(\/|\\|$))+/, '')
+    const filePath = pathModule.resolve(uploadsDir, normalizedFilePath)
     
     // 调试日志
     console.log('[Download Debug] Storage path:', storagePath)
     console.log('[Download Debug] Uploads dir:', uploadsDir)
     console.log('[Download Debug] File path from DB:', file.filePath)
+    console.log('[Download Debug] Normalized path:', normalizedFilePath)
     console.log('[Download Debug] Resolved file path:', filePath)
     console.log('[Download Debug] File exists:', fs.existsSync(filePath))
     
-    // 安全检查：确保文件路径在允许目录内
-    if (!filePath.startsWith(uploadsDir)) {
+    // 安全检查：确保文件路径在允许目录内（使用解析后的路径）
+    const resolvedUploadsDir = pathModule.resolve(uploadsDir)
+    const resolvedFilePath = pathModule.resolve(filePath)
+    
+    if (!resolvedFilePath.startsWith(resolvedUploadsDir + pathModule.sep) && resolvedFilePath !== resolvedUploadsDir) {
       console.error('[Security] Path traversal attempt:', file.filePath)
       return res.status(403).json({ success: false, error: '非法文件路径' })
     }
@@ -174,12 +190,18 @@ router.get('/:extractCode/preview', async (req, res) => {
 
   try {
     const fs = await import('fs')
-    const path = await import('path')
-    const uploadsDir = path.join(process.cwd(), 'uploads')
-    const filePath = path.resolve(uploadsDir, file.filePath)
-    
-    // 安全检查：确保文件路径在允许目录内
-    if (!filePath.startsWith(uploadsDir)) {
+    const pathModule = await import('path')
+    const uploadsDir = pathModule.join(process.cwd(), 'uploads')
+
+    // 安全检查：规范化路径并防止路径穿越攻击
+    const normalizedFilePath = pathModule.normalize(file.filePath).replace(/^(\.\.(\/|\\|$))+/, '')
+    const filePath = pathModule.resolve(uploadsDir, normalizedFilePath)
+
+    // 安全检查：确保文件路径在允许目录内（使用解析后的路径）
+    const resolvedUploadsDir = pathModule.resolve(uploadsDir)
+    const resolvedFilePath = pathModule.resolve(filePath)
+
+    if (!resolvedFilePath.startsWith(resolvedUploadsDir + pathModule.sep) && resolvedFilePath !== resolvedUploadsDir) {
       console.error('[Security] Path traversal attempt:', file.filePath)
       return res.status(403).json({ success: false, error: '非法文件路径' })
     }

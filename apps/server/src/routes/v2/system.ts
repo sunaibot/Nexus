@@ -35,11 +35,9 @@ router.get('/info', authMiddleware, (req: Request, res: Response) => {
     res.json({
       success: true,
       data: {
-        nodeVersion: process.version,
-        platform: process.platform,
-        dbVersion: dbInfo?.version || 'unknown',
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
+        status: 'running',
+        version: '2.0.0',
+        timestamp: new Date().toISOString(),
       }
     })
   } catch (error) {
@@ -107,14 +105,28 @@ router.get('/pulse', authMiddleware, adminMiddleware, async (req: Request, res: 
     const uptime = os.uptime()
     const uptimeFormatted = formatUptime(uptime)
     
-    // Docker 容器信息（如果可用）
+    // Docker 容器信息（如果可用）- 使用安全的execFile代替execSync
     let dockerInfo = null
     try {
-      const { execSync } = await import('child_process')
-      const result = execSync('docker ps -q 2>/dev/null | wc -l', { encoding: 'utf8', timeout: 1000 })
-      const running = parseInt(result.trim()) || 0
-      const allResult = execSync('docker ps -aq 2>/dev/null | wc -l', { encoding: 'utf8', timeout: 1000 })
-      const total = parseInt(allResult.trim()) || 0
+      const { execFile } = await import('child_process')
+      const { promisify } = await import('util')
+      const execFileAsync = promisify(execFile)
+      
+      // 安全地执行docker命令，使用参数数组而非字符串拼接
+      const { stdout: runningStdout } = await execFileAsync('docker', ['ps', '-q'], {
+        encoding: 'utf8',
+        timeout: 1000,
+        windowsHide: true // Windows下隐藏命令窗口
+      })
+      const running = runningStdout.trim().split('\n').filter(Boolean).length
+      
+      const { stdout: allStdout } = await execFileAsync('docker', ['ps', '-aq'], {
+        encoding: 'utf8',
+        timeout: 1000,
+        windowsHide: true
+      })
+      const total = allStdout.trim().split('\n').filter(Boolean).length
+      
       dockerInfo = { running, total }
     } catch {
       // Docker 不可用

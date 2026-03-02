@@ -14,6 +14,10 @@ import type { UnifiedPlugin } from '../api-unified'
 import QuoteManager from '../components/QuoteManager/index'
 import FileTransferManager from '../components/FileTransferManager/index'
 import NotesManager from '../components/NotesManager/index'
+import RssManager from '../components/RssManager/index'
+import VisitsManager from '../components/VisitsManager/index'
+import WebDAVManager from '../components/WebDAVManager/index'
+import NotificationManager from '../components/NotificationManager/index'
 import SlotConfigManager from '../components/SlotConfigManager/index'
 import PluginDisplayConfigManager from '../components/PluginDisplayConfigManager'
 import { UnifiedPluginManager } from '../components/UnifiedPluginManager'
@@ -139,7 +143,67 @@ export default function PluginsPage() {
               />
             </motion.div>
           )}
-          {activeTab === 'data' && managingPlugin.id !== 'quotes' && managingPlugin.id !== 'file-transfer' && managingPlugin.id !== 'notes' && (
+          {activeTab === 'data' && managingPlugin.id === 'rss' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <RssManager
+                plugin={managingPlugin}
+                onPluginUpdate={(updated) => {
+                  setManagingPlugin(updated)
+                }}
+              />
+            </motion.div>
+          )}
+          {activeTab === 'data' && managingPlugin.id === 'visits' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <VisitsManager
+                plugin={managingPlugin}
+                onPluginUpdate={(updated) => {
+                  setManagingPlugin(updated)
+                }}
+              />
+            </motion.div>
+          )}
+          {activeTab === 'data' && managingPlugin.id === 'webdav' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <WebDAVManager
+                plugin={managingPlugin}
+                onPluginUpdate={(updated) => {
+                  setManagingPlugin(updated)
+                }}
+              />
+            </motion.div>
+          )}
+          {activeTab === 'data' && managingPlugin.id === 'notifications' && (
+            <motion.div
+              key="data"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <NotificationManager
+                plugin={managingPlugin}
+                onPluginUpdate={(updated) => {
+                  setManagingPlugin(updated)
+                }}
+              />
+            </motion.div>
+          )}
+          {activeTab === 'data' && managingPlugin.id !== 'quotes' && managingPlugin.id !== 'file-transfer' && managingPlugin.id !== 'notes' && managingPlugin.id !== 'rss' && managingPlugin.id !== 'visits' && managingPlugin.id !== 'webdav' && managingPlugin.id !== 'notifications' && (
             <motion.div
               key="data"
               initial={{ opacity: 0, y: 20 }}

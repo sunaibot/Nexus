@@ -7,9 +7,22 @@ const SESSION_TIMEOUT_HOURS = parseInt(process.env.SESSION_TIMEOUT_HOURS || '24'
 const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_HOURS * 60 * 60 * 1000
 
 // JWT 密钥配置（从环境变量读取，确保生产环境安全）
-const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' 
-  ? (() => { throw new Error('JWT_SECRET must be set in production environment') })()
-  : 'dev-jwt-secret-not-for-production-' + Date.now())
+let JWT_SECRET: string
+
+if (process.env.JWT_SECRET) {
+  JWT_SECRET = process.env.JWT_SECRET
+} else if (process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET must be set in production environment')
+} else {
+  // 开发环境：生成随机密钥并缓存
+  JWT_SECRET = crypto.randomBytes(64).toString('hex')
+  console.warn('[Security] Generated random JWT_SECRET for development. Set JWT_SECRET env var for persistent sessions.')
+}
+
+// 检查密钥强度
+if (JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters long')
+}
 
 // ========== Token 管理函数 (持久化到数据库) ==========
 
@@ -242,3 +255,6 @@ export function getSessionTimeout(): { hours: number; ms: number } {
 
 // 定期清理过期 Token (每小时)
 setInterval(cleanExpiredTokens, 60 * 60 * 1000)
+
+// 从rateLimiter导入并重新导出authLimiter
+export { authLimiter } from './rateLimiter.js'

@@ -1,15 +1,25 @@
-# Nexus
+<div align="center">
+
+# 🔗 Nexus
 
 > **智能书签管理系统** - 您的个人链接枢纽
 
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/yourusername/nexus/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg?logo=typescript)](https://www.typescriptlang.org)
+[![Node.js](https://img.shields.io/badge/Node.js-18-339933.svg?logo=node.js)](https://nodejs.org)
+[![SQLite](https://img.shields.io/badge/SQLite-3-003B57.svg?logo=sqlite)](https://sqlite.org)
+
 <p align="center">
-  <img src="https://img.shields.io/badge/version-2.0.0-blue.svg" alt="version">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
-  <img src="https://img.shields.io/badge/React-18-61DAFB.svg?logo=react" alt="react">
-  <img src="https://img.shields.io/badge/TypeScript-5-3178C6.svg?logo=typescript" alt="typescript">
-  <img src="https://img.shields.io/badge/Node.js-18-339933.svg?logo=node.js" alt="nodejs">
-  <img src="https://img.shields.io/badge/SQLite-3-003B57.svg?logo=sqlite" alt="sqlite">
+  <b>🌟 Star 我们 · 🍴 Fork 项目 · 🤝 参与贡献</b>
 </p>
+
+[📖 在线文档](https://docs.nexus.app) · [🚀 在线演示](https://demo.nexus.app) · [💬 加入社区](https://discord.gg/nexus) · [🐛 报告问题](../../issues)
+
+<img src="https://raw.githubusercontent.com/yourusername/nexus/main/docs/screenshot.png" alt="Nexus Screenshot" width="800">
+
+</div>
 
 ---
 
@@ -18,6 +28,17 @@
 **Nexus** 是一个现代化的智能书签管理系统，帮助您高效地组织、管理和访问您的网络资源。
 
 "Nexus" 意为"连接点"或"枢纽"，正如其名，它将成为您所有重要链接的中央枢纽。
+
+### 🎥 功能预览
+
+| 功能 | 描述 | 状态 |
+|------|------|------|
+| 🔖 智能书签 | 分类、标签、搜索、置顶 | ✅ 可用 |
+| 🔌 插件系统 | 模块化扩展，无限可能 | ✅ 可用 |
+| 🌓 深色模式 | 自动适配系统主题 | ✅ 可用 |
+| 📱 响应式 | 完美适配移动端 | ✅ 可用 |
+| 🔒 私密书签 | 密码保护敏感链接 | ✅ 可用 |
+| 🔄 WebDAV | 多设备数据同步 | ✅ 可用 |
 
 ---
 
@@ -675,22 +696,99 @@ DATABASE_PATH=./data/nexus.db
 
 ---
 
-## 🤝 贡献指南
+## 🎯 加入我们 - 一起打造更好的 Nexus！
 
-欢迎提交 Issue 和 Pull Request！
+> **我们正在寻找热爱开源的开发者！** 无论你是前端高手、后端专家，还是全栈工程师，都欢迎加入 Nexus 开发团队。
 
-1. Fork 本项目
-2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开一个 Pull Request
+### 🌟 为什么参与 Nexus？
 
-### 开发规范
+- **🚀 技术成长** - 使用最新的 React 18、TypeScript 5、Node.js 技术栈
+- **🎨 创意实现** - 插件系统让你可以尽情发挥创意，打造独特功能
+- **👥 社区支持** - 活跃的开发者社区，互相学习，共同进步
+- **💼 简历亮点** - 参与知名开源项目，提升个人技术影响力
+- **🎁 贡献回报** - 核心贡献者将获得项目署名权和特殊荣誉
 
-- 使用 TypeScript 进行开发
-- 遵循 ESLint 和 Prettier 代码规范
-- 提交前运行测试确保代码质量
-- 编写清晰的提交信息
+### 🛠️ 我们正在寻找的贡献者
+
+| 方向 | 技能要求 | 任务示例 |
+|------|----------|----------|
+| **前端开发** | React, TypeScript, Tailwind CSS | 开发新插件 UI、优化交互体验 |
+| **后端开发** | Node.js, Express, SQLite | API 开发、性能优化、数据库设计 |
+| **插件开发** | 全栈能力 | 开发天气、日历、待办等实用插件 |
+| **UI/UX 设计** | Figma, CSS | 设计新主题、优化界面布局 |
+| **文档翻译** | 英语/其他语言 | 完善多语言文档、翻译界面 |
+| **测试工程师** | 自动化测试 | 编写测试用例、保障代码质量 |
+
+### 🚦 新手友好任务
+
+如果你是第一次参与开源，以下任务非常适合入门：
+
+- 🐛 **修复 Bug** - 查看 [Issues](https://github.com/yourusername/nexus/issues) 标签为 `good first issue` 的任务
+- 🎨 **UI 优化** - 改进按钮样式、调整颜色对比度
+- 📝 **完善文档** - 补充代码注释、修复文档错别字
+- 🌍 **界面翻译** - 添加新的语言支持
+- ⚡ **性能优化** - 优化图片加载、减少 bundle 体积
+
+### 🏗️ 插件开发指南
+
+Nexus 拥有强大的插件系统，开发插件非常简单：
+
+```typescript
+// 示例：创建一个简单的时钟插件
+export default function ClockPlugin() {
+  const [time, setTime] = useState(new Date())
+  
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+  
+  return (
+    <div className="text-2xl font-bold">
+      {time.toLocaleTimeString()}
+    </div>
+  )
+}
+```
+
+更多插件开发文档：[Plugin Development Guide](./docs/plugin-development.md)
+
+### 🤝 贡献流程
+
+1. **Fork 项目** - 点击右上角的 Fork 按钮
+2. **克隆代码** - `git clone https://github.com/你的用户名/nexus.git`
+3. **创建分支** - `git checkout -b feature/你的功能名`
+4. **提交更改** - `git commit -m "✨ feat: 添加新功能"`
+5. **推送分支** - `git push origin feature/你的功能名`
+6. **创建 PR** - 在 GitHub 上提交 Pull Request
+
+### 📋 代码规范
+
+- **TypeScript** - 所有代码必须使用 TypeScript
+- **ESLint** - 遵循项目 ESLint 配置
+- **提交信息** - 使用 [Conventional Commits](https://www.conventionalcommits.org/) 规范
+  - `✨ feat:` 新功能
+  - `🐛 fix:` 修复 Bug
+  - `📚 docs:` 文档更新
+  - `💄 style:` 代码格式
+  - `♻️ refactor:` 重构
+  - `⚡ perf:` 性能优化
+  - `✅ test:` 测试相关
+
+### 💬 加入社区
+
+- 📧 **邮件联系**: your.email@example.com
+- 💭 **Discord**: [加入我们的 Discord](https://discord.gg/nexus)
+- 🐦 **Twitter**: [@NexusApp](https://twitter.com/NexusApp)
+- 📱 **微信群**: 扫码加入开发者群
+
+### 🏆 核心贡献者
+
+感谢以下开发者对 Nexus 的贡献：
+
+<a href="https://github.com/yourusername/nexus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=yourusername/nexus" />
+</a>
 
 ---
 
