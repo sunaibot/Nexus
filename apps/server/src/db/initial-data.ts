@@ -160,7 +160,7 @@ export const initialQuotes = [
 ]
 
 export const initialSettings = {
-  siteTitle: 'NOWEN',
+  siteTitle: 'Nexus',
   siteDescription: '一个简洁优雅的导航主页',
   enableAnimation: true,
   enableParticles: true,

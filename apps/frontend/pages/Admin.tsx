@@ -258,7 +258,7 @@ function AdminContent() {
 
   // 站点设置状态
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    siteTitle: 'NOWEN',
+    siteTitle: 'Nexus',
     siteFavicon: '',
     enableBeamAnimation: true,
     widgetVisibility: {

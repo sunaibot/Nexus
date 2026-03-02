@@ -1,6 +1,6 @@
-# NOWEN 安全部署指南
+# Nexus 安全部署指南
 
-本文档介绍如何安全地部署 NOWEN，避免常见的安全风险。
+本文档介绍如何安全地部署 Nexus，避免常见的安全风险。
 
 ## 🚨 关键安全警告
 
@@ -46,8 +46,8 @@ ports:
 
 ```bash
 # 1. 克隆代码
-git clone https://github.com/cropflre/NOWEN.git
-cd NOWEN
+git clone https://github.com/sunaibot/Nexus.git
+cd Nexus
 
 # 2. 创建环境变量文件
 cp .env.example .env
@@ -225,7 +225,7 @@ echo "备份完成: $BACKUP_DIR/nowen_backup_$DATE.tar.gz"
 
 发现安全漏洞请通过以下方式报告：
 
-- GitHub Security Advisories: https://github.com/cropflre/NOWEN/security
+- GitHub Security Advisories: https://github.com/sunaibot/Nexus/security
 - 邮件: security@example.com（请替换为实际邮箱）
 
 **请不要在公开 issue 中披露安全漏洞**

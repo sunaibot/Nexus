@@ -28,7 +28,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     { requireAuth: false }
   )
   return response.data || {
-    siteName: 'NOWEN',
+    siteName: 'Nexus',
     theme: 'auto',
   }
 }

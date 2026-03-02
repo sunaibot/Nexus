@@ -5,7 +5,7 @@ import { setActiveQuotes } from '../data/quotes'
 
 // 默认站点设置
 export const defaultSiteSettings: SiteSettings = {
-  siteTitle: 'NOWEN',
+  siteTitle: 'Nexus',
   siteFavicon: '',
   enableBeamAnimation: true,
   enableLiteMode: false,

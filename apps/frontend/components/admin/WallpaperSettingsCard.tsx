@@ -487,7 +487,7 @@ export function WallpaperSettingsCard({
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <p className="text-white/90 text-lg font-bold">NOWEN</p>
+                        <p className="text-white/90 text-lg font-bold">Nexus</p>
                         <p className="text-white/60 text-xs mt-1">{t('admin.settings.wallpaper.preview_hint')}</p>
                       </div>
                     </div>

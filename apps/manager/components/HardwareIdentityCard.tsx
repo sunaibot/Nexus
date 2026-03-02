@@ -254,7 +254,7 @@ function PostHeader({ onComplete, isMobile, isDark = true }: { onComplete: () =>
   }, [onComplete])
   
   const bootLines = useMemo(() => [
-    'NOWEN BIOS v2.4.1',
+    'Nexus BIOS v2.4.1',
     '正在初始化硬件扫描...',
     '内存检测... 通过',
     'CPU检测... 通过',

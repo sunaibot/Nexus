@@ -1,4 +1,4 @@
-# NOWEN API 文档
+# Nexus API 文档
 
 > 版本: v2.0  
 > 更新日期: 2026-02-22  
@@ -106,7 +106,7 @@ curl -X GET "http://localhost:3000/api/v2/bookmarks" \
 
 ## 🔐 认证机制
 
-NOWEN 支持两种认证方式：**JWT Token** 和 **Session 认证**
+Nexus 支持两种认证方式：**JWT Token** 和 **Session 认证**
 
 ### 方式一：JWT Token（默认）
 

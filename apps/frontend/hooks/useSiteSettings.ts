@@ -4,7 +4,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 
 // 默认站点设置
 export const defaultSiteSettings: SiteSettings = {
-  siteTitle: "NOWEN",
+  siteTitle: "Nexus",
   siteFavicon: "",
   enableBeamAnimation: true,
   enableLiteMode: false,

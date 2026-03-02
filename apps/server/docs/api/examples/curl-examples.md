@@ -186,7 +186,7 @@ curl -X PUT "${BASE_URL}/settings/batch" \
   -H "Content-Type: application/json" \
   -d '{
     "settings": {
-      "siteTitle": "NOWEN",
+      "siteTitle": "Nexus",
       "enableBeamAnimation": true,
       "enableLiteMode": false
     }

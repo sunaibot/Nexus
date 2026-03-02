@@ -4,7 +4,7 @@
 
 ## 📋 概述
 
-NOWEN API 使用 JWT (JSON Web Token) 进行身份认证。
+Nexus API 使用 JWT (JSON Web Token) 进行身份认证。
 
 ## 🔐 认证流程
 

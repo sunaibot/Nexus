@@ -574,7 +574,7 @@ export function SiteSettingsCard({
                     </div>
                   )}
                   <span className="text-xs truncate max-w-[120px]" style={{ color: 'var(--color-text-secondary)' }}>
-                    {settings.siteTitle || 'NOWEN'}
+                    {settings.siteTitle || 'Nexus'}
                   </span>
                 </div>
               </div>
@@ -595,7 +595,7 @@ export function SiteSettingsCard({
                     className="text-lg font-bold bg-clip-text text-transparent"
                     style={{ backgroundImage: 'linear-gradient(to right, var(--color-text-primary), var(--color-text-muted))' }}
                   >
-                    {settings.siteTitle || 'NOWEN'}
+                    {settings.siteTitle || 'Nexus'}
                   </motion.h1>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.site.preview_subtitle')}</p>
                   

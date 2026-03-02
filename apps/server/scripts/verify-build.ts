@@ -36,7 +36,7 @@ async function verify(name: string, fn: () => void | Promise<void>): Promise<voi
 }
 
 console.log('========================================')
-console.log('  NOWEN Server - 第二阶段验证')
+console.log('  Nexus Server - 第二阶段验证')
 console.log('========================================\n')
 
 async function runVerifications() {

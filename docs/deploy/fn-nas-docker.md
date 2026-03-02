@@ -1,6 +1,6 @@
 # 飞牛 NAS Docker 部署指南
 
-本文档介绍如何在飞牛 NAS 上使用 Docker Compose 部署 NOWEN。
+本文档介绍如何在飞牛 NAS 上使用 Docker Compose 部署 Nexus。
 
 ## 📋 前置要求
 
@@ -18,8 +18,8 @@
 cd /vol1/共享文件夹
 
 # 克隆代码
-git clone https://github.com/cropflre/NOWEN.git
-cd NOWEN
+git clone https://github.com/sunaibot/Nexus.git
+cd Nexus
 ```
 
 或通过文件管理器直接上传代码压缩包并解压。
@@ -133,7 +133,7 @@ server {
 ## 🔄 更新升级
 
 ```bash
-cd /vol1/共享文件夹/NOWEN
+cd /vol1/共享文件夹/Nexus
 
 # 拉取最新代码
 git pull
@@ -184,5 +184,5 @@ nowen-frontend:
 
 ## 📞 获取帮助
 
-- GitHub Issues: https://github.com/cropflre/NOWEN/issues
-- 文档: https://github.com/cropflre/NOWEN/tree/main/docs
+- GitHub Issues: https://github.com/sunaibot/Nexus/issues
+- 文档: https://github.com/sunaibot/Nexus/tree/main/docs

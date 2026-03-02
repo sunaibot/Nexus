@@ -107,10 +107,10 @@ DB_PATH=/data/zen-garden.db
 
 ```bash
 # 1. 复制项目到 NAS
-cp -r NOWEN-main /volume1/docker/
+cp -r Nexus-main /volume1/docker/
 
 # 2. 进入目录
-cd /volume1/docker/NOWEN-main
+cd /volume1/docker/Nexus-main
 
 # 3. 启动服务
 docker-compose up -d

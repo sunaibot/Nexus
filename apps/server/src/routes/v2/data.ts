@@ -415,7 +415,7 @@ router.post('/factory-reset', authMiddleware, adminMiddleware, (req: Request, re
     
     // 重置设置
     db.run("DELETE FROM settings WHERE key != 'siteTitle'")
-    db.run("UPDATE settings SET value = 'NOWEN' WHERE key = 'siteTitle'")
+    db.run("UPDATE settings SET value = 'Nexus' WHERE key = 'siteTitle'")
     
     // 如果是恢复初始状态，插入示例数据
     if (mode === 'initial') {

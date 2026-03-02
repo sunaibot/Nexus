@@ -21,7 +21,7 @@
 {
   "success": true,
   "data": {
-    "siteTitle": "NOWEN",
+    "siteTitle": "Nexus",
     "siteFavicon": "/favicon.ico",
     "enableBeamAnimation": true,
     "enableLiteMode": false,
@@ -103,7 +103,7 @@
 ```json
 {
   "settings": {
-    "siteTitle": "NOWEN",
+    "siteTitle": "Nexus",
     "enableWeather": true
   }
 }
@@ -131,7 +131,7 @@
 
 | 键 | 类型 | 默认值 | 说明 |
 |----|------|--------|------|
-| siteTitle | string | "NOWEN" | 站点标题 |
+| siteTitle | string | "Nexus" | 站点标题 |
 | siteDescription | string | "" | 站点描述 |
 | siteFavicon | string | "/favicon.ico" | 站点图标 |
 

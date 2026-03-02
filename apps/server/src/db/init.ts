@@ -979,7 +979,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
       name: '名言管理',
       description: '名言管理插件，提供名言的增删改查功能',
       version: '1.0.0',
-      author: 'Nowen Team',
+      author: 'Nexus Team',
       icon: '',
       isEnabled: 1,
       isInstalled: 1,
@@ -1728,7 +1728,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
 async function ensureDefaultSettings(db: SqlJsDatabase): Promise<void> {
   // 确保默认设置项存在
   const defaultSettings = [
-    { key: 'siteTitle', value: 'NOWEN' },
+    { key: 'siteTitle', value: 'Nexus' },
     { key: 'enableBeamAnimation', value: 'true' },
     { key: 'enableLiteMode', value: 'false' },
     { key: 'enableWeather', value: 'true' },
@@ -1791,7 +1791,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       name: '名言管理',
       description: '名言管理插件，提供名言的增删改查功能',
       version: '1.0.0',
-      author: 'Nowen Team',
+      author: 'Nexus Team',
       icon: '',
       isEnabled: 1,
       isInstalled: 1,
@@ -1803,7 +1803,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       name: '文件快传',
       description: '文件快传插件，提供临时文件上传和分享功能',
       version: '1.0.0',
-      author: 'Nowen Team',
+      author: 'Nexus Team',
       icon: '',
       isEnabled: 1,
       isInstalled: 1,
@@ -2130,7 +2130,7 @@ function ensureDefaultDockConfigs(db: SqlJsDatabase, now: string): void {
       { id: 'language', title: '切换语言', icon: 'Languages', iconType: 'lucide', action: 'toggleLanguage', orderIndex: 4, isEnabled: 1, isVisible: 1 },
       { id: 'theme', title: '切换主题', icon: 'Sun', iconType: 'lucide', action: 'toggleTheme', orderIndex: 5, isEnabled: 1, isVisible: 1 },
       { id: 'admin', title: '管理后台', icon: 'LayoutDashboard', iconType: 'lucide', href: '/admin', orderIndex: 6, isEnabled: 1, isVisible: 1 },
-      { id: 'github', title: 'GitHub', icon: 'Github', iconType: 'lucide', href: 'https://github.com/cropflre/NOWEN', orderIndex: 7, isEnabled: 1, isVisible: 1 }
+      { id: 'github', title: 'GitHub', icon: 'Github', iconType: 'lucide', href: 'https://github.com/sunaibot/Nexus', orderIndex: 7, isEnabled: 1, isVisible: 1 }
     ])
 
     db.run(

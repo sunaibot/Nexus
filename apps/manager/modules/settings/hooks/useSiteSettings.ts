@@ -25,7 +25,7 @@ interface UseSiteSettingsReturn {
 }
 
 const defaultSettings: SiteSettings = {
-  siteTitle: 'NOWEN',
+  siteTitle: 'Nexus',
   siteFavicon: '',
   siteDescription: '',
   enableBeamAnimation: true,
