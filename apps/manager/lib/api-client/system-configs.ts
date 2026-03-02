@@ -1,0 +1,202 @@
+import { request } from './client'
+
+// 安全配置
+export interface SecurityConfig {
+  maxLoginAttempts: number
+  lockDurationMinutes: number
+  sessionTimeoutHours: number
+  passwordMinLength: number
+  requireStrongPassword: boolean
+  enableIpFilter: boolean
+  enableAuditLog: boolean
+}
+
+// 文件传输配置
+export interface FileTransferConfig {
+  maxFileSizeMB: number
+  maxExpiryHours: number
+  maxDownloads: number
+  allowedFileTypes: string[]
+  blockedFileTypes: string[]
+  uploadPath: string
+  enableVirusScan: boolean
+  chunkSizeMB: number
+  maxConcurrentUploads: number
+}
+
+// 上传配置
+export interface UploadConfig {
+  chunkSizeMB: number
+  maxConcurrent: number
+  maxFileSizeMB: number
+  tempDir: string
+  expireTimeHours: number
+  cleanupIntervalMinutes: number
+}
+
+// 通知配置
+export interface NotificationConfig {
+  cooldownMinutes: number
+  maxRetries: number
+  retryIntervalMinutes: number
+}
+
+// 健康检查配置
+export interface HealthCheckConfig {
+  intervalMinutes: number
+  timeoutSeconds: number
+  maxRetries: number
+}
+
+// 速率限制配置
+export interface RateLimitConfig {
+  windowMs: number
+  maxRequests: number
+}
+
+// 所有配置
+export interface SystemConfigs {
+  security: SecurityConfig
+  fileTransfer: FileTransferConfig
+  upload: UploadConfig
+  notification: NotificationConfig
+  healthCheck: HealthCheckConfig
+  rateLimit: RateLimitConfig
+}
+
+// 获取所有配置
+export async function getAllSystemConfigs(): Promise<SystemConfigs> {
+  const response = await request<{ success: boolean; data: SystemConfigs }>('/v2/system-configs', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取系统配置失败')
+  }
+  return response.data
+}
+
+// 获取安全配置
+export async function getSecuritySystemConfig(): Promise<SecurityConfig> {
+  const response = await request<{ success: boolean; data: SecurityConfig }>('/v2/system-configs/security', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取安全配置失败')
+  }
+  return response.data
+}
+
+// 更新安全配置
+export async function updateSecuritySystemConfig(config: Partial<SecurityConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/security', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新安全配置失败')
+  }
+}
+
+// 获取文件传输配置
+export async function getFileTransferSystemConfig(): Promise<FileTransferConfig> {
+  const response = await request<{ success: boolean; data: FileTransferConfig }>('/v2/system-configs/file-transfer', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取文件传输配置失败')
+  }
+  return response.data
+}
+
+// 更新文件传输配置
+export async function updateFileTransferSystemConfig(config: Partial<FileTransferConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/file-transfer', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新文件传输配置失败')
+  }
+}
+
+// 获取上传配置
+export async function getUploadSystemConfig(): Promise<UploadConfig> {
+  const response = await request<{ success: boolean; data: UploadConfig }>('/v2/system-configs/upload', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取上传配置失败')
+  }
+  return response.data
+}
+
+// 更新上传配置
+export async function updateUploadSystemConfig(config: Partial<UploadConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/upload', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新上传配置失败')
+  }
+}
+
+// 获取通知配置
+export async function getNotificationSystemConfig(): Promise<NotificationConfig> {
+  const response = await request<{ success: boolean; data: NotificationConfig }>('/v2/system-configs/notification', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取通知配置失败')
+  }
+  return response.data
+}
+
+// 更新通知配置
+export async function updateNotificationSystemConfig(config: Partial<NotificationConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/notification', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新通知配置失败')
+  }
+}
+
+// 批量更新配置
+export async function batchUpdateSystemConfigs(configs: Partial<SystemConfigs>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/batch', {
+    method: 'PUT',
+    body: JSON.stringify(configs),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '批量更新配置失败')
+  }
+}
+
+// 重置为默认配置
+export async function resetSystemConfigsToDefaults(): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/reset', {
+    method: 'POST',
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '重置配置失败')
+  }
+}
+
+// 获取默认配置
+export async function getSystemConfigDefaults(): Promise<SystemConfigs> {
+  const response = await request<{ success: boolean; data: SystemConfigs }>('/v2/system-configs/defaults', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取默认配置失败')
+  }
+  return response.data
+}

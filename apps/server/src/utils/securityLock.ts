@@ -1,8 +1,10 @@
 /**
  * 安全锁定机制
  * 防止暴力破解密码
- * 3次错误后锁定15分钟
+ * 动态配置从数据库读取
  */
+
+import { getSecurityConfig } from '../core/config/index.js'
 
 interface LockRecord {
   attempts: number
@@ -13,10 +15,8 @@ interface LockRecord {
 // 内存中的锁定记录（按IP和提取码/删除码组合）
 const lockMap = new Map<string, LockRecord>()
 
-// 配置
-const MAX_ATTEMPTS = 3
-const LOCK_DURATION = 15 * 60 * 1000 // 15分钟
-const CLEANUP_INTERVAL = 60 * 60 * 1000 // 1小时清理一次
+// 默认清理间隔（1小时）
+const CLEANUP_INTERVAL = 60 * 60 * 1000
 
 /**
  * 生成锁定键
@@ -26,11 +26,23 @@ function generateLockKey(ip: string, code: string, type: 'extract' | 'delete'): 
 }
 
 /**
+ * 获取安全配置
+ */
+function getLockConfig() {
+  const config = getSecurityConfig()
+  return {
+    maxAttempts: config.maxLoginAttempts,
+    lockDuration: config.lockDurationMinutes * 60 * 1000
+  }
+}
+
+/**
  * 检查是否被锁定
  */
 export function isLocked(ip: string, code: string, type: 'extract' | 'delete'): { locked: boolean; remainingTime?: number } {
   const key = generateLockKey(ip, code, type)
   const record = lockMap.get(key)
+  const { lockDuration } = getLockConfig()
   
   if (!record) {
     return { locked: false }
@@ -57,6 +69,7 @@ export function isLocked(ip: string, code: string, type: 'extract' | 'delete'): 
 export function recordFailedAttempt(ip: string, code: string, type: 'extract' | 'delete'): { locked: boolean; remainingAttempts: number } {
   const key = generateLockKey(ip, code, type)
   const now = Date.now()
+  const { maxAttempts, lockDuration } = getLockConfig()
   
   let record = lockMap.get(key)
   
@@ -73,14 +86,14 @@ export function recordFailedAttempt(ip: string, code: string, type: 'extract' | 
   record.lastAttempt = now
   
   // 检查是否达到最大尝试次数
-  if (record.attempts >= MAX_ATTEMPTS) {
-    record.lockedUntil = now + LOCK_DURATION
+  if (record.attempts >= maxAttempts) {
+    record.lockedUntil = now + lockDuration
     lockMap.set(key, record)
     return { locked: true, remainingAttempts: 0 }
   }
   
   lockMap.set(key, record)
-  return { locked: false, remainingAttempts: MAX_ATTEMPTS - record.attempts }
+  return { locked: false, remainingAttempts: maxAttempts - record.attempts }
 }
 
 /**
@@ -97,12 +110,13 @@ export function clearLock(ip: string, code: string, type: 'extract' | 'delete'):
 export function getRemainingAttempts(ip: string, code: string, type: 'extract' | 'delete'): number {
   const key = generateLockKey(ip, code, type)
   const record = lockMap.get(key)
+  const { maxAttempts } = getLockConfig()
   
   if (!record || record.lockedUntil) {
-    return MAX_ATTEMPTS
+    return maxAttempts
   }
   
-  return Math.max(0, MAX_ATTEMPTS - record.attempts)
+  return Math.max(0, maxAttempts - record.attempts)
 }
 
 /**

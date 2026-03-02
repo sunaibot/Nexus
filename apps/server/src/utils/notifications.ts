@@ -1,4 +1,5 @@
 import { getNotificationConfig, createNotificationHistory } from '../db/index.js'
+import { getNotificationConfig as getDynamicNotificationConfig } from '../core/config/index.js'
 
 interface FeishuMessage {
   msg_type: 'text' | 'post' | 'card' | 'interactive'
@@ -14,7 +15,11 @@ interface SendNotificationOptions {
 }
 
 let lastNotificationTime: { [key: string]: number } = {}
-const NOTIFICATION_COOLDOWN_MS = 5 * 60 * 1000
+
+function getNotificationCooldownMs(): number {
+  const config = getDynamicNotificationConfig()
+  return config.cooldownMinutes * 60 * 1000
+}
 
 export async function sendFeishuNotification(webhookUrl: string, message: FeishuMessage) {
   try {
@@ -98,7 +103,8 @@ export async function sendNotification(options: SendNotificationOptions): Promis
 
     const cooldownKey = `${options.type || 'general'}-${options.level || 'info'}`
     const now = Date.now()
-    if (lastNotificationTime[cooldownKey] && now - lastNotificationTime[cooldownKey] < NOTIFICATION_COOLDOWN_MS) {
+    const cooldownMs = getNotificationCooldownMs()
+    if (lastNotificationTime[cooldownKey] && now - lastNotificationTime[cooldownKey] < cooldownMs) {
       console.log(`⏳ 通知冷却中，跳过发送: ${options.title}`)
       return false
     }

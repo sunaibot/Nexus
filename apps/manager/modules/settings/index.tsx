@@ -30,6 +30,12 @@ const SettingsModule: Module = {
       path: '/settings',
       component: React.lazy(() => import('./pages/SettingsTabsPage')),
       exact: true,
+    },
+    {
+      path: '/system-configs',
+      component: React.lazy(() => import('../system-configs/pages/SystemConfigsPage')),
+      exact: true,
+      requireAuth: true,
     }
   ],
   sidebarItem: {

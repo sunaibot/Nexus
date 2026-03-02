@@ -20,7 +20,10 @@ import {
   Info,
   Upload,
   Link,
-  Network
+  Network,
+  Settings2,
+  FileText,
+  Bell
 } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
 import { themes, useTheme } from '../../../hooks/useTheme'
@@ -28,7 +31,7 @@ import { cn } from '../../../lib/utils'
 import { fetchSettings, updateSettings, type SiteSettings, factoryReset, clearAuthStatus, adminChangePassword, adminChangeUsername, exportData, importData } from '../../../lib/api'
 
 // 设置模块类型
- type SettingsModule = 'site' | 'widget' | 'network' | 'security' | 'data'
+ type SettingsModule = 'site' | 'widget' | 'network' | 'security' | 'data' | 'advanced'
 
 // 模块配置
 const modules = [
@@ -71,6 +74,14 @@ const modules = [
     icon: Database,
     color: 'from-emerald-500 to-teal-500',
     bgColor: 'from-emerald-500/10 to-teal-500/10'
+  },
+  {
+    id: 'advanced' as SettingsModule,
+    title: '高级配置',
+    desc: '系统参数、安全配置',
+    icon: Settings2,
+    color: 'from-rose-500 to-pink-500',
+    bgColor: 'from-rose-500/10 to-pink-500/10'
   }
 ]
 
@@ -121,12 +132,12 @@ function LivePreview({ settings }: { settings: Partial<SiteSettings> }) {
             </span>
           </div>
           <div className="flex items-center gap-1">
-            {settings.showLanguageSwitcher && (
+            {settings.menuVisibility?.languageToggle && (
               <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: theme.colors.glass, color: theme.colors.textSecondary }}>
                 EN/中
               </span>
             )}
-            {settings.showThemeToggle && (
+            {settings.menuVisibility?.themeToggle && (
               <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: theme.colors.glass, color: theme.colors.textSecondary }}>
                 {theme.mode === 'dark' ? <Sun className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
               </span>
@@ -167,13 +178,13 @@ function LivePreview({ settings }: { settings: Partial<SiteSettings> }) {
           
           {/* 天气和农历显示 */}
           <div className="flex items-center justify-center gap-3 mt-4">
-            {settings.showWeather && (
+            {settings.enableWeather && (
               <div className="flex items-center gap-1 text-xs" style={{ color: theme.colors.textSecondary }}>
                 <Sun className="w-3 h-3" />
                 <span>24°C 晴</span>
               </div>
             )}
-            {settings.showLunarCalendar && (
+            {settings.enableLunar && (
               <div className="text-xs" style={{ color: theme.colors.textMuted }}>
                 农历正月初一
               </div>
@@ -195,6 +206,40 @@ function LivePreview({ settings }: { settings: Partial<SiteSettings> }) {
   )
 }
 
+// 预设图标列表
+const presetFavicons = [
+  {
+    id: 'default',
+    name: '默认图标',
+    url: '/favicon.svg'
+  },
+  {
+    id: 'n-letter',
+    name: 'N字母',
+    url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234F46E5" width="100" height="100" rx="20"/><text x="50" y="70" font-size="60" fill="white" text-anchor="middle" font-family="Arial">N</text></svg>'
+  },
+  {
+    id: 'globe',
+    name: '地球',
+    url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%2310B981" width="100" height="100" rx="20"/><circle cx="50" cy="50" r="30" fill="none" stroke="white" stroke-width="4"/><ellipse cx="50" cy="50" rx="30" ry="12" fill="none" stroke="white" stroke-width="3"/><line x1="50" y1="20" x2="50" y2="80" stroke="white" stroke-width="3"/></svg>'
+  },
+  {
+    id: 'star',
+    name: '星星',
+    url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23F59E0B" width="100" height="100" rx="20"/><polygon points="50,15 61,40 88,40 66,57 74,82 50,67 26,82 34,57 12,40 39,40" fill="white"/></svg>'
+  },
+  {
+    id: 'bookmark',
+    name: '书签',
+    url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23EC4899" width="100" height="100" rx="20"/><path d="M30 25 L70 25 L70 75 L50 60 L30 75 Z" fill="white"/></svg>'
+  },
+  {
+    id: 'rocket',
+    name: '火箭',
+    url: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%233B82F6" width="100" height="100" rx="20"/><path d="M50 15 Q65 35 65 55 Q65 65 50 70 Q35 65 35 55 Q35 35 50 15" fill="white"/><circle cx="50" cy="45" r="8" fill="%233B82F6"/><path d="M35 60 L25 80 L35 75 L40 65" fill="white"/><path d="M65 60 L75 80 L65 75 L60 65" fill="white"/></svg>'
+  }
+]
+
 // 站点配置模块
 function SiteConfigModule({
   settings,
@@ -209,6 +254,22 @@ function SiteConfigModule({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // 验证文件类型
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon']
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.svg', '.ico']
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      showToast('error', '不支持的文件格式，请上传 PNG、JPG、SVG 或 ICO 格式的图片')
+      return
+    }
+
+    // 验证文件大小 (最大 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      showToast('error', '文件大小不能超过 2MB')
+      return
+    }
 
     // 模拟上传
     const reader = new FileReader()
@@ -262,6 +323,33 @@ function SiteConfigModule({
         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
           站点图标
         </label>
+        
+        {/* 预设图标选择 */}
+        <div className="mb-4">
+          <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>预设图标</p>
+          <div className="flex gap-2 flex-wrap">
+            {presetFavicons.map((favicon) => (
+              <motion.button
+                key={favicon.id}
+                onClick={() => onChange('siteFavicon', favicon.url)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center transition-all ${
+                  settings.siteFavicon === favicon.url ? 'border-blue-500 ring-2 ring-blue-500/30' : ''
+                }`}
+                style={{ 
+                  borderColor: settings.siteFavicon === favicon.url ? 'var(--color-primary)' : 'var(--color-glass-border)',
+                  background: 'var(--color-glass)'
+                }}
+                title={favicon.name}
+              >
+                <img src={favicon.url} alt={favicon.name} className="w-8 h-8 rounded" />
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* 上传区域 */}
         <div className="flex gap-4">
           <motion.button
             onClick={() => fileInputRef.current?.click()}
@@ -272,22 +360,31 @@ function SiteConfigModule({
           >
             <Upload className="w-6 h-6" style={{ color: 'var(--color-text-muted)' }} />
             <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              拖拽图片或点击上传
+              点击上传图标
+            </span>
+            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              支持 PNG、JPG、SVG、ICO 格式
             </span>
           </motion.button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept=".png,.jpg,.jpeg,.svg,.ico,image/png,image/jpeg,image/svg+xml,image/x-icon,image/vnd.microsoft.icon"
             onChange={handleFileUpload}
             className="hidden"
           />
           {settings.siteFavicon && (
             <div
-              className="w-24 h-24 rounded-xl flex items-center justify-center"
+              className="w-24 h-24 rounded-xl flex items-center justify-center relative group"
               style={{ background: 'var(--color-glass)' }}
             >
               <img src={settings.siteFavicon} alt="" className="w-16 h-16 rounded-lg" />
+              <button
+                onClick={() => onChange('siteFavicon', '')}
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                ×
+              </button>
             </div>
           )}
         </div>
@@ -317,36 +414,42 @@ function SiteConfigModule({
           icon={Monitor}
           title="精简模式"
           desc="性能优先 (Lite)，关闭所有耗能特效"
-          checked={settings.liteMode || false}
-          onChange={(v) => onChange('liteMode', v)}
+          checked={settings.enableLiteMode || false}
+          onChange={(v) => onChange('enableLiteMode', v)}
         />
         <ToggleItem
           icon={Sun}
           title="天气显示"
           desc="在首页显示当前位置的天气信息"
-          checked={settings.showWeather || false}
-          onChange={(v) => onChange('showWeather', v)}
+          checked={settings.enableWeather || false}
+          onChange={(v) => onChange('enableWeather', v)}
         />
         <ToggleItem
           icon={Type}
           title="农历显示"
           desc="在日期旁显示农历、节气和传统节日"
-          checked={settings.showLunarCalendar || false}
-          onChange={(v) => onChange('showLunarCalendar', v)}
+          checked={settings.enableLunar || false}
+          onChange={(v) => onChange('enableLunar', v)}
         />
         <ToggleItem
           icon={Globe}
           title="多语言切换"
           desc="在前台菜单栏显示中英文切换按钮"
-          checked={settings.showLanguageSwitcher || false}
-          onChange={(v) => onChange('showLanguageSwitcher', v)}
+          checked={settings.menuVisibility?.languageToggle || false}
+          onChange={(v) => onChange('menuVisibility', { 
+            ...settings.menuVisibility, 
+            languageToggle: v 
+          })}
         />
         <ToggleItem
           icon={Eye}
           title="主题切换"
           desc="在前台菜单栏显示日间/夜间模式切换按钮"
-          checked={settings.showThemeToggle || false}
-          onChange={(v) => onChange('showThemeToggle', v)}
+          checked={settings.menuVisibility?.themeToggle || false}
+          onChange={(v) => onChange('menuVisibility', { 
+            ...settings.menuVisibility, 
+            themeToggle: v 
+          })}
         />
       </div>
 
@@ -1542,6 +1645,371 @@ function DataModule() {
   )
 }
 
+// 高级配置模块 - 简化的系统配置界面
+function AdvancedConfigModule() {
+  const { showToast } = useToast()
+  const [activeTab, setActiveTab] = useState<'security' | 'fileTransfer' | 'upload' | 'notification'>('security')
+  const [loading, setLoading] = useState(true)
+
+  // 模拟配置数据
+  const [configs, setConfigs] = useState({
+    security: {
+      maxLoginAttempts: 3,
+      lockDurationMinutes: 30,
+      sessionTimeoutHours: 24,
+      passwordMinLength: 8,
+      requireStrongPassword: true,
+      enableIpFilter: false,
+      enableAuditLog: true
+    },
+    fileTransfer: {
+      maxFileSizeMB: 100,
+      maxExpiryHours: 72,
+      maxDownloads: 10,
+      allowedFileTypes: ['jpg', 'png', 'pdf', 'docx'],
+      blockedFileTypes: ['exe', 'bat', 'sh'],
+      uploadPath: './uploads',
+      enableVirusScan: false,
+      chunkSizeMB: 5,
+      maxConcurrentUploads: 3
+    },
+    upload: {
+      chunkSizeMB: 5,
+      maxConcurrent: 3,
+      maxFileSizeMB: 100,
+      tempDir: 'uploads/temp',
+      expireTimeHours: 24,
+      cleanupIntervalMinutes: 30
+    },
+    notification: {
+      cooldownMinutes: 5,
+      maxRetries: 3,
+      retryIntervalMinutes: 10
+    }
+  })
+
+  useEffect(() => {
+    // 模拟加载
+    setTimeout(() => setLoading(false), 500)
+  }, [])
+
+  const handleConfigChange = (section: string, key: string, value: any) => {
+    setConfigs(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section as keyof typeof prev],
+        [key]: value
+      }
+    }))
+  }
+
+  const handleSave = async () => {
+    showToast('success', '配置已保存')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--color-primary)' }} />
+      </div>
+    )
+  }
+
+  const tabs = [
+    { id: 'security', label: '安全配置', icon: Shield },
+    { id: 'fileTransfer', label: '文件传输', icon: FileText },
+    { id: 'upload', label: '上传配置', icon: Upload },
+    { id: 'notification', label: '通知配置', icon: Bell }
+  ]
+
+  return (
+    <div className="space-y-4">
+      {/* Tab 导航 */}
+      <div className="flex gap-2 p-1 rounded-xl" style={{ background: 'var(--color-glass)' }}>
+        {tabs.map(tab => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive ? 'text-white' : 'hover:opacity-80'
+              }`}
+              style={{
+                background: isActive ? 'var(--color-primary)' : 'transparent',
+                color: isActive ? 'white' : 'var(--color-text-secondary)'
+              }}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* 配置内容 */}
+      <div className="p-6 rounded-xl space-y-6" style={{ background: 'var(--color-glass)' }}>
+        {activeTab === 'security' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <ConfigNumberInput
+                label="最大登录尝试次数"
+                value={configs.security.maxLoginAttempts}
+                onChange={(v) => handleConfigChange('security', 'maxLoginAttempts', v)}
+                min={1}
+                max={10}
+                unit="次"
+              />
+              <ConfigNumberInput
+                label="锁定时间"
+                value={configs.security.lockDurationMinutes}
+                onChange={(v) => handleConfigChange('security', 'lockDurationMinutes', v)}
+                min={1}
+                max={60}
+                unit="分钟"
+              />
+            </div>
+            <ConfigNumberInput
+              label="会话超时时间"
+              value={configs.security.sessionTimeoutHours}
+              onChange={(v) => handleConfigChange('security', 'sessionTimeoutHours', v)}
+              min={1}
+              max={168}
+              unit="小时"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <ConfigNumberInput
+                label="密码最小长度"
+                value={configs.security.passwordMinLength}
+                onChange={(v) => handleConfigChange('security', 'passwordMinLength', v)}
+                min={4}
+                max={32}
+                unit="位"
+              />
+            </div>
+            <ConfigToggle
+              label="要求强密码"
+              checked={configs.security.requireStrongPassword}
+              onChange={(v) => handleConfigChange('security', 'requireStrongPassword', v)}
+            />
+            <ConfigToggle
+              label="启用IP过滤"
+              checked={configs.security.enableIpFilter}
+              onChange={(v) => handleConfigChange('security', 'enableIpFilter', v)}
+            />
+            <ConfigToggle
+              label="启用审计日志"
+              checked={configs.security.enableAuditLog}
+              onChange={(v) => handleConfigChange('security', 'enableAuditLog', v)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'fileTransfer' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <ConfigNumberInput
+                label="最大文件大小"
+                value={configs.fileTransfer.maxFileSizeMB}
+                onChange={(v) => handleConfigChange('fileTransfer', 'maxFileSizeMB', v)}
+                min={1}
+                max={1024}
+                unit="MB"
+              />
+              <ConfigNumberInput
+                label="最大过期时间"
+                value={configs.fileTransfer.maxExpiryHours}
+                onChange={(v) => handleConfigChange('fileTransfer', 'maxExpiryHours', v)}
+                min={1}
+                max={720}
+                unit="小时"
+              />
+            </div>
+            <ConfigNumberInput
+              label="最大下载次数"
+              value={configs.fileTransfer.maxDownloads}
+              onChange={(v) => handleConfigChange('fileTransfer', 'maxDownloads', v)}
+              min={1}
+              max={100}
+              unit="次"
+            />
+            <ConfigTextInput
+              label="上传目录"
+              value={configs.fileTransfer.uploadPath}
+              onChange={(v) => handleConfigChange('fileTransfer', 'uploadPath', v)}
+            />
+            <ConfigToggle
+              label="启用病毒扫描"
+              checked={configs.fileTransfer.enableVirusScan}
+              onChange={(v) => handleConfigChange('fileTransfer', 'enableVirusScan', v)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'upload' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <ConfigNumberInput
+                label="分片大小"
+                value={configs.upload.chunkSizeMB}
+                onChange={(v) => handleConfigChange('upload', 'chunkSizeMB', v)}
+                min={1}
+                max={50}
+                unit="MB"
+              />
+              <ConfigNumberInput
+                label="最大并发数"
+                value={configs.upload.maxConcurrent}
+                onChange={(v) => handleConfigChange('upload', 'maxConcurrent', v)}
+                min={1}
+                max={10}
+                unit="个"
+              />
+            </div>
+            <ConfigTextInput
+              label="临时目录"
+              value={configs.upload.tempDir}
+              onChange={(v) => handleConfigChange('upload', 'tempDir', v)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'notification' && (
+          <div className="space-y-6">
+            <ConfigNumberInput
+              label="冷却时间"
+              value={configs.notification.cooldownMinutes}
+              onChange={(v) => handleConfigChange('notification', 'cooldownMinutes', v)}
+              min={1}
+              max={60}
+              unit="分钟"
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <ConfigNumberInput
+                label="最大重试次数"
+                value={configs.notification.maxRetries}
+                onChange={(v) => handleConfigChange('notification', 'maxRetries', v)}
+                min={0}
+                max={10}
+                unit="次"
+              />
+              <ConfigNumberInput
+                label="重试间隔"
+                value={configs.notification.retryIntervalMinutes}
+                onChange={(v) => handleConfigChange('notification', 'retryIntervalMinutes', v)}
+                min={1}
+                max={60}
+                unit="分钟"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 保存按钮 */}
+      <div className="flex justify-end">
+        <motion.button
+          onClick={handleSave}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="px-6 py-2.5 rounded-xl text-white font-medium flex items-center gap-2"
+          style={{ background: 'var(--color-primary)' }}
+        >
+          <Save className="w-4 h-4" />
+          保存配置
+        </motion.button>
+      </div>
+    </div>
+  )
+}
+
+// 配置表单组件
+function ConfigNumberInput({ label, value, onChange, min, max, unit }: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  min: number
+  max: number
+  unit: string
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+          {label}
+        </label>
+        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unit}</span>
+      </div>
+      <input
+        type="number"
+        value={value}
+        onChange={(e) => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || 0)))}
+        min={min}
+        max={max}
+        className="w-full px-3 py-2 rounded-lg text-sm transition-all"
+        style={{
+          background: 'var(--color-bg-tertiary)',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-primary)'
+        }}
+      />
+    </div>
+  )
+}
+
+function ConfigTextInput({ label, value, onChange }: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+        {label}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full px-3 py-2 rounded-lg text-sm transition-all"
+        style={{
+          background: 'var(--color-bg-tertiary)',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-primary)'
+        }}
+      />
+    </div>
+  )
+}
+
+function ConfigToggle({ label, checked, onChange }: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+        {label}
+      </span>
+      <button
+        onClick={() => onChange(!checked)}
+        className={`relative w-11 h-6 rounded-full transition-colors ${
+          checked ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-bg-tertiary)]'
+        }`}
+        style={{ border: '1px solid var(--color-border)' }}
+      >
+        <span
+          className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+            checked ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </button>
+    </div>
+  )
+}
+
 // 主组件
 export default function SettingsPage() {
   const [activeModule, setActiveModule] = useState<SettingsModule>('site')
@@ -1600,10 +2068,13 @@ export default function SettingsPage() {
         {modules.map((module) => {
           const Icon = module.icon
           const isActive = activeModule === module.id
+          const handleClick = () => {
+            setActiveModule(module.id)
+          }
           return (
             <motion.button
               key={module.id}
-              onClick={() => setActiveModule(module.id)}
+              onClick={handleClick}
               whileHover={{ x: 4 }}
               whileTap={{ scale: 0.98 }}
               className={cn(
@@ -1700,6 +2171,7 @@ export default function SettingsPage() {
                 )}
                 {activeModule === 'security' && <SecurityModule />}
                 {activeModule === 'data' && <DataModule />}
+                {activeModule === 'advanced' && <AdvancedConfigModule />}
               </div>
             </motion.div>
           </AnimatePresence>

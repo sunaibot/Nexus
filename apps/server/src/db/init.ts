@@ -2034,6 +2034,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       orderIndex: 8,
       visibility: 'public'
     }
+    // 注意: 系统配置菜单已移除，功能合并到系统设置 - 高级配置中
   ]
 
   for (const menu of defaultMenus) {
@@ -2065,6 +2066,19 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
     db.run("UPDATE admin_menus SET orderIndex = 10 WHERE id = 'settings'")
     db.run("UPDATE admin_menus SET orderIndex = 11 WHERE id = 'security'")
     console.log('✅ Admin menu order indexes updated')
+  }
+
+  // 迁移：删除系统配置的独立菜单（已合并到系统设置中）
+  try {
+    const systemConfigsMenuExists = db.exec('SELECT 1 FROM admin_menus WHERE id = ?', ['system-configs'])
+    if (systemConfigsMenuExists.length > 0) {
+      db.run('DELETE FROM admin_menus WHERE id = ?', ['system-configs'])
+      db.run('DELETE FROM user_menus WHERE menuId = ?', ['system-configs'])
+      db.run('DELETE FROM role_menus WHERE menuId = ?', ['system-configs'])
+      console.log('🗑️ 已删除系统配置的独立菜单（已合并到系统设置）')
+    }
+  } catch (error) {
+    console.error('删除系统配置菜单时出错:', error)
   }
 
   // 确保默认主题存在
@@ -2520,7 +2534,7 @@ function ensureDefaultBookmarkCardStyles(db: SqlJsDatabase, now: string): void {
 /**
  * 数据库迁移
  */
-function migrateDatabase(db: SqlJsDatabase): void {
+async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
   // 迁移逻辑 - 处理数据库版本升级
   try {
     // 示例：添加索引
@@ -2749,6 +2763,52 @@ function migrateDatabase(db: SqlJsDatabase): void {
     } catch (e: any) {
       console.error('Migration error (bookmark card styles):', e)
     }
+
+    // 迁移：创建系统配置表（如果不存在）
+    try {
+      db.run(`
+        CREATE TABLE IF NOT EXISTS system_configs (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+          updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+      console.log('✅ Migrated: Ensured system_configs table exists')
+    } catch (e: any) {
+      console.error('Migration error (system_configs):', e)
+    }
+
+    // 迁移：初始化默认系统配置
+    try {
+      const { DEFAULT_SYSTEM_CONFIG } = await import('../core/config/index.js')
+      const defaultConfigs = [
+        { key: 'security', value: JSON.stringify(DEFAULT_SYSTEM_CONFIG.security) },
+        { key: 'fileTransfer', value: JSON.stringify(DEFAULT_SYSTEM_CONFIG.fileTransfer) },
+        { key: 'upload', value: JSON.stringify(DEFAULT_SYSTEM_CONFIG.upload) },
+        { key: 'notification', value: JSON.stringify(DEFAULT_SYSTEM_CONFIG.notification) },
+        { key: 'healthCheck', value: JSON.stringify(DEFAULT_SYSTEM_CONFIG.healthCheck) },
+        { key: 'rateLimit', value: JSON.stringify(DEFAULT_SYSTEM_CONFIG.rateLimit) }
+      ]
+
+      let initCount = 0
+      for (const config of defaultConfigs) {
+        const existing = db.exec('SELECT 1 FROM system_configs WHERE key = ?', [config.key])
+        if (existing.length === 0 || existing[0].values.length === 0) {
+          db.run(
+            'INSERT INTO system_configs (key, value, updatedAt) VALUES (?, ?, ?)',
+            [config.key, config.value, new Date().toISOString()]
+          )
+          initCount++
+        }
+      }
+
+      if (initCount > 0) {
+        console.log(`✅ Migrated: Initialized ${initCount} default system configs`)
+      }
+    } catch (e: any) {
+      console.error('Migration error (default system configs):', e)
+    }
   } catch (error) {
     console.error('Migration error:', error)
   }
@@ -2777,7 +2837,6 @@ export function cleanupExpiredFileTransfers(db?: SqlJsDatabase): void {
   // 先查询要删除的文件路径
   const queryResult = database.exec('SELECT filePath FROM file_transfers WHERE expiresAt < ?', [now])
   if (queryResult.length > 0 && queryResult[0].values.length > 0) {
-    const fs = require('fs')
     queryResult[0].values.forEach((row: any[]) => {
       const filePath = row[0] as string
       if (filePath && fs.existsSync(filePath)) {

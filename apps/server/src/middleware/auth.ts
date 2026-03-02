@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import crypto from 'crypto'
 import { getDatabase, saveDatabase, forceSaveDatabase } from '../db/index.js'
-
-// 会话超时配置（单位：小时）
-const SESSION_TIMEOUT_HOURS = parseInt(process.env.SESSION_TIMEOUT_HOURS || '24', 10)
-const SESSION_TIMEOUT_MS = SESSION_TIMEOUT_HOURS * 60 * 60 * 1000
+import { getSecurityConfig } from '../core/config/index.js'
 
 // JWT 密钥配置（从环境变量读取，确保生产环境安全）
 let JWT_SECRET: string
@@ -22,6 +19,16 @@ if (process.env.JWT_SECRET) {
 // 检查密钥强度
 if (JWT_SECRET.length < 32) {
   throw new Error('JWT_SECRET must be at least 32 characters long')
+}
+
+/**
+ * 获取会话超时时间（毫秒）
+ * 从配置系统动态读取
+ */
+export function getSessionTimeout(): { hours: number; ms: number } {
+  const config = getSecurityConfig()
+  const hours = config.sessionTimeoutHours
+  return { hours, ms: hours * 60 * 60 * 1000 }
 }
 
 // ========== Token 管理函数 (持久化到数据库) ==========
@@ -156,7 +163,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
       console.log('[Auth] New format token verification:', newFormatData ? 'Valid' : 'Invalid')
     }
     if (newFormatData) {
-      const expiresAt = newFormatData.timestamp + SESSION_TIMEOUT_MS
+      const { ms: timeoutMs } = getSessionTimeout()
+      const expiresAt = newFormatData.timestamp + timeoutMs
       if (Date.now() <= expiresAt) {
         tokenData = {
           userId: newFormatData.userId,
@@ -203,7 +211,8 @@ export function optionalAuthMiddleware(req: Request, res: Response, next: NextFu
     if (!tokenData) {
       const newFormatData = verifyNewFormatToken(token)
       if (newFormatData) {
-        const expiresAt = newFormatData.timestamp + SESSION_TIMEOUT_MS
+        const { ms: timeoutMs } = getSessionTimeout()
+        const expiresAt = newFormatData.timestamp + timeoutMs
         if (Date.now() <= expiresAt) {
           tokenData = {
             userId: newFormatData.userId,
@@ -246,12 +255,7 @@ export function adminMiddleware(req: Request, res: Response, next: NextFunction)
   next()
 }
 
-export function getSessionTimeout(): { hours: number; ms: number } {
-  return {
-    hours: SESSION_TIMEOUT_HOURS,
-    ms: SESSION_TIMEOUT_MS
-  }
-}
+
 
 // 定期清理过期 Token (每小时)
 setInterval(cleanExpiredTokens, 60 * 60 * 1000)

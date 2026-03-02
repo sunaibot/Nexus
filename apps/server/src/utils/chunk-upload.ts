@@ -58,6 +58,20 @@ interface UploadProgress {
 
 // ========== 默认配置 ==========
 
+import { getUploadConfig } from '../core/config/index.js'
+
+function getDynamicConfig(): UploadConfig {
+  const config = getUploadConfig()
+  return {
+    chunkSize: config.chunkSizeMB * 1024 * 1024,
+    maxConcurrent: config.maxConcurrent,
+    maxFileSize: config.maxFileSizeMB * 1024 * 1024,
+    tempDir: config.tempDir,
+    expireTime: config.expireTimeHours * 60 * 60 * 1000,
+    cleanupInterval: config.cleanupIntervalMinutes * 60 * 1000
+  }
+}
+
 const DEFAULT_CONFIG: UploadConfig = {
   chunkSize: 5 * 1024 * 1024,      // 5MB
   maxConcurrent: 3,                 // 最多3个并发
@@ -75,7 +89,8 @@ export class ChunkUploadManager {
   private cleanupTimer: NodeJS.Timeout | null = null
 
   constructor(config: Partial<UploadConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
+    const dynamicConfig = getDynamicConfig()
+    this.config = { ...DEFAULT_CONFIG, ...dynamicConfig, ...config }
     this.ensureTempDir()
     this.startCleanup()
   }

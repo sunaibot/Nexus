@@ -14,6 +14,7 @@ import { ThemeModule } from './theme'
 import FileTransferModule from './file-transfer'
 import RssModule from './rss'
 import NotesModule from './notes'
+import SystemConfigsModule from './system-configs'
 
 export const modules = [
   BookmarksModule,
@@ -31,6 +32,7 @@ export const modules = [
   FileTransferModule,
   RssModule,
   NotesModule,
+  SystemConfigsModule,
 ]
 
 export function registerAllModules(moduleManager: ModuleManager) {
@@ -55,4 +57,5 @@ export {
   FileTransferModule,
   RssModule,
   NotesModule,
+  SystemConfigsModule,
 }

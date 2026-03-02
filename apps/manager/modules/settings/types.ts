@@ -9,6 +9,13 @@ export interface SiteSettings {
   siteFavicon: string
   siteDescription?: string
   enableBeamAnimation: boolean
+  enableLiteMode?: boolean
+  enableWeather?: boolean
+  enableLunar?: boolean
+  menuVisibility?: {
+    languageToggle?: boolean
+    themeToggle?: boolean
+  }
   language?: string
   timezone?: string
 }

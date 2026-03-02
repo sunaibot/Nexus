@@ -154,7 +154,7 @@ export class FileTransferRepository {
    * 获取系统设置
    * @returns 设置信息
    */
-  async getSettings(): Promise<FileTransferSettings | null> {
+  async getSettings(): Promise<ReturnType<typeof dbGetSettings>> {
     return dbGetSettings()
   }
 

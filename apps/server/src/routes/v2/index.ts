@@ -62,6 +62,7 @@ import weatherRouter from './weather.js'
 import apiDocsRouter from '../api-docs.js'
 import sessionAuthRouter from './session-auth.js'
 import pluginsUnifiedRouter from './plugins-unified.js'
+import systemConfigsRouter from './system-configs.js'
 
 const router = Router()
 
@@ -130,6 +131,9 @@ router.use('/i18n', i18nRouter)
 router.use('/permissions', permissionsRouter)
 router.use('/custom-icons', customIconsRouter)
 router.use('/weather', weatherRouter)
+
+// ========== 系统配置管理 ==========
+router.use('/system-configs', systemConfigsRouter)
 
 // ========== 数据统计分析 ==========
 router.use('/stats', statsRouter)

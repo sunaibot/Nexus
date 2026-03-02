@@ -990,52 +990,59 @@ export function cleanupExpiredFileTransfers(): { count: number; filePaths: strin
   return { count: count as number, filePaths }
 }
 
-export function getFileTransferSettings() {
-  const db = getDatabase()
-  if (!db) return null
+export async function getFileTransferSettings(): Promise<{
+  id: string
+  maxFileSize: number
+  maxExpiryHours: number
+  maxDownloads: number
+  allowedFileTypes: string[]
+  blockedFileTypes: string[]
+  uploadPath: string
+  enableVirusScan: boolean
+  chunkSizeMB: number
+  maxConcurrentUploads: number
+}> {
+  // 使用新的配置系统
+  const { getFileTransferConfig } = await import('../core/config/index.js')
+  const config = getFileTransferConfig()
   
-  const result = db.exec('SELECT value FROM settings WHERE key = ?', ['file_transfer_settings'])
-  
-  // 默认设置 - 上传目录可配置，默认为 ./uploads
-  const defaultSettings = {
-    maxFileSize: 100 * 1024 * 1024, // 100MB
-    maxExpiryHours: 72, // 默认72小时
-    maxDownloads: 10,
-    // 安全：默认只允许常见文档和图片类型，禁止可执行文件
-    allowedFileTypes: [
-      'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', // 图片
-      'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', // 文档
-      'zip', 'rar', '7z', 'tar', 'gz', // 压缩包
-      'mp3', 'mp4', 'avi', 'mov', 'wmv', // 音视频
-    ],
-    uploadPath: './uploads' // 默认上传目录
-  }
-  
-  if (result.length === 0) {
-    return defaultSettings
-  }
-  
-  try {
-    const savedSettings = JSON.parse(result[0].values[0][0])
-    // 合并默认设置，确保所有字段都存在
-    return { ...defaultSettings, ...savedSettings }
-  } catch {
-    return defaultSettings
+  return {
+    id: 'system',
+    maxFileSize: config.maxFileSizeMB * 1024 * 1024,
+    maxExpiryHours: config.maxExpiryHours,
+    maxDownloads: config.maxDownloads,
+    allowedFileTypes: config.allowedFileTypes,
+    blockedFileTypes: config.blockedFileTypes,
+    uploadPath: config.uploadPath,
+    enableVirusScan: config.enableVirusScan,
+    chunkSizeMB: config.chunkSizeMB,
+    maxConcurrentUploads: config.maxConcurrentUploads
   }
 }
 
-export function updateFileTransferSettings(settings: any) {
-  const db = getDatabase()
-  if (!db) return false
+export async function updateFileTransferSettings(settings: any): Promise<boolean> {
+  // 使用新的配置系统
+  const { updateFileTransferConfig } = await import('../core/config/index.js')
   
-  const now = new Date().toISOString()
-  db.run(
-    'INSERT OR REPLACE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)',
-    ['file_transfer_settings', JSON.stringify(settings), now]
-  )
+  // 转换设置格式
+  const configUpdate: any = {}
+  if (settings.maxFileSize !== undefined) {
+    configUpdate.maxFileSizeMB = Math.floor(settings.maxFileSize / (1024 * 1024))
+  }
+  if (settings.maxExpiryHours !== undefined) {
+    configUpdate.maxExpiryHours = settings.maxExpiryHours
+  }
+  if (settings.maxDownloads !== undefined) {
+    configUpdate.maxDownloads = settings.maxDownloads
+  }
+  if (settings.allowedFileTypes !== undefined) {
+    configUpdate.allowedFileTypes = settings.allowedFileTypes
+  }
+  if (settings.uploadPath !== undefined) {
+    configUpdate.uploadPath = settings.uploadPath
+  }
   
-  saveDatabase()
-  return true
+  return updateFileTransferConfig(configUpdate)
 }
 
 export function getFileTransferStats() {
