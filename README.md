@@ -129,15 +129,45 @@ nexus-project/
 │   │   ├── modules/       # 功能模块
 │   │   ├── components/    # 组件目录
 │   │   └── ...
-│   └── server/            # 后端 API 服务
+│   └── server/            # 后端 API 服务 (模块化架构)
 │       ├── src/
-│       │   ├── features/  # 功能模块
-│       │   ├── routes/    # API路由
-│       │   ├── db/        # 数据库
+│       │   ├── routes/    # API路由 (模块化)
+│       │   │   └── v2/
+│       │   │       └── modules/     # 路由模块
+│       │   │           ├── bookmarks/      # 书签模块
+│       │   │           ├── categories/     # 分类模块
+│       │   │           ├── plugins/        # 统一插件模块
+│       │   │           ├── widgets/        # 小部件模块
+│       │   │           ├── rss/            # RSS模块
+│       │   │           ├── notes/          # 笔记模块
+│       │   │           ├── notepads/       # 便签模块
+│       │   │           ├── quotes/         # 名言模块
+│       │   │           ├── visits/         # 访问统计模块
+│       │   │           ├── service-monitors/ # 服务监控模块
+│       │   │           └── metrics/        # 指标模块
+│       │   ├── db/        # 数据库 (模块化)
+│       │   │   └── modules/         # 数据库模块
+│       │   │       ├── bookmarks/    # 书签数据操作
+│       │   │       ├── categories/   # 分类数据操作
+│       │   │       ├── plugins/      # 插件数据操作
+│       │   │       ├── widgets/      # 小部件数据操作
+│       │   │       ├── rss/          # RSS数据操作
+│       │   │       ├── notes/        # 笔记数据操作
+│       │   │       ├── quotes/       # 名言数据操作
+│       │   │       └── ...           # 其他模块
+│       │   ├── features/  # 功能特性
 │       │   └── ...
 ├── package.json           # 根项目配置
 └── README.md              # 项目说明
 ```
+
+### 架构特点
+
+- **🧩 模块化设计** - 高内聚、低耦合的模块结构
+- **📦 独立数据库模块** - 每个模块拥有独立的数据访问层
+- **🔌 统一插件系统** - 内置插件和自定义插件统一管理
+- **🛡️ 分层权限控制** - 公开/个人/私有三级权限模型
+- **⚡ 缓存优化** - 模块级缓存策略，提升性能
 
 ---
 
@@ -693,6 +723,31 @@ DATABASE_PATH=./data/nexus.db
 启动后端服务后，访问以下地址查看 API 文档：
 - 本地开发：`http://localhost:8787/api/docs`
 - 包含完整的 API 列表、请求参数、响应示例和数据库结构说明
+
+### 模块化 API 路由
+
+后端采用模块化架构，API 路由按功能模块组织：
+
+| 模块 | 路由前缀 | 说明 |
+|------|----------|------|
+| 书签 | `/api/v2/bookmarks` | 书签增删改查、排序 |
+| 分类 | `/api/v2/categories` | 分类管理 |
+| 插件 | `/api/v2/plugins` | 统一插件管理（内置+自定义） |
+| 小部件 | `/api/v2/widgets` | 首页小部件 |
+| RSS | `/api/v2/rss` | RSS订阅管理 |
+| 笔记 | `/api/v2/notes` | 笔记管理 |
+| 便签 | `/api/v2/notepads` | 便签管理 |
+| 名言 | `/api/v2/quotes` | 每日名言 |
+| 访问统计 | `/api/v2/visits` | 访问数据统计 |
+| 服务监控 | `/api/v2/service-monitors` | 服务状态监控 |
+| 指标 | `/api/v2/metrics` | 自定义指标 |
+
+### 权限模型
+
+- **公开接口** - 无需认证，如 `/api/v2/bookmarks/public`
+- **可选认证** - 支持匿名和登录用户，如 `/api/v2/bookmarks`
+- **需要认证** - 必须登录，如 `/api/v2/bookmarks/admin/all`
+- **管理员权限** - 需要管理员角色，如 `/api/v2/plugins` (POST)
 
 ---
 
