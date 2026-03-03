@@ -5,7 +5,7 @@
 > **智能书签管理系统** - 您的个人链接枢纽
 
 [![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/yourusername/nexus/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg?logo=typescript)](https://www.typescriptlang.org)
 [![Node.js](https://img.shields.io/badge/Node.js-18-339933.svg?logo=node.js)](https://nodejs.org)
@@ -20,6 +20,21 @@
 <img src="https://raw.githubusercontent.com/yourusername/nexus/main/docs/screenshot.png" alt="Nexus Screenshot" width="800">
 
 </div>
+
+---
+
+## 📜 开源声明
+
+**Nexus 采用 AGPL-3.0 许可证开源**
+
+本项目是自由软件，任何人都可以在遵守 AGPL-3.0 许可证的前提下使用、修改和分发。
+
+**⚠️ 重要提示：**
+- 如果您修改了本软件并在网络上提供服务，**必须**向用户公开您的源代码
+- 禁止将修改后的版本作为闭源商业软件销售
+- 任何衍生作品都必须使用相同的 AGPL-3.0 许可证开源
+
+[查看完整许可证](LICENSE) | [了解 AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ---
 
