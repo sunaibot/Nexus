@@ -73,7 +73,7 @@ export async function fetchFrontendNavItemsFlat(): Promise<FrontendNavItem[]> {
  * 获取单个导航项
  */
 export async function fetchFrontendNavItemById(id: string): Promise<FrontendNavItem> {
-  return request<FrontendNavItem>(`/api/v2/frontend-nav/${id}`, {
+  return request<FrontendNavItem>(`/v2/frontend-nav/${id}`, {
     requireAuth: false,
   })
 }
@@ -98,7 +98,7 @@ export async function updateFrontendNavItem(
   id: string,
   data: UpdateFrontendNavItemRequest
 ): Promise<FrontendNavItem> {
-  return request<FrontendNavItem>(`/api/v2/frontend-nav/${id}`, {
+  return request<FrontendNavItem>(`/v2/frontend-nav/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
     requireAuth: true,
@@ -109,7 +109,7 @@ export async function updateFrontendNavItem(
  * 删除导航项（管理员）
  */
 export async function deleteFrontendNavItem(id: string): Promise<void> {
-  return request<void>(`/api/v2/frontend-nav/${id}`, {
+  return request<void>(`/v2/frontend-nav/${id}`, {
     method: 'DELETE',
     requireAuth: true,
   })

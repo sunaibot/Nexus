@@ -234,3 +234,14 @@ export async function fetchCurrentBookmarkCardStyle(): Promise<BookmarkCardStyle
   const response = await request<SingleResponse>('/v2/bookmark-card-styles/current', { method: 'GET', requireAuth: false })
   return response.data
 }
+
+// API对象导出
+export const bookmarkCardStylesApi = {
+  fetchAll: fetchBookmarkCardStyles,
+  fetchById: fetchBookmarkCardStyle,
+  create: createBookmarkCardStyle,
+  update: updateBookmarkCardStyle,
+  delete: deleteBookmarkCardStyle,
+  setDefault: setDefaultBookmarkCardStyle,
+  fetchCurrent: fetchCurrentBookmarkCardStyle,
+}

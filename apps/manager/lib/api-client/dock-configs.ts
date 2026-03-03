@@ -157,3 +157,15 @@ export async function fetchDockConfigStats(): Promise<DockConfigStats> {
   })
   return result.data
 }
+
+// API对象导出
+export const dockConfigsApi = {
+  fetchAll: fetchDockConfigs,
+  fetchCurrent: fetchCurrentDockConfig,
+  fetchById: fetchDockConfigById,
+  create: createDockConfig,
+  update: updateDockConfig,
+  delete: deleteDockConfig,
+  reorderItems: reorderDockItems,
+  getStats: fetchDockConfigStats,
+}

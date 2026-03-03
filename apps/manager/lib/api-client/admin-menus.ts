@@ -158,3 +158,18 @@ export async function fetchMenuStats(): Promise<MenuStats> {
   })
   return response.data
 }
+
+// API对象导出
+export const adminMenusApi = {
+  fetchAll: fetchAdminMenus,
+  fetchById: fetchAdminMenu,
+  create: createAdminMenu,
+  update: updateAdminMenu,
+  delete: deleteAdminMenu,
+  addUserMenu,
+  removeUserMenu,
+  addRoleMenu,
+  removeRoleMenu,
+  reorder: reorderAdminMenus,
+  getStats: fetchMenuStats,
+}

@@ -63,7 +63,7 @@ export async function fetchAllSettingsTabs(): Promise<SettingsTab[]> {
  * 获取单个 Settings Tab
  */
 export async function fetchSettingsTabById(id: string): Promise<SettingsTab> {
-  return request<SettingsTab>(`/api/v2/settings-tabs/${id}`, {
+  return request<SettingsTab>(`/v2/settings-tabs/${id}`, {
     requireAuth: false,
   })
 }
@@ -88,7 +88,7 @@ export async function updateSettingsTab(
   id: string,
   data: UpdateSettingsTabRequest
 ): Promise<SettingsTab> {
-  return request<SettingsTab>(`/api/v2/settings-tabs/${id}`, {
+  return request<SettingsTab>(`/v2/settings-tabs/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
     requireAuth: true,
@@ -99,7 +99,7 @@ export async function updateSettingsTab(
  * 删除 Settings Tab（管理员）
  */
 export async function deleteSettingsTab(id: string): Promise<void> {
-  return request<void>(`/api/v2/settings-tabs/${id}`, {
+  return request<void>(`/v2/settings-tabs/${id}`, {
     method: 'DELETE',
     requireAuth: true,
   })

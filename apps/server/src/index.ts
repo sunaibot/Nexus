@@ -247,9 +247,9 @@ initDatabase().then(() => {
       // 定期清理过期文件（每小时执行一次）
       setInterval(() => {
         try {
-          const result = cleanupExpiredFileTransfers()
-          if (result.count > 0) {
-            console.log(`🧹 Cleaned up ${result.count} expired file transfers`)
+          const count = cleanupExpiredFileTransfers()
+          if (count > 0) {
+            console.log(`🧹 Cleaned up ${count} expired file transfers`)
           }
         } catch (error) {
           console.error('❌ Error cleaning up expired file transfers:', error)

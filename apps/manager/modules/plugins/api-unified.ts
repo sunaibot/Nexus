@@ -60,7 +60,7 @@ export interface SlotConfigRequest {
   config?: Record<string, any>
 }
 
-const API_BASE = '/v2/plugins-unified'
+const API_BASE = '/v2/plugins'
 
 /**
  * 获取所有插件

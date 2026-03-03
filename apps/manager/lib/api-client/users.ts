@@ -85,3 +85,23 @@ export async function fetchUserStats(userId: string): Promise<UserStats> {
     totalVisits: 0,
   }
 }
+
+// 批量删除用户
+export async function batchDeleteUsers(userIds: string[]): Promise<void> {
+  await request<ApiResponse<void>>('/v2/users/batch', {
+    method: 'DELETE',
+    body: JSON.stringify({ userIds }),
+    requireAuth: true
+  })
+}
+
+// API对象导出
+export const usersApi = {
+  fetchAll: fetchUsers,
+  create: createUser,
+  update: updateUser,
+  delete: deleteUser,
+  batchDelete: batchDeleteUsers,
+  batchUpdate: batchUpdateUsers,
+  getStats: fetchUserStats,
+}

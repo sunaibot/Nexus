@@ -99,10 +99,10 @@ router.get('/download/:downloadToken', async (req, res) => {
   try {
     const fs = await import('fs')
     const pathModule = await import('path')
-    const { getFileTransferSettings } = await import('../../db/settings.js')
-    
+    const { getFileTransferSettings } = await import('../../db/index.js')
+
     // 获取设置中的存储路径
-    const settings = getFileTransferSettings()
+    const settings = await getFileTransferSettings()
     const storagePath = settings?.uploadPath || './uploads'
     const uploadsDir = storagePath.startsWith('/') 
       ? storagePath 

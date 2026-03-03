@@ -117,9 +117,9 @@ export async function fetchPluginDisplayConfig(pluginId: string): Promise<Plugin
   return data.data;
 }
 
-// 获取所有启用的插件
+// 获取所有启用的插件（公开接口，无需认证）
 export async function fetchEnabledPlugins(): Promise<Plugin[]> {
-  const res = await fetch(`${API_BASE}/api/v2/plugins`, {
+  const res = await fetch(`${API_BASE}/api/v2/plugins/public/list`, {
     credentials: 'include',
   });
 

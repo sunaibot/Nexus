@@ -121,7 +121,7 @@ export class FileTransferRepository {
    * @param id 文件ID
    * @returns 删除结果
    */
-  async delete(id: string): Promise<{ success: boolean; filePath?: string }> {
+  async delete(id: string): Promise<boolean> {
     return dbDeleteFileTransfer(id)
   }
 
@@ -146,7 +146,7 @@ export class FileTransferRepository {
    * 清理过期文件
    * @returns 清理结果
    */
-  async cleanupExpired(): Promise<{ count: number; filePaths: string[] }> {
+  async cleanupExpired(): Promise<number> {
     return dbCleanupExpired()
   }
 

@@ -390,9 +390,9 @@ export class FileTransferService {
         return { success: false, error: '无权删除此文件' }
       }
 
-      const deleteResult = await this.repository.delete(file.id)
+      const deleteSuccess = await this.repository.delete(file.id)
 
-      if (deleteResult.success) {
+      if (deleteSuccess) {
         // 记录审计日志
         logAudit({
           userId: userId ?? null,
@@ -406,7 +406,7 @@ export class FileTransferService {
         })
       }
 
-      return { success: deleteResult.success }
+      return { success: deleteSuccess }
     } catch (error) {
       console.error('文件删除失败:', error)
       return { success: false, error: '删除失败' }

@@ -66,7 +66,7 @@ export async function updateCategory(
   const response = await request<ApiResponse<Category>>(
     `/v2/categories/${id}`,
     {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify(data),
       requireAuth: true,
     }

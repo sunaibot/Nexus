@@ -82,7 +82,7 @@ export async function updateBookmark(
   data: UpdateBookmarkParams
 ): Promise<Bookmark> {
   const response = await request<ApiResponse<Bookmark>>(`/v2/bookmarks/${id}`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(data),
     requireAuth: true,
   })

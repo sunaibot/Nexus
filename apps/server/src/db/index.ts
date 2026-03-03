@@ -51,12 +51,6 @@ export {
   removeUserPrivatePassword
 } from './bookmarks.js'
 
-// ========== 分类管理 ==========
-export {
-  getAllCategoryCollapseStates,
-  setCategoryCollapseState
-} from './settings.js'
-
 // ========== 标签管理 ==========
 export {
   createTag,
@@ -84,20 +78,35 @@ export {
   SYSTEM_ERROR_ACTIONS
 } from './audit-enhanced.js'
 
-// ========== 设置管理 ==========
+// ========== 设置核心 ==========
 export {
   getUserSettings,
-  setUserSettings
-} from './settings.js'
+  setUserSettings,
+  getGlobalSetting,
+  setGlobalSetting,
+  getAllCategoryCollapseStates,
+  setCategoryCollapseState
+} from './modules/settings-core/index.js'
 
-// ========== 自定义小部件 ==========
+// ========== 自定义小部件 (custom_widgets 表) ==========
 export {
   createCustomWidget,
   getCustomWidgetsByUser,
   getCustomWidgetById,
   updateCustomWidget,
-  deleteCustomWidget
-} from './settings.js'
+  deleteCustomWidget,
+  type CustomWidget
+} from './modules/widgets/index.js'
+
+// ========== 用户小部件 (widgets 表) ==========
+export {
+  getUserWidgets,
+  createWidget,
+  updateWidget,
+  deleteWidget,
+  getWidgetById,
+  type Widget
+} from './modules/widgets/user-widgets.js'
 
 // ========== 私密模式 ==========
 export {
@@ -105,15 +114,16 @@ export {
   setPrivatePassword,
   verifyPrivatePassword,
   hasPrivatePassword
-} from './settings.js'
+} from './modules/private-mode/index.js'
 
 // ========== IP过滤 ==========
 export {
   addIpFilter,
   removeIpFilter,
   getIpFilters,
-  checkIpAccess
-} from './settings.js'
+  checkIpAccess,
+  type IpFilter
+} from './modules/ip-filter/index.js'
 
 // ========== RSS订阅 ==========
 export {
@@ -127,8 +137,10 @@ export {
   markArticleRead,
   markAllRead,
   starArticle,
-  createRssArticle
-} from './settings.js'
+  createRssArticle,
+  type RssFeed,
+  type RssArticle
+} from './modules/rss/index.js'
 
 // ========== WebDAV配置 ==========
 export {
@@ -136,8 +148,9 @@ export {
   getWebdavConfigs,
   getWebdavConfig,
   updateWebdavConfig,
-  deleteWebdavConfig
-} from './settings.js'
+  deleteWebdavConfig,
+  type WebdavConfig
+} from './modules/webdav/index.js'
 
 // ========== 通知配置 ==========
 export {
@@ -145,25 +158,28 @@ export {
   saveNotificationConfig,
   getNotificationHistory,
   clearNotificationHistory,
-  createNotificationHistory
-} from './settings.js'
+  createNotificationHistory,
+  type NotificationHistory
+} from './modules/notifications/index.js'
 
 // ========== 文件快传 ==========
 export {
   createFileTransfer,
   getFileTransferByExtractCode,
-  getFileTransferByDeleteCode,
   getFileTransferByDownloadToken,
+  incrementDownloadCount,
   incrementFileTransferDownload,
   deleteFileTransfer,
   deleteFileTransferById,
+  getFileTransferByDeleteCode,
   getUserFileTransfers,
   getAllFileTransfers,
   cleanupExpiredFileTransfers,
   getFileTransferSettings,
   updateFileTransferSettings,
-  getFileTransferStats
-} from './settings.js'
+  getFileTransferStats,
+  type FileTransfer
+} from './modules/file-transfer/index.js'
 
 // ========== 自定义指标 ==========
 export {
@@ -174,8 +190,10 @@ export {
   deleteCustomMetric,
   addCustomMetricHistory,
   getCustomMetricHistory,
-  clearCustomMetricHistory
-} from './settings.js'
+  clearCustomMetricHistory,
+  type CustomMetric,
+  type MetricHistory
+} from './modules/metrics/index.js'
 
 // ========== 服务监控 ==========
 export {
@@ -183,8 +201,9 @@ export {
   getServiceMonitorsByUser,
   getServiceMonitorById,
   updateServiceMonitor,
-  deleteServiceMonitor
-} from './settings.js'
+  deleteServiceMonitor,
+  type ServiceMonitor
+} from './modules/service-monitors/index.js'
 
 // ========== 便签管理 ==========
 export {
@@ -194,8 +213,45 @@ export {
   deleteNotepad,
   createNotepad,
   updateNotepad,
-  getNotepadById
-} from './settings.js'
+  getNotepadById,
+  type Notepad
+} from './modules/notepads/index.js'
+
+// ========== 笔记管理 ==========
+export {
+  getUserNotes,
+  getNoteById,
+  createNote,
+  updateNote,
+  deleteNote,
+  getAllNotes,
+  getUserNoteFolders,
+  getAllNoteFolders,
+  getNoteFolderById,
+  createNoteFolder,
+  updateNoteFolder,
+  deleteNoteFolder,
+  type Note,
+  type NoteFolder
+} from './modules/notes/index.js'
+
+// ========== 访问统计 ==========
+export {
+  recordVisit,
+  getTopBookmarks,
+  getVisitTrend,
+  getRecentVisits,
+  getBookmarkStats,
+  getCategoryStats,
+  getCategoryTrend,
+  getVisitRecords,
+  getPopularBookmarks,
+  getVisitTimeline,
+  getVisitStatsSummary,
+  clearAllVisits,
+  type Visit,
+  type VisitStats
+} from './modules/visits/index.js'
 
 // ========== 插件管理 ==========
 export {
@@ -210,8 +266,27 @@ export {
   enablePlugin,
   disablePlugin,
   getUserPlugin,
-  getRolePlugin
+  getRolePlugin,
+  type Plugin,
+  type UserPlugin,
+  type RolePlugin
 } from './plugins.js'
+
+// ========== 名言管理 ==========
+export {
+  getQuotes,
+  getActiveQuotes,
+  getQuoteById,
+  getRandomQuote,
+  getDailyQuote,
+  createQuote,
+  updateQuote,
+  deleteQuote,
+  toggleQuoteStatus,
+  getQuoteCategories,
+  getQuoteAuthors,
+  type Quote
+} from './modules/quotes/index.js'
 
 // ========== 数据库初始化 ==========
 export { initDatabase } from './init.js'

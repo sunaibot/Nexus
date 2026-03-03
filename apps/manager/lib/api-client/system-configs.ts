@@ -200,3 +200,27 @@ export async function getSystemConfigDefaults(): Promise<SystemConfigs> {
   }
   return response.data
 }
+
+// API对象导出
+export const systemConfigsApi = {
+  getAll: getAllSystemConfigs,
+  batchUpdate: batchUpdateSystemConfigs,
+  reset: resetSystemConfigsToDefaults,
+  getDefaults: getSystemConfigDefaults,
+  security: {
+    get: getSecuritySystemConfig,
+    update: updateSecuritySystemConfig,
+  },
+  fileTransfer: {
+    get: getFileTransferSystemConfig,
+    update: updateFileTransferSystemConfig,
+  },
+  upload: {
+    get: getUploadSystemConfig,
+    update: updateUploadSystemConfig,
+  },
+  notification: {
+    get: getNotificationSystemConfig,
+    update: updateNotificationSystemConfig,
+  },
+}

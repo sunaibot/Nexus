@@ -61,6 +61,7 @@ export {
   systemApi,
 } from './system'
 
+// 导出 plugins 模块（函数和API对象）
 export {
   fetchPlugins,
   fetchPlugin,
@@ -72,9 +73,11 @@ export {
   removeUserPlugin,
   addRolePlugin,
   removeRolePlugin,
+  pluginsApi,
 } from './plugins'
 export type { Plugin, CreatePluginData, UpdatePluginData } from './plugins'
 
+// 导出 admin-menus 模块（函数和API对象）
 export {
   fetchAdminMenus,
   fetchAdminMenu,
@@ -87,9 +90,34 @@ export {
   removeRoleMenu,
   reorderAdminMenus,
   fetchMenuStats,
+  adminMenusApi,
 } from './admin-menus'
 export type { AdminMenu, CreateAdminMenuData, UpdateAdminMenuData, ReorderMenuItem, MenuStats } from './admin-menus'
 
+// 导出 users 模块
+export {
+  fetchUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  batchDeleteUsers,
+  batchUpdateUsers,
+  fetchUserStats,
+  usersApi,
+} from './users'
+export type { User, CreateUserData, UpdateUserData, UserStats } from './users'
+
+// 导出 security 模块
+export {
+  getSecurityConfig,
+  updateCsrfConfig,
+  getSecurityLogs,
+  getSecurityStats,
+  securityApi,
+} from './security'
+export type { SecurityConfig, SecurityStats, SecurityLog } from './security'
+
+// 导出 bookmark-card-styles 模块
 export {
   fetchBookmarkCardStyles,
   fetchBookmarkCardStyle,
@@ -98,17 +126,13 @@ export {
   deleteBookmarkCardStyle,
   setDefaultBookmarkCardStyle,
   fetchCurrentBookmarkCardStyle,
+  bookmarkCardStylesApi,
 } from './bookmark-card-styles'
 export type { BookmarkCardStyle, CreateBookmarkCardStyleData, UpdateBookmarkCardStyleData } from './bookmark-card-styles'
 
-import { authApi } from './auth'
-import { bookmarksApi } from './bookmarks'
-import { categoriesApi } from './categories'
-import { systemApi } from './system'
-
-export default {
-  auth: authApi,
-  bookmarks: bookmarksApi,
-  categories: categoriesApi,
-  system: systemApi,
-}
+// 导出其他API模块
+export { settingsTabsApi } from './settings-tabs'
+export { dockConfigsApi } from './dock-configs'
+export { frontendNavApi } from './frontend-nav'
+export { systemConfigsApi } from './system-configs'
+export type { SystemConfigs, FileTransferConfig, UploadConfig, NotificationConfig } from './system-configs'

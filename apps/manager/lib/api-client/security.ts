@@ -135,3 +135,11 @@ export async function getSecurityStats(): Promise<SecurityStats> {
   }
   return response.data
 }
+
+// API对象导出
+export const securityApi = {
+  getConfig: getSecurityConfig,
+  updateCsrfConfig,
+  getLogs: getSecurityLogs,
+  getStats: getSecurityStats,
+}

@@ -33,16 +33,21 @@ export interface CustomPluginContent {
 
 /**
  * 获取所有自定义插件
+ * 使用统一插件API，过滤自定义插件
  */
 export async function getCustomPlugins(): Promise<CustomPlugin[]> {
-  return request<CustomPlugin[]>('/api/v2/custom-plugins')
+  const plugins = await request<{ success: boolean; data: any[] }>('/api/v2/plugins?includeUninstalled=true', { requireAuth: true })
+  return (plugins.data || [])
+    .filter(p => p.isCustom === true || p.builderData)
+    .map(p => ({ ...p, isCustom: true }))
 }
 
 /**
  * 获取单个自定义插件
  */
 export async function getCustomPlugin(id: string): Promise<CustomPlugin> {
-  return request<CustomPlugin>(`/api/v2/custom-plugins/${id}`)
+  const response = await request<{ success: boolean; data: any }>(`/api/v2/plugins/${id}`, { requireAuth: true })
+  return { ...response.data, isCustom: true }
 }
 
 /**
@@ -55,10 +60,18 @@ export async function createCustomPlugin(data: {
   builderData: BuildingPlugin
   visibility?: 'public' | 'private' | 'role'
 }): Promise<CustomPlugin> {
-  return request<CustomPlugin>('/api/v2/custom-plugins', {
+  const response = await request<{ success: boolean; data: any }>('/api/v2/plugins', {
     method: 'POST',
-    body: JSON.stringify(data),
+    requireAuth: true,
+    body: JSON.stringify({
+      ...data,
+      version: '1.0.0',
+      author: 'custom',
+      isCustom: true,
+      config: { builderData: data.builderData }
+    }),
   })
+  return { ...response.data, isCustom: true }
 }
 
 /**
@@ -74,18 +87,24 @@ export async function updateCustomPlugin(
     isEnabled?: boolean
   }
 ): Promise<CustomPlugin> {
-  return request<CustomPlugin>(`/api/v2/custom-plugins/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
+  const response = await request<{ success: boolean; data: any }>(`/api/v2/plugins/${id}`, {
+    method: 'PATCH',
+    requireAuth: true,
+    body: JSON.stringify({
+      ...data,
+      config: data.builderData ? { builderData: data.builderData } : undefined
+    }),
   })
+  return { ...response.data, isCustom: true }
 }
 
 /**
  * 删除自定义插件
  */
 export async function deleteCustomPlugin(id: string): Promise<void> {
-  await request<void>(`/api/v2/custom-plugins/${id}`, {
+  await request(`/api/v2/plugins/${id}`, {
     method: 'DELETE',
+    requireAuth: true,
   })
 }
 
@@ -93,7 +112,15 @@ export async function deleteCustomPlugin(id: string): Promise<void> {
  * 获取插件内容（前台使用，公开接口）
  */
 export async function getCustomPluginContent(id: string): Promise<CustomPluginContent> {
-  return request<CustomPluginContent>(`/api/v2/custom-plugins/${id}/content`)
+  const response = await request<{ success: boolean; data: any }>(`/api/v2/plugins/${id}`, { requireAuth: false })
+  const plugin = response.data
+  return {
+    id: plugin.id,
+    name: plugin.name,
+    description: plugin.description,
+    icon: plugin.icon,
+    builderData: plugin.config?.builderData || plugin.builderData
+  }
 }
 
 /**

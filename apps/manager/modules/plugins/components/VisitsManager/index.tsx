@@ -182,7 +182,7 @@ export default function VisitsManager({ plugin, onPluginUpdate }: VisitsManagerP
     }
 
     try {
-      const response = await fetch(`/api/v2/plugins-unified/${plugin.id}`, {
+      const response = await fetch(`/api/v2/plugins/${plugin.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

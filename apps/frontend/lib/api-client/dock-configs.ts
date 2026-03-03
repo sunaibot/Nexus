@@ -85,7 +85,7 @@ export async function updateDockConfig(
   id: string,
   data: UpdateDockConfigRequest
 ): Promise<DockConfig> {
-  return request<DockConfig>(`/api/v2/dock-configs/${id}`, {
+  return request<DockConfig>(`/v2/dock-configs/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
     requireAuth: true,
@@ -96,7 +96,7 @@ export async function updateDockConfig(
  * 删除 Dock 配置（管理员）
  */
 export async function deleteDockConfig(id: string): Promise<void> {
-  return request<void>(`/api/v2/dock-configs/${id}`, {
+  return request<void>(`/v2/dock-configs/${id}`, {
     method: 'DELETE',
     requireAuth: true,
   })

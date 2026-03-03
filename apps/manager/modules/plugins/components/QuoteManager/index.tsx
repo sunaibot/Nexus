@@ -213,7 +213,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
     }
 
     try {
-      const response = await fetch(`/api/v2/plugins-unified/${plugin.id}`, {
+      const response = await fetch(`/api/v2/plugins/${plugin.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -237,7 +237,7 @@ export default function QuoteManager({ plugin, onPluginUpdate }: QuoteManagerPro
   // 保存配置
   const handleSaveConfig = async () => {
     try {
-      const response = await fetch(`/api/v2/plugins-unified/${plugin.id}`, {
+      const response = await fetch(`/api/v2/plugins/${plugin.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

@@ -142,3 +142,17 @@ export async function removeRolePlugin(roleId: string, pluginId: string): Promis
   })
   invalidateCache('/v2/plugins')
 }
+
+// API对象导出
+export const pluginsApi = {
+  fetchAll: fetchPlugins,
+  fetchById: fetchPlugin,
+  create: createPlugin,
+  update: updatePlugin,
+  delete: deletePlugin,
+  install: installPlugin,
+  addUserPlugin,
+  removeUserPlugin,
+  addRolePlugin,
+  removeRolePlugin,
+}

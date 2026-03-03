@@ -26,6 +26,7 @@ export default function CustomPluginList({ className }: CustomPluginListProps) {
     } catch (err) {
       console.error('加载自定义插件列表失败:', err)
       setError('加载插件列表失败')
+      setPlugins([])
     } finally {
       setLoading(false)
     }

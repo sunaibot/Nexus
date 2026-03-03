@@ -7,8 +7,8 @@ import { Router } from 'express'
 import { apiCacheMiddleware, invalidateCache, cacheConfigs, cacheStatsHandler, clearCacheHandler, adminMiddleware, publicApiLimiter } from '../../middleware/index.js'
 
 // ========== 核心功能路由 ==========
-import bookmarksRouter from './bookmarks.js'
-import categoriesRouter from './categories.js'
+import bookmarksRouter from './modules/bookmarks/index.js'
+import categoriesRouter from './modules/categories/index.js'
 import tabsRouter from './tabs.js'
 import usersRouter from './users.js'
 import adminRouter from './admin.js'
@@ -28,21 +28,22 @@ import themeRouter from './theme.js'
 // ========== 扩展功能路由 ==========
 import webDAVRoutes from '../../features/webdav/routes.js'
 import notificationRoutes from '../../features/notification/routes.js'
-import rssRouter from './rss.js'
-import notesRouter from './notes.js'
-import notepadsRouter from './notepads.js'
-import quotesRouter from './quotes.js'
-import widgetsRouter from './widgets.js'
-import serviceMonitorsRouter from './service-monitors.js'
-import customMetricsRouter from './custom-metrics.js'
-import visitsRouter from './visits.js'
+import rssRouter from './modules/rss/index.js'
+import notesRouter from './modules/notes/index.js'
+import notepadsRouter from './modules/notepads/index.js'
+import quotesRouter from './modules/quotes/index.js'
+import widgetsRouter from './modules/widgets/index.js'
+import serviceMonitorsRouter from './modules/service-monitors/index.js'
+import customMetricsRouter from './modules/metrics/index.js'
+import visitsRouter from './modules/visits/index.js'
 import metadataRouter from './metadata.js'
 import tagsRouter from './tags.js'
 import sharesRouter from './shares.js'
 import ipFiltersRouter from './ipFilters.js'
 import batchRouter from './batch.js'
 import privateModeRouter from './privateMode.js'
-import pluginsRouter from './plugins.js'
+// ========== 统一插件路由（合并 plugins.ts, plugins-unified.ts, custom-plugins.ts） ==========
+import pluginsRouter from './modules/plugins/index.js'
 import pluginDisplayConfigsRouter from './plugin-display-configs.js'
 import pluginSlotsRouter from './plugin-slots.js'
 import bookmarkCardStylesRouter from './bookmark-card-styles.js'
@@ -61,8 +62,6 @@ import customIconsRouter from './custom-icons.js'
 import weatherRouter from './weather.js'
 import apiDocsRouter from '../api-docs.js'
 import sessionAuthRouter from './session-auth.js'
-import pluginsUnifiedRouter from './plugins-unified.js'
-import customPluginsRouter from './custom-plugins.js'
 import systemConfigsRouter from './system-configs.js'
 
 const router = Router()
@@ -113,9 +112,8 @@ router.use('/shares', sharesRouter)
 router.use('/ip-filters', ipFiltersRouter)
 router.use('/batch', batchRouter)
 router.use('/private-mode', privateModeRouter)
+// 统一插件路由（已合并 plugins-unified 和 custom-plugins）
 router.use('/plugins', pluginsRouter)
-router.use('/plugins-unified', pluginsUnifiedRouter)
-router.use('/custom-plugins', customPluginsRouter)
 router.use('/plugin-display-configs', pluginDisplayConfigsRouter)
 router.use('/plugin-slots', pluginSlotsRouter)
 router.use('/bookmark-card-styles', bookmarkCardStylesRouter)

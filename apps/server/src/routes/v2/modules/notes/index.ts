@@ -1,16 +1,30 @@
 /**
- * 笔记路由 - V2版本
+ * 笔记路由模块
  * 提供富文本笔记管理功能，支持多用户数据隔离
  */
 
 import { Router, Request, Response } from 'express'
-import { authMiddleware } from '../../middleware/index.js'
-import { generateId } from '../../db/index.js'
-import { queryAll, queryOne, run } from '../../utils/index.js'
-import { successResponse, errorResponse } from '../utils/routeHelpers.js'
-import { validateBody, validateParams, idParamSchema } from '../../schemas.js'
+import { authMiddleware } from '../../../../middleware/index.js'
+import { successResponse, errorResponse } from '../../../utils/routeHelpers.js'
+import {
+  getUserNotes,
+  getNoteById,
+  createNote,
+  updateNote,
+  deleteNote,
+  getAllNotes,
+  getUserNoteFolders,
+  getAllNoteFolders,
+  getNoteFolderById,
+  createNoteFolder,
+  updateNoteFolder,
+  deleteNoteFolder,
+  type Note,
+  type NoteFolder
+} from '../../../../db/index.js'
+import { validateBody, validateParams, idParamSchema } from '../../../../schemas.js'
 import { z } from 'zod'
-import { logAudit } from '../../db/audit-enhanced.js'
+import { logAudit } from '../../../../db/audit-enhanced.js'
 
 const router = Router()
 
@@ -40,13 +54,13 @@ const updateNoteSchema = z.object({
 router.get('/all', authMiddleware, (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    
+
     // 检查是否是管理员
     if (user.role !== 'admin') {
       return errorResponse(res, '无权限访问', 403)
     }
-    
-    const notes = queryAll('SELECT * FROM notes ORDER BY updatedAt DESC')
+
+    const notes = getAllNotes()
     return successResponse(res, notes)
   } catch (error) {
     console.error('获取所有笔记失败:', error)
@@ -58,13 +72,13 @@ router.get('/all', authMiddleware, (req: Request, res: Response) => {
 router.get('/folders/all', authMiddleware, (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    
+
     // 检查是否是管理员
     if (user.role !== 'admin') {
       return errorResponse(res, '无权限访问', 403)
     }
-    
-    const folders = queryAll('SELECT * FROM note_folders ORDER BY orderIndex ASC, createdAt DESC')
+
+    const folders = getAllNoteFolders()
     return successResponse(res, folders)
   } catch (error) {
     console.error('获取所有文件夹失败:', error)
@@ -77,30 +91,13 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
   try {
     const user = (req as any).user
     const { folderId, isArchived, search } = req.query
-    
-    let query = 'SELECT * FROM notes WHERE userId = ?'
-    const params: any[] = [user.id]
-    
-    if (folderId) {
-      query += ' AND folderId = ?'
-      params.push(folderId as string)
-    }
-    
-    if (isArchived === 'true') {
-      query += ' AND isArchived = 1'
-    } else if (isArchived === 'false') {
-      query += ' AND isArchived = 0'
-    }
-    
-    if (search) {
-      query += ' AND (title LIKE ? OR content LIKE ? OR tags LIKE ?)'
-      const searchTerm = `%${search}%`
-      params.push(searchTerm, searchTerm, searchTerm)
-    }
-    
-    query += ' ORDER BY isPinned DESC, updatedAt DESC'
-    
-    const notes = queryAll(query, params)
+
+    const notes = getUserNotes(user.id, {
+      folderId: folderId as string | undefined,
+      isArchived: isArchived === 'true' ? true : isArchived === 'false' ? false : undefined,
+      search: search as string | undefined
+    })
+
     return successResponse(res, notes)
   } catch (error) {
     console.error('获取笔记列表失败:', error)
@@ -113,38 +110,31 @@ router.post('/', authMiddleware, validateBody(createNoteSchema), (req: Request, 
   try {
     const user = (req as any).user
     const { title, content, isMarkdown, tags, folderId } = req.body
-    
-    const id = generateId()
-    const now = new Date().toISOString()
-    
-    run(
-      `INSERT INTO notes (id, userId, title, content, isMarkdown, tags, folderId, isPinned, isArchived, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?)`,
-      [id, user.id, title, content || '', isMarkdown ? 1 : 0, tags || null, folderId || null, now, now]
-    )
-    
+
+    const note = createNote(user.id, title, content || '', {
+      isMarkdown,
+      tags,
+      folderId
+    })
+
+    if (!note) {
+      return errorResponse(res, '创建笔记失败', 500)
+    }
+
     // 记录创建笔记日志
     logAudit({
       userId: user.id,
       username: user.username,
       action: 'CREATE_NOTE',
       resourceType: 'note',
-      resourceId: id,
+      resourceId: note.id,
       details: { title, isMarkdown },
       ip: String(req.ip || 'unknown'),
       userAgent: String(req.headers['user-agent'] || ''),
       riskLevel: 'low'
     })
-    
-    return successResponse(res, { 
-      id, 
-      title, 
-      content, 
-      isMarkdown: isMarkdown ?? true,
-      tags,
-      folderId,
-      userId: user.id 
-    })
+
+    return successResponse(res, note)
   } catch (error) {
     console.error('创建笔记失败:', error)
     return errorResponse(res, '创建笔记失败')
@@ -155,17 +145,13 @@ router.post('/', authMiddleware, validateBody(createNoteSchema), (req: Request, 
 router.get('/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
-    
-    const note = queryOne(
-      'SELECT * FROM notes WHERE id = ? AND userId = ?',
-      [id, user.id]
-    )
-    
+    const id = req.params.id as string
+
+    const note = getNoteById(id, user.id)
     if (!note) {
       return errorResponse(res, '笔记不存在或无权限访问', 404)
     }
-    
+
     return successResponse(res, note)
   } catch (error) {
     console.error('获取笔记失败:', error)
@@ -177,65 +163,33 @@ router.get('/:id', authMiddleware, validateParams(idParamSchema), (req: Request,
 router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateNoteSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
+    const id = req.params.id as string
     const { title, content, isMarkdown, tags, folderId, isPinned, isArchived } = req.body
-    
+
     // 验证所有权
-    const existing = queryOne(
-      'SELECT * FROM notes WHERE id = ? AND userId = ?',
-      [id, user.id]
-    )
-    
+    const existing = getNoteById(id, user.id)
     if (!existing) {
       return errorResponse(res, '笔记不存在或无权限访问', 404)
     }
-    
-    const updates: string[] = []
-    const params: any[] = []
-    
-    if (title !== undefined) {
-      updates.push('title = ?')
-      params.push(title)
-    }
-    if (content !== undefined) {
-      updates.push('content = ?')
-      params.push(content)
-    }
-    if (isMarkdown !== undefined) {
-      updates.push('isMarkdown = ?')
-      params.push(isMarkdown ? 1 : 0)
-    }
-    if (tags !== undefined) {
-      updates.push('tags = ?')
-      params.push(tags)
-    }
-    if (folderId !== undefined) {
-      updates.push('folderId = ?')
-      params.push(folderId)
-    }
-    if (isPinned !== undefined) {
-      updates.push('isPinned = ?')
-      params.push(isPinned ? 1 : 0)
-    }
-    if (isArchived !== undefined) {
-      updates.push('isArchived = ?')
-      params.push(isArchived ? 1 : 0)
-    }
-    
-    if (updates.length === 0) {
+
+    const updates: Partial<Note> = {}
+    if (title !== undefined) updates.title = title
+    if (content !== undefined) updates.content = content
+    if (isMarkdown !== undefined) updates.isMarkdown = isMarkdown
+    if (tags !== undefined) updates.tags = tags
+    if (folderId !== undefined) updates.folderId = folderId
+    if (isPinned !== undefined) updates.isPinned = isPinned
+    if (isArchived !== undefined) updates.isArchived = isArchived
+
+    if (Object.keys(updates).length === 0) {
       return errorResponse(res, '没有要更新的字段', 400)
     }
-    
-    updates.push('updatedAt = ?')
-    params.push(new Date().toISOString())
-    params.push(id)
-    params.push(user.id)
-    
-    run(
-      `UPDATE notes SET ${updates.join(', ')} WHERE id = ? AND userId = ?`,
-      params
-    )
-    
+
+    const success = updateNote(id, user.id, updates)
+    if (!success) {
+      return errorResponse(res, '更新笔记失败', 500)
+    }
+
     // 记录更新笔记日志
     logAudit({
       userId: user.id,
@@ -248,7 +202,7 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
       userAgent: String(req.headers['user-agent'] || ''),
       riskLevel: 'low'
     })
-    
+
     return successResponse(res, { id })
   } catch (error) {
     console.error('更新笔记失败:', error)
@@ -260,20 +214,19 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
 router.delete('/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
-    
+    const id = req.params.id as string
+
     // 验证所有权
-    const existing = queryOne(
-      'SELECT * FROM notes WHERE id = ? AND userId = ?',
-      [id, user.id]
-    )
-    
+    const existing = getNoteById(id, user.id)
     if (!existing) {
       return errorResponse(res, '笔记不存在或无权限访问', 404)
     }
-    
-    run('DELETE FROM notes WHERE id = ? AND userId = ?', [id, user.id])
-    
+
+    const success = deleteNote(id, user.id)
+    if (!success) {
+      return errorResponse(res, '删除笔记失败', 500)
+    }
+
     // 记录删除笔记日志
     logAudit({
       userId: user.id,
@@ -300,12 +253,7 @@ router.delete('/:id', authMiddleware, validateParams(idParamSchema), (req: Reque
 router.get('/folders/list', authMiddleware, (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    
-    const folders = queryAll(
-      'SELECT * FROM note_folders WHERE userId = ? ORDER BY orderIndex ASC, createdAt DESC',
-      [user.id]
-    )
-    
+    const folders = getUserNoteFolders(user.id)
     return successResponse(res, folders)
   } catch (error) {
     console.error('获取文件夹列表失败:', error)
@@ -323,23 +271,18 @@ router.post('/folders', authMiddleware, validateBody(createFolderSchema), (req: 
   try {
     const user = (req as any).user
     const { name, parentId } = req.body
-    
-    const id = generateId()
-    const now = new Date().toISOString()
-    
+
     // 获取最大orderIndex
-    const maxResult = queryOne(
-      'SELECT MAX(orderIndex) as maxOrder FROM note_folders WHERE userId = ?',
-      [user.id]
-    )
-    const orderIndex = (maxResult?.maxOrder || 0) + 1
-    
-    run(
-      'INSERT INTO note_folders (id, userId, name, parentId, orderIndex, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [id, user.id, name, parentId || null, orderIndex, now, now]
-    )
-    
-    return successResponse(res, { id, name, parentId, orderIndex })
+    const folders = getUserNoteFolders(user.id)
+    const maxOrder = folders.length > 0 ? Math.max(...folders.map(f => f.orderIndex)) : 0
+    const orderIndex = maxOrder + 1
+
+    const folder = createNoteFolder(user.id, name, parentId, orderIndex)
+    if (!folder) {
+      return errorResponse(res, '创建文件夹失败', 500)
+    }
+
+    return successResponse(res, folder)
   } catch (error) {
     console.error('创建文件夹失败:', error)
     return errorResponse(res, '创建文件夹失败')
@@ -355,45 +298,28 @@ const updateFolderSchema = z.object({
 router.patch('/folders/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateFolderSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
+    const id = req.params.id as string
     const { name, parentId } = req.body
-    
+
     // 验证所有权
-    const existing = queryOne(
-      'SELECT * FROM note_folders WHERE id = ? AND userId = ?',
-      [id, user.id]
-    )
-    
+    const existing = getNoteFolderById(id, user.id)
     if (!existing) {
       return errorResponse(res, '文件夹不存在或无权限访问', 404)
     }
-    
-    const updates: string[] = []
-    const params: any[] = []
-    
-    if (name !== undefined) {
-      updates.push('name = ?')
-      params.push(name)
-    }
-    if (parentId !== undefined) {
-      updates.push('parentId = ?')
-      params.push(parentId)
-    }
-    
-    if (updates.length === 0) {
+
+    const updates: Partial<NoteFolder> = {}
+    if (name !== undefined) updates.name = name
+    if (parentId !== undefined) updates.parentId = parentId
+
+    if (Object.keys(updates).length === 0) {
       return errorResponse(res, '没有要更新的字段', 400)
     }
-    
-    updates.push('updatedAt = ?')
-    params.push(new Date().toISOString())
-    params.push(id)
-    params.push(user.id)
-    
-    run(
-      `UPDATE note_folders SET ${updates.join(', ')} WHERE id = ? AND userId = ?`,
-      params
-    )
-    
+
+    const success = updateNoteFolder(id, user.id, updates)
+    if (!success) {
+      return errorResponse(res, '更新文件夹失败', 500)
+    }
+
     return successResponse(res, { id })
   } catch (error) {
     console.error('更新文件夹失败:', error)
@@ -405,24 +331,26 @@ router.patch('/folders/:id', authMiddleware, validateParams(idParamSchema), vali
 router.delete('/folders/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
-    
+    const id = req.params.id as string
+
     // 验证所有权
-    const existing = queryOne(
-      'SELECT * FROM note_folders WHERE id = ? AND userId = ?',
-      [id, user.id]
-    )
-    
+    const existing = getNoteFolderById(id, user.id)
     if (!existing) {
       return errorResponse(res, '文件夹不存在或无权限访问', 404)
     }
-    
+
     // 将该文件夹下的笔记移动到根目录
-    run('UPDATE notes SET folderId = NULL WHERE folderId = ? AND userId = ?', [id, user.id])
-    
+    const notes = getUserNotes(user.id).filter(n => n.folderId === id)
+    for (const note of notes) {
+      updateNote(note.id, user.id, { folderId: null })
+    }
+
     // 删除文件夹
-    run('DELETE FROM note_folders WHERE id = ? AND userId = ?', [id, user.id])
-    
+    const success = deleteNoteFolder(id, user.id)
+    if (!success) {
+      return errorResponse(res, '删除文件夹失败', 500)
+    }
+
     return successResponse(res, { id })
   } catch (error) {
     console.error('删除文件夹失败:', error)
@@ -436,21 +364,24 @@ router.delete('/folders/:id', authMiddleware, validateParams(idParamSchema), (re
 router.delete('/admin/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
-    
+    const id = req.params.id as string
+
     // 检查是否是管理员
     if (user.role !== 'admin') {
       return errorResponse(res, '无权限访问', 403)
     }
-    
+
     // 获取笔记信息用于日志
-    const existing = queryOne('SELECT * FROM notes WHERE id = ?', [id])
+    const existing = getAllNotes().find(n => n.id === id)
     if (!existing) {
       return errorResponse(res, '笔记不存在', 404)
     }
-    
-    run('DELETE FROM notes WHERE id = ?', [id])
-    
+
+    const success = deleteNote(id, existing.userId)
+    if (!success) {
+      return errorResponse(res, '删除笔记失败', 500)
+    }
+
     // 记录删除笔记日志
     logAudit({
       userId: user.id,
@@ -463,7 +394,7 @@ router.delete('/admin/:id', authMiddleware, validateParams(idParamSchema), (req:
       userAgent: String(req.headers['user-agent'] || ''),
       riskLevel: 'medium'
     })
-    
+
     return successResponse(res, { id })
   } catch (error) {
     console.error('删除笔记失败:', error)
@@ -475,25 +406,31 @@ router.delete('/admin/:id', authMiddleware, validateParams(idParamSchema), (req:
 router.delete('/folders/admin/:id', authMiddleware, validateParams(idParamSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { id } = req.params
-    
+    const id = req.params.id as string
+
     // 检查是否是管理员
     if (user.role !== 'admin') {
       return errorResponse(res, '无权限访问', 403)
     }
-    
+
     // 获取文件夹信息用于日志
-    const existing = queryOne('SELECT * FROM note_folders WHERE id = ?', [id])
+    const existing = getAllNoteFolders().find(f => f.id === id)
     if (!existing) {
       return errorResponse(res, '文件夹不存在', 404)
     }
-    
+
     // 将该文件夹下的笔记移动到根目录
-    run('UPDATE notes SET folderId = NULL WHERE folderId = ?', [id])
-    
+    const notes = getAllNotes().filter(n => n.folderId === id)
+    for (const note of notes) {
+      updateNote(note.id, note.userId, { folderId: null })
+    }
+
     // 删除文件夹
-    run('DELETE FROM note_folders WHERE id = ?', [id])
-    
+    const success = deleteNoteFolder(id, existing.userId)
+    if (!success) {
+      return errorResponse(res, '删除文件夹失败', 500)
+    }
+
     // 记录删除文件夹日志
     logAudit({
       userId: user.id,
@@ -506,7 +443,7 @@ router.delete('/folders/admin/:id', authMiddleware, validateParams(idParamSchema
       userAgent: String(req.headers['user-agent'] || ''),
       riskLevel: 'medium'
     })
-    
+
     return successResponse(res, { id })
   } catch (error) {
     console.error('删除文件夹失败:', error)
