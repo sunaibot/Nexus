@@ -15,7 +15,7 @@ import { PluginSlot } from './PluginSlot';
 const pluginComponents: Record<string, React.ComponentType<any>> = {};
 
 // 插件注册函数
-export function registerPlugin(name: string, component: React.ComponentType<any>) {
+function registerPlugin(name: string, component: React.ComponentType<any>) {
   pluginComponents[name] = component;
 }
 
@@ -161,4 +161,6 @@ export function PluginRenderer({ className = '' }: PluginRendererProps) {
 }
 
 // 导出注册函数供其他模块使用
-export { registerPlugin as registerFrontendPlugin };
+export function registerFrontendPlugin(name: string, component: React.ComponentType<any>) {
+  registerPlugin(name, component);
+}
