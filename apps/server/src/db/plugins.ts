@@ -10,7 +10,9 @@ export interface Plugin {
   icon?: string
   isEnabled: boolean
   isInstalled: boolean
+  isCustom?: boolean
   config?: Record<string, any>
+  builderData?: Record<string, any> // 存储可视化构建器数据
   orderIndex: number
   visibility: 'public' | 'private' | 'role'
   allowedRoles?: string[]
@@ -59,12 +61,96 @@ export function createPlugin(
   return id
 }
 
-export function getPlugins(enabledOnly: boolean = false): Plugin[] {
+// 创建自定义插件（通过构建器）
+export function createCustomPlugin(
+  name: string,
+  description: string,
+  author: string,
+  icon: string,
+  builderData: Record<string, any>,
+  visibility: 'public' | 'private' | 'role' = 'public'
+): string | null {
+  const db = getDatabase()
+  if (!db) return null
+
+  const id = `custom_${generateId()}`
+  const now = new Date().toISOString()
+
+  run(
+    'INSERT INTO plugins (id, name, description, version, author, icon, isEnabled, isInstalled, isCustom, builderData, orderIndex, visibility, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, ?, 0, ?, ?, ?)',
+    [id, name, description, '1.0.0', author, icon, JSON.stringify(builderData), visibility, now, now]
+  )
+
+  return id
+}
+
+// 更新自定义插件的构建器数据
+export function updateCustomPlugin(
+  id: string,
+  updates: {
+    name?: string
+    description?: string
+    icon?: string
+    builderData?: Record<string, any>
+    isEnabled?: boolean
+  }
+): boolean {
+  const db = getDatabase()
+  if (!db) return false
+
+  const sets: string[] = []
+  const values: any[] = []
+
+  if (updates.name !== undefined) {
+    sets.push('name = ?')
+    values.push(updates.name)
+  }
+  if (updates.description !== undefined) {
+    sets.push('description = ?')
+    values.push(updates.description)
+  }
+  if (updates.icon !== undefined) {
+    sets.push('icon = ?')
+    values.push(updates.icon)
+  }
+  if (updates.builderData !== undefined) {
+    sets.push('builderData = ?')
+    values.push(JSON.stringify(updates.builderData))
+  }
+  if (updates.isEnabled !== undefined) {
+    sets.push('isEnabled = ?')
+    values.push(updates.isEnabled ? 1 : 0)
+  }
+
+  if (sets.length === 0) return false
+
+  sets.push('updatedAt = ?')
+  values.push(new Date().toISOString())
+  values.push(id)
+
+  run(
+    `UPDATE plugins SET ${sets.join(', ')} WHERE id = ? AND isCustom = 1`,
+    values
+  )
+
+  return true
+}
+
+export function getPlugins(enabledOnly: boolean = false, includeCustom?: boolean): Plugin[] {
   let query = 'SELECT * FROM plugins'
   const params: any[] = []
+  const conditions: string[] = []
 
   if (enabledOnly) {
-    query += ' WHERE isEnabled = 1'
+    conditions.push('isEnabled = 1')
+  }
+  
+  if (includeCustom === false) {
+    conditions.push('isCustom = 0')
+  }
+
+  if (conditions.length > 0) {
+    query += ' WHERE ' + conditions.join(' AND ')
   }
 
   query += ' ORDER BY orderIndex ASC, createdAt DESC'
@@ -79,7 +165,9 @@ export function getPlugins(enabledOnly: boolean = false): Plugin[] {
     icon: row.icon,
     isEnabled: row.isEnabled === 1,
     isInstalled: row.isInstalled === 1,
+    isCustom: row.isCustom === 1,
     config: row.config ? JSON.parse(row.config) : undefined,
+    builderData: row.builderData ? JSON.parse(row.builderData) : undefined,
     orderIndex: row.orderIndex || 0,
     visibility: (row.visibility as 'public' | 'private' | 'role') || 'public',
     allowedRoles: row.allowedRoles ? JSON.parse(row.allowedRoles) : undefined,

@@ -466,7 +466,9 @@ function createTables(db: SqlJsDatabase): void {
       icon TEXT,
       isEnabled INTEGER DEFAULT 1,
       isInstalled INTEGER DEFAULT 1,
+      isCustom INTEGER DEFAULT 0,
       config TEXT,
+      builderData TEXT,
       orderIndex INTEGER DEFAULT 0,
       visibility TEXT DEFAULT 'public',
       allowedRoles TEXT,
@@ -1019,6 +1021,14 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
       if (!pluginsColumns.includes('allowedRoles')) {
         console.log('Adding allowedRoles column to plugins table...')
         db.run("ALTER TABLE plugins ADD COLUMN allowedRoles TEXT")
+      }
+      if (!pluginsColumns.includes('builderData')) {
+        console.log('Adding builderData column to plugins table...')
+        db.run("ALTER TABLE plugins ADD COLUMN builderData TEXT")
+      }
+      if (!pluginsColumns.includes('isCustom')) {
+        console.log('Adding isCustom column to plugins table...')
+        db.run("ALTER TABLE plugins ADD COLUMN isCustom INTEGER DEFAULT 0")
       }
     }
 

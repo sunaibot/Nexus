@@ -197,6 +197,22 @@ export {
   getNotepadById
 } from './settings.js'
 
+// ========== 插件管理 ==========
+export {
+  createPlugin,
+  createCustomPlugin,
+  updateCustomPlugin,
+  getPlugins,
+  getPluginsForUser,
+  getPluginById,
+  updatePlugin,
+  deletePlugin,
+  enablePlugin,
+  disablePlugin,
+  getUserPlugin,
+  getRolePlugin
+} from './plugins.js'
+
 // ========== 数据库初始化 ==========
 export { initDatabase } from './init.js'
 

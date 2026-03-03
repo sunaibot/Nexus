@@ -62,6 +62,7 @@ import weatherRouter from './weather.js'
 import apiDocsRouter from '../api-docs.js'
 import sessionAuthRouter from './session-auth.js'
 import pluginsUnifiedRouter from './plugins-unified.js'
+import customPluginsRouter from './custom-plugins.js'
 import systemConfigsRouter from './system-configs.js'
 
 const router = Router()
@@ -114,6 +115,7 @@ router.use('/batch', batchRouter)
 router.use('/private-mode', privateModeRouter)
 router.use('/plugins', pluginsRouter)
 router.use('/plugins-unified', pluginsUnifiedRouter)
+router.use('/custom-plugins', customPluginsRouter)
 router.use('/plugin-display-configs', pluginDisplayConfigsRouter)
 router.use('/plugin-slots', pluginSlotsRouter)
 router.use('/bookmark-card-styles', bookmarkCardStylesRouter)

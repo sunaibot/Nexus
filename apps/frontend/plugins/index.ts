@@ -23,3 +23,7 @@ export { default as FileTransferWidget } from './builtin/file-transfer'
 export { default as WeatherWidget } from './builtin/weather'
 export { default as ClockWidget } from './builtin/clock'
 export { default as QuoteWidget } from './builtin/quote'
+
+// 自定义插件渲染器
+export { default as CustomPluginRenderer } from './components/CustomPluginRenderer'
+export { default as CustomPluginList } from './components/CustomPluginList'

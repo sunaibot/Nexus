@@ -18,6 +18,7 @@ import { ForcePasswordChange } from '../../components/ForcePasswordChange'
 import { Admin } from '../Admin'
 import { TabSidebar } from '../../components/TabSidebar'
 import { PluginSlot } from '../../plugins'
+import { CustomPluginList } from '../../plugins'
 
 import { WidgetSection, ReadLaterToggle, BookmarkList, PinnedBookmark } from './components'
 
@@ -237,6 +238,9 @@ export function HomePage() {
 
               {/* 插件系统 */}
               <PluginRenderer className="my-8" />
+
+              {/* 自定义插件列表 */}
+              <CustomPluginList className="my-8" />
 
             {/* 系统监控小部件 */}
             <WidgetSection 

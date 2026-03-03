@@ -882,6 +882,251 @@ const apiModules = {
     ]
   },
 
+  // 自定义插件模块（可视化构建器）
+  customPlugins: {
+    id: 'custom-plugins',
+    name: '自定义插件',
+    icon: '🧩',
+    description: '通过可视化构建器创建的自定义插件管理',
+    apis: [
+      {
+        method: 'GET', path: '/api/v2/custom-plugins', auth: true, admin: false,
+        name: '获取自定义插件列表',
+        desc: '获取所有自定义插件（需要登录）',
+        response: { 
+          code: 200, 
+          desc: '自定义插件列表', 
+          example: { 
+            success: true, 
+            data: [
+              { 
+                id: 'custom_abc123', 
+                name: '我的插件', 
+                description: '这是一个自定义插件',
+                version: '1.0.0',
+                author: 'admin',
+                icon: '📦',
+                isEnabled: true,
+                isInstalled: true,
+                isCustom: true,
+                builderData: {
+                  name: '我的插件',
+                  description: '',
+                  canvas: { width: 800, height: 600, gridSize: 8 },
+                  components: []
+                },
+                visibility: 'public',
+                orderIndex: 0,
+                createdAt: '2024-01-01T00:00:00Z',
+                updatedAt: '2024-01-01T00:00:00Z'
+              }
+            ] 
+          } 
+        }
+      },
+      {
+        method: 'GET', path: '/api/v2/custom-plugins/:id', auth: true, admin: false,
+        name: '获取自定义插件详情',
+        desc: '获取指定自定义插件的详细信息（需要登录）',
+        params: [{ name: 'id', type: 'string', required: true, desc: '插件ID' }],
+        response: { 
+          code: 200, 
+          desc: '插件详情', 
+          example: { 
+            success: true, 
+            data: { 
+              id: 'custom_abc123', 
+              name: '我的插件',
+              builderData: {
+                name: '我的插件',
+                canvas: { width: 800, height: 600 },
+                components: [
+                  {
+                    id: 'comp_001',
+                    partId: 'part_button_1',
+                    position: { x: 100, y: 100 },
+                    size: { width: 'auto', height: 'auto' },
+                    props: { text: '点击我' },
+                    zIndex: 0,
+                    visible: true,
+                    locked: false
+                  }
+                ]
+              }
+            } 
+          } 
+        }
+      },
+      {
+        method: 'POST', path: '/api/v2/custom-plugins', auth: true, admin: false,
+        name: '创建自定义插件',
+        desc: '通过可视化构建器创建新插件（需要登录）',
+        body: [
+          { name: 'name', type: 'string', required: true, desc: '插件名称' },
+          { name: 'description', type: 'string', required: false, desc: '插件描述' },
+          { name: 'icon', type: 'string', required: false, desc: '插件图标（emoji）', default: '📦' },
+          { 
+            name: 'builderData', 
+            type: 'object', 
+            required: true, 
+            desc: '构建器数据，包含画布配置和组件列表',
+            fields: [
+              { name: 'name', type: 'string', desc: '插件名称' },
+              { name: 'description', type: 'string', desc: '插件描述' },
+              { name: 'canvas', type: 'object', desc: '画布配置' },
+              { name: 'components', type: 'array', desc: '组件列表' },
+              { name: 'dataSources', type: 'array', desc: '数据源配置' },
+              { name: 'variables', type: 'array', desc: '变量定义' },
+              { name: 'actions', type: 'array', desc: '动作定义' }
+            ]
+          },
+          { name: 'visibility', type: 'string', required: false, desc: '可见性', enum: ['public', 'private', 'role'], default: 'public' }
+        ],
+        response: { 
+          code: 200, 
+          desc: '创建成功', 
+          example: { 
+            success: true, 
+            data: { 
+              plugin: {
+                id: 'custom_abc123',
+                name: '我的插件',
+                version: '1.0.0',
+                isEnabled: true,
+                isCustom: true
+              },
+              message: '插件创建成功'
+            } 
+          } 
+        }
+      },
+      {
+        method: 'PUT', path: '/api/v2/custom-plugins/:id', auth: true, admin: false,
+        name: '更新自定义插件',
+        desc: '更新自定义插件信息（需要登录，只能更新自己创建的插件）',
+        params: [{ name: 'id', type: 'string', required: true, desc: '插件ID' }],
+        body: [
+          { name: 'name', type: 'string', required: false, desc: '插件名称' },
+          { name: 'description', type: 'string', required: false, desc: '插件描述' },
+          { name: 'icon', type: 'string', required: false, desc: '插件图标' },
+          { name: 'builderData', type: 'object', required: false, desc: '构建器数据' },
+          { name: 'isEnabled', type: 'boolean', required: false, desc: '是否启用' }
+        ],
+        response: { 
+          code: 200, 
+          desc: '更新成功', 
+          example: { 
+            success: true, 
+            data: {
+              plugin: { id: 'custom_abc123', name: '更新后的插件' },
+              message: '插件更新成功'
+            }
+          } 
+        }
+      },
+      {
+        method: 'DELETE', path: '/api/v2/custom-plugins/:id', auth: true, admin: false,
+        name: '删除自定义插件',
+        desc: '删除自定义插件（需要登录，只能删除自己创建的插件）',
+        params: [{ name: 'id', type: 'string', required: true, desc: '插件ID' }],
+        response: { 
+          code: 200, 
+          desc: '删除成功', 
+          example: { success: true, data: { message: '插件删除成功' } } 
+        }
+      },
+      {
+        method: 'GET', path: '/api/v2/custom-plugins/public', auth: false, admin: false,
+        name: '获取公开自定义插件列表',
+        desc: '获取所有公开且启用的自定义插件（无需登录，前台使用）',
+        response: { 
+          code: 200, 
+          desc: '公开插件列表', 
+          example: { 
+            success: true, 
+            data: [
+              {
+                id: 'custom_abc123',
+                name: '我的插件',
+                description: '这是一个示例插件',
+                icon: '📦',
+                builderData: {
+                  name: '我的插件',
+                  canvas: { width: 800, height: 600 },
+                  components: []
+                }
+              }
+            ]
+          } 
+        }
+      },
+      {
+        method: 'GET', path: '/api/v2/custom-plugins/:id/content', auth: false, admin: false,
+        name: '获取自定义插件内容',
+        desc: '获取指定自定义插件的完整内容（无需登录，前台渲染使用）',
+        params: [{ name: 'id', type: 'string', required: true, desc: '插件ID' }],
+        response: { 
+          code: 200, 
+          desc: '插件内容', 
+          example: { 
+            success: true, 
+            data: {
+              id: 'custom_abc123',
+              name: '我的插件',
+              description: '这是一个示例插件',
+              icon: '📦',
+              builderData: {
+                name: '我的插件',
+                description: '',
+                version: '1.0.0',
+                canvas: {
+                  width: 800,
+                  height: 600,
+                  gridSize: 8,
+                  snapToGrid: true,
+                  showGrid: true,
+                  backgroundColor: '#ffffff'
+                },
+                components: [
+                  {
+                    id: 'comp_001',
+                    partId: 'part_button_1',
+                    part: {
+                      id: 'part_button_1',
+                      name: '主按钮',
+                      icon: '🔘',
+                      visual: {
+                        base: {
+                          padding: '12px 24px',
+                          backgroundColor: '#3b82f6',
+                          color: '#ffffff',
+                          borderRadius: '8px'
+                        },
+                        states: {
+                          hover: { backgroundColor: '#2563eb' }
+                        }
+                      }
+                    },
+                    position: { x: 100, y: 100 },
+                    size: { width: 'auto', height: 'auto' },
+                    props: { text: '点击我' },
+                    zIndex: 0,
+                    visible: true,
+                    locked: false
+                  }
+                ],
+                selectedComponentIds: [],
+                dataSources: [],
+                variables: [],
+                actions: []
+              }
+            }
+          } 
+        }
+      }
+    ]
+  },
+
   // 数据管理模块
   data: {
     id: 'data',
