@@ -87,7 +87,7 @@ export function CategoryCard({
           >
             {category.name}
           </h3>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
             <span 
               className="text-xs flex items-center gap-1"
               style={{ color: 'var(--color-text-muted)' }}
@@ -95,6 +95,24 @@ export function CategoryCard({
               <Bookmark className="w-3 h-3" />
               {bookmarkCount} 个书签
             </span>
+            {/* 显示关联的 Tabs */}
+            {category.tabs && category.tabs.length > 0 && (
+              <div className="flex items-center gap-1">
+                {category.tabs.map(tab => (
+                  <span
+                    key={tab.id}
+                    className="text-xs px-2 py-0.5 rounded-full"
+                    style={{ 
+                      backgroundColor: `${tab.color}20`,
+                      color: tab.color,
+                      border: `1px solid ${tab.color}40`
+                    }}
+                  >
+                    {tab.name}
+                  </span>
+                ))}
+              </div>
+            )}
             {category.description && (
               <span 
                 className="text-xs truncate max-w-[200px]"

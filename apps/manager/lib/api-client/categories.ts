@@ -39,6 +39,14 @@ export async function fetchAllCategories(): Promise<Category[]> {
   return response.data || []
 }
 
+export async function fetchAllCategoriesWithTabs(): Promise<Category[]> {
+  const response = await request<ApiResponse<Category[]>>(
+    '/v2/categories/admin/all-with-tabs',
+    { requireAuth: true }
+  )
+  return response.data || []
+}
+
 export async function fetchCategoryById(id: string): Promise<Category | null> {
   const response = await request<ApiResponse<Category>>(
     `/v2/categories/${id}`,

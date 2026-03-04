@@ -8,9 +8,11 @@ import { FileUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { PluginComponentProps } from '../../types'
 import FileTransferModal from '../../../components/file-transfer/FileTransferModal'
+import { useAuth } from '../../../hooks/useAuth'
 
 export default function FileTransferPlugin({ config }: PluginComponentProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const { isLoggedIn } = useAuth()
 
   return (
     <>
@@ -29,6 +31,7 @@ export default function FileTransferPlugin({ config }: PluginComponentProps) {
       <FileTransferModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        isLoggedIn={isLoggedIn}
       />
     </>
   )

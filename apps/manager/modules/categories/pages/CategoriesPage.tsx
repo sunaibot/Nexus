@@ -25,15 +25,16 @@ import {
   Trash2,
   AlertTriangle,
   FolderOpen,
-  ArrowUpDown
+  ArrowUpDown,
+  LayoutGrid
 } from 'lucide-react'
 import { Category } from '../../../types/bookmark'
 import { Bookmark } from '../../../types/bookmark'
 import { useToast } from '../../../components/admin/Toast'
 import { cn } from '../../../lib/utils'
-import { CategoryCard, CategoryStats, CategoryDetailStats, CategoryForm, CategoryTree } from '../components'
+import { CategoryCard, CategoryStats, CategoryDetailStats, CategoryForm, CategoryTree, TabManager } from '../components'
 import {
-  fetchCategories,
+  fetchAllCategoriesWithTabs,
   createCategory,
   updateCategory,
   deleteCategory,
@@ -46,6 +47,9 @@ import {
 // 排序方式
  type SortBy = 'order' | 'name' | 'count' | 'date'
 
+// 管理标签页类型
+ type ManagerTab = 'categories' | 'tabs'
+
 export default function CategoriesPage() {
   // 状态
   const [categories, setCategories] = useState<Category[]>([])
@@ -54,6 +58,7 @@ export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [sortBy, setSortBy] = useState<SortBy>('order')
+  const [activeTab, setActiveTab] = useState<ManagerTab>('categories')
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
@@ -79,7 +84,7 @@ export default function CategoriesPage() {
     try {
       setIsLoading(true)
       const [cats, bms] = await Promise.all([
-        fetchCategories(),
+        fetchAllCategoriesWithTabs(),
         fetchBookmarks()
       ])
       setCategories(cats)
@@ -279,28 +284,57 @@ export default function CategoriesPage() {
                 共 {categories.length} 个分类，{bookmarks.length} 个书签
               </p>
             </div>
-            <motion.button
-              onClick={() => {
-                setEditingCategory(null)
-                setIsFormOpen(true)
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium"
-              style={{ 
-                background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))'
-              }}
+            
+            {/* Tab 切换按钮 */}
+            <div 
+              className="flex p-1 rounded-xl"
+              style={{ background: 'var(--color-bg-tertiary)' }}
             >
-              <Plus className="w-4 h-4" />
-              新建分类
-            </motion.button>
+              <button
+                onClick={() => setActiveTab('categories')}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+                  activeTab === 'categories' 
+                    ? 'bg-[var(--color-primary)] text-white' 
+                    : 'hover:bg-white/5'
+                )}
+                style={{ 
+                  color: activeTab === 'categories' ? 'white' : 'var(--color-text-muted)' 
+                }}
+              >
+                <FolderOpen className="w-4 h-4" />
+                分类
+              </button>
+              <button
+                onClick={() => setActiveTab('tabs')}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg transition-all',
+                  activeTab === 'tabs' 
+                    ? 'bg-[var(--color-primary)] text-white' 
+                    : 'hover:bg-white/5'
+                )}
+                style={{ 
+                  color: activeTab === 'tabs' ? 'white' : 'var(--color-text-muted)' 
+                }}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Tab 管理
+              </button>
+            </div>
           </div>
 
-          {/* 统计卡片 */}
-          <CategoryStats categories={categories} bookmarks={bookmarks} />
+          {/* 统计卡片 - 只在分类标签显示 */}
+          {activeTab === 'categories' && (
+            <CategoryStats categories={categories} bookmarks={bookmarks} />
+          )}
         </div>
-
-        {/* 工具栏 */}
+        
+        {/* Tab 内容区域 */}
+        {activeTab === 'tabs' ? (
+          <TabManager categories={categories} />
+        ) : (
+          <>
+            {/* 工具栏 */}
         <div 
           className="flex items-center justify-between p-3 rounded-xl mb-4"
           style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}
@@ -446,6 +480,8 @@ export default function CategoriesPage() {
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
 
       {/* 右侧详情面板 */}

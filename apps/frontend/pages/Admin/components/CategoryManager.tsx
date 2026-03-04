@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -18,13 +18,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Plus, Trash2, Edit2, GripVertical, FolderPlus, X, Check } from 'lucide-react'
+import { Plus, Trash2, Edit2, GripVertical, FolderPlus, X, Check, LayoutGrid } from 'lucide-react'
 import { Category } from '../../../types/bookmark'
+import { Tab } from '../../../types'
 import { cn, presetIcons } from '../../../lib/utils'
 import { useAdmin, useCategoryActions } from '../../../contexts/AdminContext'
 import { useToast } from '../../../components/admin/Toast'
 import { IconRenderer } from '../../../components/IconRenderer'
 import { IconifyPicker } from '../../../components/IconifyPicker'
+import { fetchTabs, updateTab } from '../../../lib/api-client'
 
 const presetColors = [
   '#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#eab308',
@@ -43,9 +45,37 @@ export function CategoryManager() {
     name: '',
     color: '#3b82f6',
     icon: 'folder',
+    tabIds: [] as string[],
   })
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [iconTab, setIconTab] = useState<'preset' | 'iconify'>('preset')
+  
+  // Tabs 状态
+  const [tabs, setTabs] = useState<Tab[]>([])
+  const [tabsLoading, setTabsLoading] = useState(false)
+  
+  // 加载 Tabs
+  useEffect(() => {
+    const loadTabs = async () => {
+      setTabsLoading(true)
+      try {
+        const tabsData = await fetchTabs()
+        setTabs(tabsData)
+      } catch (err) {
+        console.error('加载 Tabs 失败:', err)
+      } finally {
+        setTabsLoading(false)
+      }
+    }
+    loadTabs()
+  }, [])
+  
+  // 获取分类所属的 Tab 列表
+  const getCategoryTabs = useCallback((categoryId: string): Tab[] => {
+    return tabs.filter(tab => 
+      tab.categories?.some(c => c.id === categoryId)
+    )
+  }, [tabs])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -66,29 +96,96 @@ export function CategoryManager() {
     }
   }, [categories, reorderCategories, showToast, t])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) {
       showToast('error', t('admin.category.name_required'))
       return
     }
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, formData)
+      // 更新分类
+      updateCategory(editingCategory.id, {
+        name: formData.name,
+        color: formData.color,
+        icon: formData.icon,
+      })
+      
+      // 更新 Tab 关联
+      await updateCategoryTabAssociations(editingCategory.id, formData.tabIds)
+      
       showToast('success', t('admin.category.updated'))
     } else {
-      addCategory(formData)
+      // 创建分类
+      const newCategory = await addCategory({
+        name: formData.name,
+        color: formData.color,
+        icon: formData.icon,
+      })
+      
+      // 如果创建成功且有选择 Tab，更新 Tab 关联
+      if (newCategory && newCategory.id && formData.tabIds.length > 0) {
+        await updateCategoryTabAssociations(newCategory.id, formData.tabIds)
+      }
+      
       showToast('success', t('admin.category.created'))
     }
 
     resetForm()
   }
+  
+  // 更新分类与 Tab 的关联
+  const updateCategoryTabAssociations = async (categoryId: string, tabIds: string[]) => {
+    try {
+      // 获取当前包含该分类的所有 Tab
+      const currentTabs = getCategoryTabs(categoryId)
+      const currentTabIds = currentTabs.map(t => t.id)
+      
+      // 需要从哪些 Tab 中移除该分类
+      const tabsToRemove = currentTabIds.filter(id => !tabIds.includes(id))
+      
+      // 需要添加到哪些 Tab
+      const tabsToAdd = tabIds.filter(id => !currentTabIds.includes(id))
+      
+      // 从旧 Tab 中移除
+      for (const tabId of tabsToRemove) {
+        const tab = tabs.find(t => t.id === tabId)
+        if (tab && tab.categories) {
+          const newCategoryIds = tab.categories
+            .filter(c => c.id !== categoryId)
+            .map(c => c.id)
+          await updateTab(tabId, { categoryIds: newCategoryIds })
+        }
+      }
+      
+      // 添加到新 Tab
+      for (const tabId of tabsToAdd) {
+        const tab = tabs.find(t => t.id === tabId)
+        if (tab) {
+          const currentCategoryIds = tab.categories?.map(c => c.id) || []
+          await updateTab(tabId, { 
+            categoryIds: [...currentCategoryIds, categoryId] 
+          })
+        }
+      }
+      
+      // 刷新 Tabs 数据
+      const updatedTabs = await fetchTabs()
+      setTabs(updatedTabs)
+    } catch (err) {
+      console.error('更新 Tab 关联失败:', err)
+      showToast('error', '更新 Tab 关联失败')
+    }
+  }
 
   const handleEdit = (category: Category) => {
     setEditingCategory(category)
+    // 获取当前分类所属的 Tab IDs
+    const categoryTabs = getCategoryTabs(category.id)
     setFormData({
       name: category.name,
       color: category.color || '#3b82f6',
       icon: category.icon || 'folder',
+      tabIds: categoryTabs.map(t => t.id),
     })
     setShowForm(true)
   }
@@ -108,7 +205,7 @@ export function CategoryManager() {
   const resetForm = () => {
     setShowForm(false)
     setEditingCategory(null)
-    setFormData({ name: '', color: '#3b82f6', icon: 'folder' })
+    setFormData({ name: '', color: '#3b82f6', icon: 'folder', tabIds: [] })
     setShowIconPicker(false)
   }
 
@@ -280,6 +377,62 @@ export function CategoryManager() {
                 </AnimatePresence>
               </div>
 
+              {/* Tab Selection */}
+              <div>
+                <label className="block text-sm mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                  <div className="flex items-center gap-2">
+                    <LayoutGrid className="w-4 h-4" />
+                    所属 Tab
+                  </div>
+                </label>
+                {tabsLoading ? (
+                  <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                    加载中...
+                  </div>
+                ) : tabs.length === 0 ? (
+                  <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                    暂无 Tab，请先创建 Tab
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          const isSelected = formData.tabIds.includes(tab.id)
+                          setFormData({
+                            ...formData,
+                            tabIds: isSelected
+                              ? formData.tabIds.filter(id => id !== tab.id)
+                              : [...formData.tabIds, tab.id]
+                          })
+                        }}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all",
+                          formData.tabIds.includes(tab.id)
+                            ? "bg-blue-500/20 border-blue-500 text-blue-400"
+                            : "hover:bg-white/5"
+                        )}
+                        style={{
+                          backgroundColor: formData.tabIds.includes(tab.id) ? undefined : 'var(--color-bg-secondary)',
+                          borderColor: formData.tabIds.includes(tab.id) ? undefined : 'var(--color-border)',
+                          color: formData.tabIds.includes(tab.id) ? undefined : 'var(--color-text-secondary)',
+                        }}
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: tab.color || '#3b82f6' }}
+                        />
+                        <span className="text-sm">{tab.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+                  选择该分类要显示在哪些 Tab 中（可多选）
+                </p>
+              </div>
+
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -310,6 +463,7 @@ export function CategoryManager() {
               <SortableCategoryItem
                 key={category.id}
                 category={category}
+                tabs={tabs}
                 bookmarkCount={bookmarks.filter(b => b.category === category.id).length}
                 onEdit={() => handleEdit(category)}
                 onDelete={() => handleDelete(category)}
@@ -331,12 +485,13 @@ export function CategoryManager() {
 
 interface SortableCategoryItemProps {
   category: Category
+  tabs: Tab[]
   bookmarkCount: number
   onEdit: () => void
   onDelete: () => void
 }
 
-function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete }: SortableCategoryItemProps) {
+function SortableCategoryItem({ category, tabs, bookmarkCount, onEdit, onDelete }: SortableCategoryItemProps) {
   const {
     attributes,
     listeners,
@@ -350,6 +505,11 @@ function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete }: Sor
     transform: CSS.Transform.toString(transform),
     transition,
   }
+  
+  // 获取该分类所属的 Tab
+  const categoryTabs = tabs.filter(tab => 
+    tab.categories?.some(c => c.id === category.id)
+  )
 
   return (
     <div
@@ -392,6 +552,11 @@ function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete }: Sor
         </h3>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
           {bookmarkCount} 个书签
+          {categoryTabs.length > 0 && (
+            <span className="ml-2">
+              · 属于: {categoryTabs.map(t => t.name).join(', ')}
+            </span>
+          )}
         </p>
       </div>
 

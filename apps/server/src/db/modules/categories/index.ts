@@ -42,11 +42,49 @@ export interface ReorderItem {
   orderIndex: number
 }
 
+export interface CategoryWithTabs extends Category {
+  tabs?: { id: string; name: string; color: string }[]
+}
+
 /**
  * 获取所有分类（管理员）
  */
 export function getAllCategories(): Category[] {
   return queryAll('SELECT * FROM categories ORDER BY orderIndex ASC')
+}
+
+/**
+ * 获取所有分类及其关联的 Tab 信息（管理员）
+ */
+export function getAllCategoriesWithTabs(): CategoryWithTabs[] {
+  const categories = queryAll('SELECT * FROM categories ORDER BY orderIndex ASC')
+
+  // 获取所有分类的 Tab 关联
+  const tabRelations = queryAll(`
+    SELECT tc.categoryId, t.id, t.name, t.color
+    FROM tab_categories tc
+    JOIN tabs t ON tc.tabId = t.id
+    ORDER BY tc.orderIndex ASC
+  `)
+
+  // 将 Tab 信息分组到对应分类
+  const tabsByCategory = new Map<string, { id: string; name: string; color: string }[]>()
+  for (const rel of tabRelations) {
+    if (!tabsByCategory.has(rel.categoryId)) {
+      tabsByCategory.set(rel.categoryId, [])
+    }
+    tabsByCategory.get(rel.categoryId)!.push({
+      id: rel.id,
+      name: rel.name,
+      color: rel.color
+    })
+  }
+
+  // 将 Tab 信息附加到分类
+  return categories.map(cat => ({
+    ...cat,
+    tabs: tabsByCategory.get(cat.id) || []
+  }))
 }
 
 /**

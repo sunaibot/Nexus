@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { X, Upload, File, Copy, Check, Download, AlertCircle, Clock, DownloadIcon, Edit2, Check as CheckIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { request } from '@/lib/api-legacy'
@@ -6,6 +6,7 @@ import { request } from '@/lib/api-legacy'
 interface FileTransferModalProps {
   isOpen: boolean
   onClose: () => void
+  isLoggedIn?: boolean // 是否已登录
 }
 
 interface UploadResult {
@@ -35,7 +36,7 @@ const DOWNLOAD_PRESETS = [
   { value: 100, label: '100次' },
 ]
 
-export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
+export function FileTransferModal({ isOpen, onClose, isLoggedIn = false }: FileTransferModalProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
@@ -205,6 +206,38 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
       window.open(`/api/v2/file-transfers/download/${uploadResult.downloadToken}`, '_blank')
     }
   }, [uploadResult])
+
+  // 通过提取码下载文件
+  const handleDownloadByExtractCode = useCallback(async () => {
+    if (!extractCode.trim()) {
+      setError('请输入提取码')
+      return
+    }
+
+    try {
+      setError(null)
+      // 先通过提取码获取下载令牌
+      const response = await request<{ success: boolean; data?: { downloadToken: string }; message?: string }>(
+        `/v2/file-transfers/extract`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            extractCode: extractCode.trim().toUpperCase()
+          })
+        }
+      )
+
+      if (response.success && response.data?.downloadToken) {
+        // 获取到下载令牌后，打开下载链接
+        window.open(`/api/v2/file-transfers/download/${response.data.downloadToken}`, '_blank')
+        setExtractCode('')
+      } else {
+        setError(response.message || '提取码无效或已过期')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '下载失败，请检查提取码')
+    }
+  }, [extractCode])
 
   const formatExpiry = (expiresAt: number): string => {
     const hours = Math.floor((expiresAt - Date.now()) / (1000 * 60 * 60))
@@ -558,45 +591,69 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
               </div>
             </div>
           ) : (
-            // 上传区域
+            // 默认界面：上传区域（仅登录用户）+ 提取码下载（所有用户）
             <div className="space-y-4">
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`
-                  border-2 border-dashed rounded-xl p-12 text-center cursor-pointer
-                  transition-all duration-200
-                  ${isDragging 
-                    ? 'border-blue-500 bg-blue-500/5 scale-[1.02]' 
-                    : 'border-white/20 hover:border-blue-500/50'
-                  }
-                `}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <div className="flex flex-col items-center gap-3">
-                  <div 
-                    className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: 'var(--color-glass-hover)' }}
+              {/* 上传区域 - 仅登录用户显示 */}
+              {isLoggedIn ? (
+                <>
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`
+                      border-2 border-dashed rounded-xl p-12 text-center cursor-pointer
+                      transition-all duration-200
+                      ${isDragging 
+                        ? 'border-blue-500 bg-blue-500/5 scale-[1.02]' 
+                        : 'border-white/20 hover:border-blue-500/50'
+                      }
+                    `}
                   >
-                    <Upload className="w-8 h-8 text-blue-500" />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center gap-3">
+                      <div 
+                        className="w-16 h-16 rounded-full flex items-center justify-center"
+                        style={{ background: 'var(--color-glass-hover)' }}
+                      >
+                        <Upload className="w-8 h-8 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-medium" style={{ color: 'var(--color-text)' }}>
+                          点击或拖拽文件到此处
+                        </p>
+                        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                          支持任意文件类型，单文件最大 100MB
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium" style={{ color: 'var(--color-text)' }}>
-                      点击或拖拽文件到此处
-                    </p>
-                    <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                      支持任意文件类型，单文件最大 100MB
-                    </p>
+
+                  {/* 分隔线 */}
+                  <div className="relative py-2">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-white/10"></div>
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="px-2 text-xs" style={{ color: 'var(--color-text-muted)', background: 'var(--color-glass)' }}>
+                        或
+                      </span>
+                    </div>
                   </div>
+                </>
+              ) : (
+                /* 未登录提示 */
+                <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+                  <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                    登录后可上传文件
+                  </p>
                 </div>
-              </div>
+              )}
 
               {error && (
                 <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
@@ -607,8 +664,8 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                 </div>
               )}
 
-              {/* 下载文件区域 */}
-              <div className="pt-4 border-t border-white/10">
+              {/* 下载文件区域 - 所有用户可见 */}
+              <div>
                 <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>
                   已有提取码？
                 </p>
@@ -626,7 +683,7 @@ export function FileTransferModal({ isOpen, onClose }: FileTransferModalProps) {
                     }}
                   />
                   <button
-                    onClick={handleDownload}
+                    onClick={handleDownloadByExtractCode}
                     disabled={!extractCode}
                     className="px-4 py-2 rounded-lg border hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     style={{ borderColor: 'var(--color-glass-border)', color: 'var(--color-text)' }}

@@ -24,9 +24,9 @@ export interface AdminContextValue {
   updateBookmark: (id: string, updates: Partial<Bookmark>) => void
   
   // 分类操作
-  addCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
-  updateCategory: (id: string, updates: Partial<Category>) => void
-  deleteCategory: (id: string) => void
+  addCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => Promise<Category> | void
+  updateCategory: (id: string, updates: Partial<Category>) => Promise<Category> | void
+  deleteCategory: (id: string) => Promise<void> | void
   reorderCategories: (categories: Category[]) => void
   
   // 图标操作

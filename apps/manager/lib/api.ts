@@ -349,6 +349,10 @@ export async function fetchCategories(): Promise<Category[]> {
   return request<Category[]>('/api/v2/categories', { requireAuth: true })
 }
 
+export async function fetchAllCategoriesWithTabs(): Promise<Category[]> {
+  return request<Category[]>('/api/v2/categories/admin/all-with-tabs', { requireAuth: true })
+}
+
 export async function createCategory(data: CreateCategoryParams): Promise<Category> {
   return request<Category>('/api/v2/categories', {
     method: 'POST',

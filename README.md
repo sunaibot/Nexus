@@ -231,6 +231,22 @@ cd apps/server && npm run start
 - 希望一键部署、自动运行的用户
 - 需要数据持久化和备份的用户
 
+### 📁 配置文件说明
+
+Docker Compose 部署需要以下配置文件：
+
+| 文件 | 说明 | 必需 |
+|------|------|------|
+| `docker-compose.yml` | Docker Compose 主配置文件 | ✅ |
+| `.env` | 环境变量配置文件 | ✅ |
+| `Dockerfile` (各应用) | 应用构建文件 (已包含在项目中) | ✅ |
+
+**快速配置步骤：**
+1. 复制项目中的 `docker-compose.yml` 和 `.env.example`
+2. 将 `.env.example` 重命名为 `.env`
+3. 修改 `.env` 中的配置（端口、密钥、数据路径）
+4. 执行 `docker-compose up -d` 启动服务
+
 ---
 
 ### 📋 部署前准备
@@ -293,7 +309,114 @@ git clone https://github.com/sunaibot/Nexus.git .
 2. 解压 ZIP 文件
 3. 通过 NAS 文件管理器上传到 `/vol1/1000/docker/nexus` 目录
 
-#### 步骤 2：配置环境变量
+#### 步骤 2：创建 Docker Compose 配置文件
+
+在项目根目录创建 `docker-compose.yml` 文件：
+
+```yaml
+# Nexus - 智能书签管理系统
+# Docker Compose 配置文件
+
+version: '3.8'
+
+services:
+  # 后端 API 服务
+  nexus-server:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile
+    container_name: nexus-server
+    restart: unless-stopped
+    ports:
+      - "${SERVER_PORT:-8787}:8787"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=8787
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - DATABASE_PATH=${DATABASE_PATH:-/app/data/nexus.db}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - ${DATA_PATH:-./data}:/app/data
+    networks:
+      - nexus-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 前端用户界面
+  nexus-frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: nexus-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    environment:
+      - VITE_API_BASE_URL=http://nexus-server:8787
+    depends_on:
+      - nexus-server
+    networks:
+      - nexus-network
+
+  # 管理后台
+  nexus-manager:
+    build:
+      context: ./apps/manager
+      dockerfile: Dockerfile
+    container_name: nexus-manager
+    restart: unless-stopped
+    ports:
+      - "${MANAGER_PORT:-5174}:80"
+    environment:
+      - VITE_API_BASE_URL=http://nexus-server:8787
+    depends_on:
+      - nexus-server
+    networks:
+      - nexus-network
+
+networks:
+  nexus-network:
+    driver: bridge
+```
+
+同时创建 `.env` 环境变量文件（参考项目根目录的 `.env.example`）：
+
+```env
+# ============================================
+# Nexus 环境变量配置
+# ============================================
+
+# 服务端口配置（可根据需要修改）
+SERVER_PORT=8787
+FRONTEND_PORT=5173
+MANAGER_PORT=5174
+
+# 数据存储路径（必须设置为绝对路径）
+# 飞牛 NAS 示例: /vol1/1000/docker/nexus/data
+# 群晖 NAS 示例: /volume1/docker/nexus/data
+DATA_PATH=./data
+
+# 安全密钥（必须修改！使用强随机字符串）
+# 生成命令: openssl rand -base64 32
+JWT_SECRET=your-jwt-secret-key-here
+SESSION_SECRET=your-session-secret-key-here
+
+# 运行环境
+NODE_ENV=production
+
+# 日志级别 (debug, info, warn, error)
+LOG_LEVEL=info
+
+# 数据库路径（容器内路径，一般不需要修改）
+DATABASE_PATH=/app/data/nexus.db
+```
+
+#### 步骤 3：配置环境变量
 
 复制示例配置文件：
 
@@ -338,7 +461,7 @@ NODE_ENV=production
 LOG_LEVEL=info
 ```
 
-#### 步骤 3：创建数据目录
+#### 步骤 4：创建数据目录
 
 ```bash
 # 创建数据存储目录
@@ -348,7 +471,7 @@ mkdir -p /vol1/1000/docker/nexus/data
 chmod 755 /vol1/1000/docker/nexus/data
 ```
 
-#### 步骤 4：启动服务
+#### 步骤 5：启动服务
 
 ```bash
 # 进入项目目录
@@ -373,7 +496,7 @@ nexus-manager      nginx -g daemon off;             Up      0.0.0.0:15174->80/tc
 nexus-server       node dist/index.js               Up      0.0.0.0:18787->8787/tcp
 ```
 
-#### 步骤 5：访问服务
+#### 步骤 6：访问服务
 
 服务启动后，通过浏览器访问：
 

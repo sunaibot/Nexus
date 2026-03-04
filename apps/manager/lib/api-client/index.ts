@@ -130,6 +130,17 @@ export {
 } from './bookmark-card-styles'
 export type { BookmarkCardStyle, CreateBookmarkCardStyleData, UpdateBookmarkCardStyleData } from './bookmark-card-styles'
 
+// 导出 tabs 模块
+export {
+  fetchTabs,
+  fetchTabById,
+  createTab,
+  updateTab,
+  deleteTab,
+  reorderTabs,
+} from './tabs'
+export type { Tab, CreateTabParams, UpdateTabParams, ReorderTabItem } from '../../types/tab'
+
 // 导出其他API模块
 export { settingsTabsApi } from './settings-tabs'
 export { dockConfigsApi } from './dock-configs'

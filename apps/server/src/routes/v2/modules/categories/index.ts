@@ -16,6 +16,7 @@ import {
 import { asyncHandler, successResponse, errorResponse, getClientInfo, normalizeId } from '../../../utils/index.js'
 import {
   getAllCategories,
+  getAllCategoriesWithTabs,
   getPublicCategories,
   getCategories,
   getCategoryById,
@@ -34,6 +35,12 @@ const router = Router()
 // 获取所有分类（管理后台专用）
 router.get('/admin/all', authMiddleware, adminMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const categories = getAllCategories()
+  return successResponse(res, categories)
+}))
+
+// 获取所有分类及其 Tab 信息（管理后台专用）
+router.get('/admin/all-with-tabs', authMiddleware, adminMiddleware, asyncHandler(async (req: Request, res: Response) => {
+  const categories = getAllCategoriesWithTabs()
   return successResponse(res, categories)
 }))
 

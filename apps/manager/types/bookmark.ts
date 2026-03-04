@@ -33,6 +33,7 @@ export interface Category {
   isVisible?: boolean
   createdAt?: number
   updatedAt?: number
+  tabs?: { id: string; name: string; color: string }[]
 }
 
 export interface CustomIcon {
