@@ -52,6 +52,9 @@ export default function PluginsPage() {
   const [editingPlugin, setEditingPlugin] = useState<BuildingPlugin | null>(null)
   const [showBuilder, setShowBuilder] = useState(false)
   
+  // 主页面状态 - 必须放在所有条件逻辑之前
+  const [mainTab, setMainTab] = useState<'plugins' | 'market' | 'workshop' | 'custom'>('plugins')
+  
   // 加载自定义插件列表
   const loadCustomPlugins = useCallback(async () => {
     setIsLoadingCustom(true)
@@ -334,9 +337,6 @@ export default function PluginsPage() {
       </div>
     )
   }
-
-  // 主页面状态
-  const [mainTab, setMainTab] = useState<'plugins' | 'market' | 'workshop' | 'custom'>('plugins')
 
   // 主页面
   return (

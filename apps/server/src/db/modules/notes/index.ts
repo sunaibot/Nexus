@@ -15,6 +15,12 @@ export interface Note {
   folderId: string | null
   isPinned: boolean
   isArchived: boolean
+  // 待办事项增强字段
+  isTodo?: boolean
+  priority?: number
+  dueDate?: string | null
+  completedAt?: string | null
+  tagColors?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -25,6 +31,7 @@ export interface NoteFolder {
   name: string
   parentId: string | null
   orderIndex: number
+  color?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -76,6 +83,12 @@ export function getUserNotes(
     folderId: row[6],
     isPinned: row[7] === 1,
     isArchived: row[8] === 1,
+    // 待办事项增强字段
+    isTodo: row[11] === 1,
+    priority: row[12] || 0,
+    dueDate: row[13],
+    completedAt: row[14],
+    tagColors: row[15],
     createdAt: row[9],
     updatedAt: row[10]
   }))
@@ -105,6 +118,12 @@ export function getNoteById(id: string, userId: string): Note | null {
     folderId: row[6],
     isPinned: row[7] === 1,
     isArchived: row[8] === 1,
+    // 待办事项增强字段
+    isTodo: row[11] === 1,
+    priority: row[12] || 0,
+    dueDate: row[13],
+    completedAt: row[14],
+    tagColors: row[15],
     createdAt: row[9],
     updatedAt: row[10]
   }
@@ -121,6 +140,10 @@ export function createNote(
     isMarkdown?: boolean
     tags?: string
     folderId?: string
+    isTodo?: boolean
+    priority?: number
+    dueDate?: string
+    tagColors?: string
   }
 ): Note | null {
   const db = getDatabase()
@@ -130,8 +153,8 @@ export function createNote(
   const now = new Date().toISOString()
 
   db.run(
-    `INSERT INTO notes (id, userId, title, content, isMarkdown, tags, folderId, isPinned, isArchived, createdAt, updatedAt) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?)`,
+    `INSERT INTO notes (id, userId, title, content, isMarkdown, tags, folderId, isPinned, isArchived, isTodo, priority, dueDate, tagColors, createdAt, updatedAt) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       userId,
@@ -140,6 +163,10 @@ export function createNote(
       options?.isMarkdown ? 1 : 0,
       options?.tags || null,
       options?.folderId || null,
+      options?.isTodo ? 1 : 0,
+      options?.priority || 0,
+      options?.dueDate || null,
+      options?.tagColors || null,
       now,
       now
     ]
@@ -156,6 +183,10 @@ export function createNote(
     folderId: options?.folderId || null,
     isPinned: false,
     isArchived: false,
+    isTodo: options?.isTodo || false,
+    priority: options?.priority || 0,
+    dueDate: options?.dueDate || null,
+    tagColors: options?.tagColors || null,
     createdAt: now,
     updatedAt: now
   }
@@ -202,6 +233,27 @@ export function updateNote(
   if (updates.isArchived !== undefined) {
     fields.push('isArchived = ?')
     values.push(updates.isArchived ? 1 : 0)
+  }
+  // 待办事项增强字段
+  if (updates.isTodo !== undefined) {
+    fields.push('isTodo = ?')
+    values.push(updates.isTodo ? 1 : 0)
+  }
+  if (updates.priority !== undefined) {
+    fields.push('priority = ?')
+    values.push(updates.priority)
+  }
+  if (updates.dueDate !== undefined) {
+    fields.push('dueDate = ?')
+    values.push(updates.dueDate)
+  }
+  if (updates.completedAt !== undefined) {
+    fields.push('completedAt = ?')
+    values.push(updates.completedAt)
+  }
+  if (updates.tagColors !== undefined) {
+    fields.push('tagColors = ?')
+    values.push(updates.tagColors)
   }
 
   if (fields.length === 0) return false
@@ -251,6 +303,12 @@ export function getAllNotes(): Note[] {
     folderId: row[6],
     isPinned: row[7] === 1,
     isArchived: row[8] === 1,
+    // 待办事项增强字段
+    isTodo: row[11] === 1,
+    priority: row[12] || 0,
+    dueDate: row[13],
+    completedAt: row[14],
+    tagColors: row[15],
     createdAt: row[9],
     updatedAt: row[10]
   }))
@@ -277,6 +335,7 @@ export function getUserNoteFolders(userId: string): NoteFolder[] {
     name: row[2],
     parentId: row[3],
     orderIndex: row[4] || 0,
+    color: row[7],
     createdAt: row[5],
     updatedAt: row[6]
   }))
@@ -298,6 +357,7 @@ export function getAllNoteFolders(): NoteFolder[] {
     name: row[2],
     parentId: row[3],
     orderIndex: row[4] || 0,
+    color: row[7],
     createdAt: row[5],
     updatedAt: row[6]
   }))
@@ -323,6 +383,7 @@ export function getNoteFolderById(id: string, userId: string): NoteFolder | null
     name: row[2],
     parentId: row[3],
     orderIndex: row[4] || 0,
+    color: row[7],
     createdAt: row[5],
     updatedAt: row[6]
   }
@@ -335,7 +396,8 @@ export function createNoteFolder(
   userId: string,
   name: string,
   parentId?: string,
-  orderIndex: number = 0
+  orderIndex: number = 0,
+  color?: string
 ): NoteFolder | null {
   const db = getDatabase()
   if (!db) return null
@@ -344,8 +406,8 @@ export function createNoteFolder(
   const now = new Date().toISOString()
 
   db.run(
-    'INSERT INTO note_folders (id, userId, name, parentId, orderIndex, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, name, parentId || null, orderIndex, now, now]
+    'INSERT INTO note_folders (id, userId, name, parentId, orderIndex, color, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, name, parentId || null, orderIndex, color || null, now, now]
   )
   saveDatabase()
 
@@ -355,6 +417,7 @@ export function createNoteFolder(
     name,
     parentId: parentId || null,
     orderIndex,
+    color: color || null,
     createdAt: now,
     updatedAt: now
   }
@@ -385,6 +448,10 @@ export function updateNoteFolder(
   if (updates.orderIndex !== undefined) {
     fields.push('orderIndex = ?')
     values.push(updates.orderIndex)
+  }
+  if (updates.color !== undefined) {
+    fields.push('color = ?')
+    values.push(updates.color)
   }
 
   if (fields.length === 0) return false

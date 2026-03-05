@@ -56,6 +56,9 @@ interface FileTransferSettings {
   maxDownloads: number
   maxExpiryHours: number
   allowedFileTypes: string
+  uploadPath?: string
+  requireAuth?: boolean
+  enablePassword?: boolean
 }
 
 interface FileTransferManagerProps {
@@ -102,6 +105,17 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
   const [searchQuery, setSearchQuery] = useState('')
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'files' | 'stats' | 'settings'>('files')
+  const [isEditingSettings, setIsEditingSettings] = useState(false)
+  const [editedSettings, setEditedSettings] = useState<FileTransferSettings | null>(null)
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  
+  // 批量操作状态
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
+  const [isBatchMode, setIsBatchMode] = useState(false)
+  const [showBatchActions, setShowBatchActions] = useState(false)
+  const [batchAction, setBatchAction] = useState<'delete' | 'extend' | 'downloads' | null>(null)
+  const [batchValue, setBatchValue] = useState('')
+  const [isProcessingBatch, setIsProcessingBatch] = useState(false)
 
   // 加载文件列表
   const loadFiles = useCallback(async () => {
@@ -148,6 +162,7 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
       const data = await res.json()
       if (data.success) {
         setSettings(data.data)
+        setEditedSettings(data.data)
       }
     } catch (err) {
       console.error('获取设置失败:', err)
@@ -192,6 +207,232 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
     const url = `${window.location.origin}/api/v2/file-transfers/download/${extractCode}`
     navigator.clipboard.writeText(url)
     showToast('success', '下载链接已复制')
+  }
+
+  // 保存设置
+  const handleSaveSettings = async () => {
+    if (!editedSettings) return
+    
+    setIsSavingSettings(true)
+    try {
+      const res = await fetch(`/api/v2/file-transfers/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(editedSettings)
+      })
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || '保存设置失败')
+      }
+      
+      const data = await res.json()
+      if (data.success) {
+        setSettings(editedSettings)
+        setIsEditingSettings(false)
+        showToast('success', '设置已保存')
+      } else {
+        throw new Error(data.error || '保存设置失败')
+      }
+    } catch (err) {
+      showToast('error', err instanceof Error ? err.message : '保存设置失败')
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
+
+  // 取消编辑
+  const handleCancelEdit = () => {
+    setEditedSettings(settings)
+    setIsEditingSettings(false)
+  }
+
+  // 更新编辑中的设置
+  const updateEditedSetting = (key: keyof FileTransferSettings, value: any) => {
+    setEditedSettings(prev => prev ? { ...prev, [key]: value } : null)
+  }
+
+  // 批量选择文件
+  const toggleSelectFile = (id: string) => {
+    setSelectedFiles(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) {
+        newSet.delete(id)
+      } else {
+        newSet.add(id)
+      }
+      return newSet
+    })
+  }
+
+  // 全选/取消全选
+  const toggleSelectAll = () => {
+    if (selectedFiles.size === filteredFiles.length) {
+      setSelectedFiles(new Set())
+    } else {
+      setSelectedFiles(new Set(filteredFiles.map(f => f.id)))
+    }
+  }
+
+  // 退出批量模式
+  const exitBatchMode = () => {
+    setIsBatchMode(false)
+    setSelectedFiles(new Set())
+    setShowBatchActions(false)
+    setBatchAction(null)
+    setBatchValue('')
+  }
+
+  // 批量删除
+  const handleBatchDelete = async () => {
+    if (selectedFiles.size === 0) {
+      showToast('error', '请先选择文件')
+      return
+    }
+    
+    if (!confirm(`确定要删除选中的 ${selectedFiles.size} 个文件吗？此操作不可撤销。`)) {
+      return
+    }
+    
+    setIsProcessingBatch(true)
+    let successCount = 0
+    let failCount = 0
+    
+    try {
+      const selectedFileList = files.filter(f => selectedFiles.has(f.id))
+      
+      for (const file of selectedFileList) {
+        try {
+          const res = await fetch(`/api/v2/file-transfers/${file.deleteCode}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          })
+          if (res.ok) {
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch {
+          failCount++
+        }
+      }
+      
+      if (successCount > 0) {
+        showToast('success', `成功删除 ${successCount} 个文件`)
+        loadFiles()
+        loadStats()
+      }
+      if (failCount > 0) {
+        showToast('error', `${failCount} 个文件删除失败`)
+      }
+    } finally {
+      setIsProcessingBatch(false)
+      exitBatchMode()
+    }
+  }
+
+  // 批量延长过期时间
+  const handleBatchExtend = async () => {
+    if (selectedFiles.size === 0) {
+      showToast('error', '请先选择文件')
+      return
+    }
+    
+    const hours = parseInt(batchValue)
+    if (isNaN(hours) || hours <= 0) {
+      showToast('error', '请输入有效的小时数')
+      return
+    }
+    
+    setIsProcessingBatch(true)
+    let successCount = 0
+    let failCount = 0
+    
+    try {
+      const selectedFileList = files.filter(f => selectedFiles.has(f.id))
+      
+      for (const file of selectedFileList) {
+        try {
+          const newExpiry = Date.now() + hours * 60 * 60 * 1000
+          const res = await fetch(`/api/v2/file-transfers/${file.deleteCode}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ expiresAt: newExpiry })
+          })
+          if (res.ok) {
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch {
+          failCount++
+        }
+      }
+      
+      if (successCount > 0) {
+        showToast('success', `成功延长 ${successCount} 个文件的过期时间`)
+        loadFiles()
+      }
+      if (failCount > 0) {
+        showToast('error', `${failCount} 个文件延长失败`)
+      }
+    } finally {
+      setIsProcessingBatch(false)
+      exitBatchMode()
+    }
+  }
+
+  // 批量修改下载次数
+  const handleBatchUpdateDownloads = async () => {
+    if (selectedFiles.size === 0) {
+      showToast('error', '请先选择文件')
+      return
+    }
+    
+    const downloads = parseInt(batchValue)
+    if (isNaN(downloads) || downloads <= 0) {
+      showToast('error', '请输入有效的下载次数')
+      return
+    }
+    
+    setIsProcessingBatch(true)
+    let successCount = 0
+    let failCount = 0
+    
+    try {
+      const selectedFileList = files.filter(f => selectedFiles.has(f.id))
+      
+      for (const file of selectedFileList) {
+        try {
+          const res = await fetch(`/api/v2/file-transfers/${file.deleteCode}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ maxDownloads: downloads })
+          })
+          if (res.ok) {
+            successCount++
+          } else {
+            failCount++
+          }
+        } catch {
+          failCount++
+        }
+      }
+      
+      if (successCount > 0) {
+        showToast('success', `成功修改 ${successCount} 个文件的下载次数`)
+        loadFiles()
+      }
+      if (failCount > 0) {
+        showToast('error', `${failCount} 个文件修改失败`)
+      }
+    } finally {
+      setIsProcessingBatch(false)
+      exitBatchMode()
+    }
   }
 
   // 过滤文件
@@ -257,6 +498,164 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
       {/* 文件管理 */}
       {activeTab === 'files' && (
         <div className="space-y-4">
+          {/* 批量操作工具栏 */}
+          {isBatchMode ? (
+            <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: 'var(--color-bg-tertiary)' }}>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleSelectAll}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                  style={{ 
+                    background: 'var(--color-glass)',
+                    color: 'var(--color-text-primary)'
+                  }}
+                >
+                  {selectedFiles.size === filteredFiles.length ? '取消全选' : '全选'}
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    (已选 {selectedFiles.size} 个)
+                  </span>
+                </button>
+                {!showBatchActions ? (
+                  <>
+                    <button
+                      onClick={() => { setShowBatchActions(true); setBatchAction('delete'); }}
+                      disabled={selectedFiles.size === 0}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+                      style={{ 
+                        background: 'rgba(239, 68, 68, 0.2)',
+                        color: '#ef4444'
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      批量删除
+                    </button>
+                    <button
+                      onClick={() => { setShowBatchActions(true); setBatchAction('extend'); }}
+                      disabled={selectedFiles.size === 0}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+                      style={{ 
+                        background: 'var(--color-glass)',
+                        color: 'var(--color-text-primary)'
+                      }}
+                    >
+                      <Clock className="w-4 h-4" />
+                      延长过期时间
+                    </button>
+                    <button
+                      onClick={() => { setShowBatchActions(true); setBatchAction('downloads'); }}
+                      disabled={selectedFiles.size === 0}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+                      style={{ 
+                        background: 'var(--color-glass)',
+                        color: 'var(--color-text-primary)'
+                      }}
+                    >
+                      <Download className="w-4 h-4" />
+                      修改下载次数
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {batchAction === 'extend' && (
+                      <>
+                        <input
+                          type="number"
+                          value={batchValue}
+                          onChange={(e) => setBatchValue(e.target.value)}
+                          placeholder="延长小时数"
+                          className="w-32 px-3 py-1.5 rounded-lg text-sm"
+                          style={{ 
+                            background: 'var(--color-bg-primary)',
+                            border: '1px solid var(--color-glass-border)',
+                            color: 'var(--color-text-primary)'
+                          }}
+                        />
+                        <button
+                          onClick={handleBatchExtend}
+                          disabled={isProcessingBatch}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                          style={{ 
+                            background: 'var(--color-primary)',
+                            color: 'white'
+                          }}
+                        >
+                          {isProcessingBatch ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          确认
+                        </button>
+                      </>
+                    )}
+                    {batchAction === 'downloads' && (
+                      <>
+                        <input
+                          type="number"
+                          value={batchValue}
+                          onChange={(e) => setBatchValue(e.target.value)}
+                          placeholder="新的下载次数"
+                          className="w-32 px-3 py-1.5 rounded-lg text-sm"
+                          style={{ 
+                            background: 'var(--color-bg-primary)',
+                            border: '1px solid var(--color-glass-border)',
+                            color: 'var(--color-text-primary)'
+                          }}
+                        />
+                        <button
+                          onClick={handleBatchUpdateDownloads}
+                          disabled={isProcessingBatch}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                          style={{ 
+                            background: 'var(--color-primary)',
+                            color: 'white'
+                          }}
+                        >
+                          {isProcessingBatch ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          确认
+                        </button>
+                      </>
+                    )}
+                    {batchAction === 'delete' && (
+                      <button
+                        onClick={handleBatchDelete}
+                        disabled={isProcessingBatch}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                        style={{ 
+                          background: '#ef4444',
+                          color: 'white'
+                        }}
+                      >
+                        {isProcessingBatch ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        确认删除 {selectedFiles.size} 个文件
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setShowBatchActions(false); setBatchAction(null); setBatchValue(''); }}
+                      disabled={isProcessingBatch}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                      style={{ 
+                        background: 'var(--color-bg-secondary)',
+                        color: 'var(--color-text-muted)'
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                      取消
+                    </button>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={exitBatchMode}
+                disabled={isProcessingBatch}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                style={{ 
+                  background: 'var(--color-bg-secondary)',
+                  color: 'var(--color-text-muted)'
+                }}
+              >
+                <X className="w-4 h-4" />
+                退出批量模式
+              </button>
+            </div>
+          ) : null}
+          
           {/* 搜索和刷新 */}
           <div className="flex gap-3">
             <div className="flex-1 relative">
@@ -286,6 +685,19 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
               <RefreshCw className="w-4 h-4" />
               刷新
             </button>
+            {!isBatchMode && (
+              <button
+                onClick={() => setIsBatchMode(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg transition-colors"
+                style={{ 
+                  background: 'var(--color-primary)',
+                  color: 'white'
+                }}
+              >
+                <Database className="w-4 h-4" />
+                批量操作
+              </button>
+            )}
           </div>
 
           {/* 文件列表 */}
@@ -303,6 +715,7 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
               {filteredFiles.map((file) => {
                 const isExpired = Date.now() > file.expiresAt
                 const isExhausted = file.currentDownloads >= file.maxDownloads
+                const isSelected = selectedFiles.has(file.id)
                 
                 return (
                   <motion.div
@@ -311,11 +724,25 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 rounded-xl"
                     style={{ 
-                      background: 'var(--color-bg-tertiary)',
-                      border: '1px solid var(--color-glass-border)'
+                      background: isSelected ? 'var(--color-glass)' : 'var(--color-bg-tertiary)',
+                      border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-glass-border)'
                     }}
                   >
                     <div className="flex items-center gap-4">
+                      {/* 批量选择复选框 */}
+                      {isBatchMode && (
+                        <button
+                          onClick={() => toggleSelectFile(file.id)}
+                          className="flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+                          style={{
+                            borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-glass-border)',
+                            background: isSelected ? 'var(--color-primary)' : 'transparent'
+                          }}
+                        >
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </button>
+                      )}
+                      
                       <div className="p-3 rounded-lg" style={{ background: 'var(--color-glass)' }}>
                         <FileTypeIcon fileType={file.fileType} />
                       </div>
@@ -449,26 +876,79 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
       )}
 
       {/* 插件设置 */}
-      {activeTab === 'settings' && settings && (
+      {activeTab === 'settings' && settings && editedSettings && (
         <div className="p-6 rounded-xl space-y-6" style={{ background: 'var(--color-bg-tertiary)' }}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                最大文件大小
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={formatFileSize(settings.maxFileSize)}
-                  disabled
-                  className="flex-1 px-4 py-2.5 rounded-lg"
+          {/* 操作按钮 */}
+          <div className="flex justify-end gap-3">
+            {isEditingSettings ? (
+              <>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={isSavingSettings}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
                   style={{ 
                     background: 'var(--color-bg-secondary)',
                     border: '1px solid var(--color-glass-border)',
                     color: 'var(--color-text-primary)'
                   }}
-                />
-              </div>
+                >
+                  <X className="w-4 h-4" />
+                  取消
+                </button>
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={isSavingSettings}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+                  style={{ 
+                    background: 'var(--color-primary)',
+                    color: 'white'
+                  }}
+                >
+                  {isSavingSettings ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  {isSavingSettings ? '保存中...' : '保存设置'}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsEditingSettings(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors"
+                style={{ 
+                  background: 'var(--color-primary)',
+                  color: 'white'
+                }}
+              >
+                <Settings className="w-4 h-4" />
+                编辑设置
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                最大文件大小 (MB)
+              </label>
+              <input
+                type="number"
+                value={Math.round(editedSettings.maxFileSize / 1024 / 1024)}
+                onChange={(e) => updateEditedSetting('maxFileSize', parseInt(e.target.value) * 1024 * 1024)}
+                disabled={!isEditingSettings}
+                min={1}
+                max={1024}
+                className="w-full px-4 py-2.5 rounded-lg"
+                style={{ 
+                  background: isEditingSettings ? 'var(--color-bg-primary)' : 'var(--color-bg-secondary)',
+                  border: '1px solid var(--color-glass-border)',
+                  color: 'var(--color-text-primary)'
+                }}
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                当前: {formatFileSize(editedSettings.maxFileSize)}
+              </p>
             </div>
 
             <div>
@@ -477,11 +957,14 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
               </label>
               <input
                 type="number"
-                value={settings.maxDownloads}
-                disabled
+                value={editedSettings.maxDownloads}
+                onChange={(e) => updateEditedSetting('maxDownloads', parseInt(e.target.value))}
+                disabled={!isEditingSettings}
+                min={1}
+                max={100}
                 className="w-full px-4 py-2.5 rounded-lg"
                 style={{ 
-                  background: 'var(--color-bg-secondary)',
+                  background: isEditingSettings ? 'var(--color-bg-primary)' : 'var(--color-bg-secondary)',
                   border: '1px solid var(--color-glass-border)',
                   color: 'var(--color-text-primary)'
                 }}
@@ -494,11 +977,14 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
               </label>
               <input
                 type="number"
-                value={settings.maxExpiryHours}
-                disabled
+                value={editedSettings.maxExpiryHours}
+                onChange={(e) => updateEditedSetting('maxExpiryHours', parseInt(e.target.value))}
+                disabled={!isEditingSettings}
+                min={1}
+                max={720}
                 className="w-full px-4 py-2.5 rounded-lg"
                 style={{ 
-                  background: 'var(--color-bg-secondary)',
+                  background: isEditingSettings ? 'var(--color-bg-primary)' : 'var(--color-bg-secondary)',
                   border: '1px solid var(--color-glass-border)',
                   color: 'var(--color-text-primary)'
                 }}
@@ -511,24 +997,31 @@ export default function FileTransferManager({ plugin, onPluginUpdate }: FileTran
               </label>
               <input
                 type="text"
-                value={settings.allowedFileTypes}
-                disabled
+                value={editedSettings.allowedFileTypes}
+                onChange={(e) => updateEditedSetting('allowedFileTypes', e.target.value)}
+                disabled={!isEditingSettings}
+                placeholder="*表示允许所有类型"
                 className="w-full px-4 py-2.5 rounded-lg"
                 style={{ 
-                  background: 'var(--color-bg-secondary)',
+                  background: isEditingSettings ? 'var(--color-bg-primary)' : 'var(--color-bg-secondary)',
                   border: '1px solid var(--color-glass-border)',
                   color: 'var(--color-text-primary)'
                 }}
               />
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                用逗号分隔，如: jpg,png,pdf,doc
+              </p>
             </div>
           </div>
 
-          <div className="p-4 rounded-lg flex items-start gap-3" style={{ background: 'var(--color-glass)' }}>
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)' }} />
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              设置修改功能即将推出，如需修改请联系管理员。
-            </p>
-          </div>
+          {!isEditingSettings && (
+            <div className="p-4 rounded-lg flex items-start gap-3" style={{ background: 'var(--color-glass)' }}>
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)' }} />
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                点击"编辑设置"按钮可修改以上配置。修改后将立即生效，但不会影响已上传的文件。
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

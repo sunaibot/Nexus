@@ -21,11 +21,18 @@ import {
   ChevronDown,
   MoreVertical,
   Filter,
-  FileText
+  FileText,
+  Calendar,
+  Flag,
+  CheckCircle2,
+  Circle,
+  Clock,
+  AlertCircle
 } from 'lucide-react'
 import type { PluginComponentProps } from '../../types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import TiptapEditor from './TiptapEditor'
 
 // 工具函数
 function cn(...inputs: ClassValue[]) {
@@ -42,6 +49,12 @@ interface Note {
   isArchived: boolean
   folderId: string | null
   tags: string
+  // 待办事项增强字段
+  isTodo?: boolean
+  priority?: number
+  dueDate?: string
+  completedAt?: string
+  tagColors?: string
   createdAt: string
   updatedAt: string
 }
@@ -51,14 +64,18 @@ interface Folder {
   name: string
   parentId: string | null
   orderIndex: number
+  color?: string
 }
 
 interface NoteFilters {
   search: string
   folderId: string | null
   showArchived: boolean
-  sortBy: 'updatedAt' | 'createdAt' | 'title'
+  sortBy: 'updatedAt' | 'createdAt' | 'title' | 'priority' | 'dueDate'
   sortOrder: 'desc' | 'asc'
+  // 待办事项筛选
+  showTodoOnly?: boolean
+  priorityFilter?: number | null
 }
 
 const COLORS = [
@@ -70,6 +87,64 @@ const COLORS = [
   { name: 'orange', bg: 'bg-orange-500/20', border: 'border-orange-500/30', text: 'text-orange-200', hover: 'hover:bg-orange-500/30' },
 ]
 
+// 优先级配置
+const PRIORITIES = [
+  { level: 0, name: '无', color: 'text-gray-400', bg: 'bg-gray-500/20', icon: Circle },
+  { level: 1, name: '低', color: 'text-blue-400', bg: 'bg-blue-500/20', icon: Flag },
+  { level: 2, name: '中', color: 'text-yellow-400', bg: 'bg-yellow-500/20', icon: Flag },
+  { level: 3, name: '高', color: 'text-red-400', bg: 'bg-red-500/20', icon: AlertCircle },
+]
+
+// 文件夹颜色选项
+const FOLDER_COLORS = [
+  { name: '默认', value: '', bg: 'bg-white/10', border: 'border-white/20' },
+  { name: '红色', value: 'red', bg: 'bg-red-500/20', border: 'border-red-500/30' },
+  { name: '橙色', value: 'orange', bg: 'bg-orange-500/20', border: 'border-orange-500/30' },
+  { name: '黄色', value: 'yellow', bg: 'bg-yellow-500/20', border: 'border-yellow-500/30' },
+  { name: '绿色', value: 'green', bg: 'bg-green-500/20', border: 'border-green-500/30' },
+  { name: '蓝色', value: 'blue', bg: 'bg-blue-500/20', border: 'border-blue-500/30' },
+  { name: '紫色', value: 'purple', bg: 'bg-purple-500/20', border: 'border-purple-500/30' },
+  { name: '粉色', value: 'pink', bg: 'bg-pink-500/20', border: 'border-pink-500/30' },
+]
+
+// 标签颜色选项
+const TAG_COLORS = [
+  { name: 'red', bg: 'bg-red-500' },
+  { name: 'orange', bg: 'bg-orange-500' },
+  { name: 'yellow', bg: 'bg-yellow-500' },
+  { name: 'green', bg: 'bg-green-500' },
+  { name: 'blue', bg: 'bg-blue-500' },
+  { name: 'purple', bg: 'bg-purple-500' },
+  { name: 'pink', bg: 'bg-pink-500' },
+  { name: 'cyan', bg: 'bg-cyan-500' },
+  { name: 'gray', bg: 'bg-gray-500' },
+]
+
+// 获取优先级配置
+function getPriorityConfig(level: number = 0) {
+  return PRIORITIES.find(p => p.level === level) || PRIORITIES[0]
+}
+
+// 获取文件夹颜色配置
+function getFolderColorConfig(colorValue?: string) {
+  return FOLDER_COLORS.find(c => c.value === colorValue) || FOLDER_COLORS[0]
+}
+
+// 格式化日期
+function formatDate(dateString?: string) {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const isOverdue = date < now && !isToday
+
+  if (isToday) {
+    return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+  }
+
+  return `${date.getMonth() + 1}/${date.getDate()} ${isOverdue ? '(已逾期)' : ''}`
+}
+
 // 简单的富文本编辑器组件
 function RichTextEditor({
   value,
@@ -80,83 +155,13 @@ function RichTextEditor({
   onChange: (value: string) => void
   placeholder?: string
 }) {
-  const [isMarkdown, setIsMarkdown] = useState(false)
-
-  const toolbarButtons = [
-    { icon: 'B', title: '粗体', action: () => insertText('**', '**') },
-    { icon: 'I', title: '斜体', action: () => insertText('*', '*') },
-    { icon: 'H1', title: '标题1', action: () => insertText('# ', '') },
-    { icon: 'H2', title: '标题2', action: () => insertText('## ', '') },
-    { icon: '-', title: '列表', action: () => insertText('- ', '') },
-    { icon: '[]', title: '任务', action: () => insertText('- [ ] ', '') },
-    { icon: '```', title: '代码', action: () => insertText('```\n', '\n```') },
-    { icon: '>', title: '引用', action: () => insertText('> ', '') },
-  ]
-
-  function insertText(before: string, after: string) {
-    const textarea = document.getElementById('note-editor') as HTMLTextAreaElement
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = value.substring(start, end)
-    const newText = value.substring(0, start) + before + selectedText + after + value.substring(end)
-    onChange(newText)
-
-    setTimeout(() => {
-      textarea.focus()
-      const newCursorPos = start + before.length + selectedText.length
-      textarea.setSelectionRange(newCursorPos, newCursorPos)
-    }, 0)
-  }
-
   return (
-    <div className="space-y-2">
-      {/* 工具栏 */}
-      <div className="flex items-center gap-1 p-2 rounded bg-white/5 border border-white/10">
-        {toolbarButtons.map((btn, idx) => (
-          <button
-            key={idx}
-            onClick={btn.action}
-            title={btn.title}
-            className="px-2 py-1 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 rounded transition-colors"
-          >
-            {btn.icon}
-          </button>
-        ))}
-        <div className="w-px h-4 bg-white/20 mx-1" />
-        <button
-          onClick={() => setIsMarkdown(!isMarkdown)}
-          className={cn(
-            "px-2 py-1 text-xs rounded transition-colors",
-            isMarkdown ? "bg-white/20 text-white" : "text-white/60 hover:text-white hover:bg-white/10"
-          )}
-        >
-          Markdown
-        </button>
-      </div>
-
-      {/* 编辑器 */}
-      <textarea
-        id="note-editor"
-        placeholder={placeholder}
-        rows={8}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/30 font-mono leading-relaxed"
-      />
-
-      {/* 预览 */}
-      {isMarkdown && value && (
-        <div className="p-3 rounded bg-white/5 border border-white/10">
-          <div className="text-xs text-white/40 mb-2">预览</div>
-          <div
-            className="text-sm text-white/80 prose prose-invert prose-sm max-w-none"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
-          />
-        </div>
-      )}
-    </div>
+    <TiptapEditor
+      content={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      minHeight="200px"
+    />
   )
 }
 
@@ -168,10 +173,16 @@ function escapeHtml(text: string): string {
   return div.innerHTML
 }
 
-// 简单的 Markdown 渲染 - 安全的版本
+// 渲染笔记内容 - 支持 HTML (Tiptap) 和 Markdown
 function renderMarkdown(text: string): string {
   if (!text) return ''
-  // 先转义HTML，防止XSS
+
+  // 如果内容已经是 HTML（以 < 开头），直接返回
+  if (text.trim().startsWith('<')) {
+    return text
+  }
+
+  // 否则按 Markdown 处理
   const escaped = escapeHtml(text)
   return escaped
     .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-3 mb-2">$1</h3>')
@@ -200,6 +211,7 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
   const [newFolderName, setNewFolderName] = useState('')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['root']))
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [creatingSubfolderOf, setCreatingSubfolderOf] = useState<string | null>(null)
 
   // 筛选状态
   const [filters, setFilters] = useState<NoteFilters>({
@@ -207,7 +219,9 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
     folderId: null,
     showArchived: false,
     sortBy: 'updatedAt',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
+    showTodoOnly: false,
+    priorityFilter: null
   })
 
   const maxNotes = config?.maxNotes || 10
@@ -252,12 +266,22 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
 
     // 搜索筛选
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      result = result.filter(note =>
-        note.title.toLowerCase().includes(searchLower) ||
-        note.content.toLowerCase().includes(searchLower) ||
-        note.tags.toLowerCase().includes(searchLower)
-      )
+      const searchTerms = filters.search.toLowerCase().split(' ').filter(Boolean)
+      result = result.filter(note => {
+        return searchTerms.every(term => {
+          // 标签筛选: tag:xxx
+          if (term.startsWith('tag:')) {
+            const tagName = term.slice(4)
+            return note.tags.toLowerCase().includes(tagName)
+          }
+          // 普通搜索
+          return (
+            note.title.toLowerCase().includes(term) ||
+            note.content.toLowerCase().includes(term) ||
+            note.tags.toLowerCase().includes(term)
+          )
+        })
+      })
     }
 
     // 文件夹筛选
@@ -275,6 +299,16 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
       result = result.filter(note => note.isPinned)
     }
 
+    // 待办事项筛选
+    if (filters.showTodoOnly) {
+      result = result.filter(note => note.isTodo)
+    }
+
+    // 优先级筛选
+    if (filters.priorityFilter !== undefined && filters.priorityFilter !== null) {
+      result = result.filter(note => note.priority === filters.priorityFilter)
+    }
+
     // 排序
     result.sort((a, b) => {
       let comparison = 0
@@ -284,6 +318,14 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
           break
         case 'createdAt':
           comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          break
+        case 'priority':
+          comparison = (b.priority || 0) - (a.priority || 0)
+          break
+        case 'dueDate':
+          const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity
+          const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity
+          comparison = aDue - bDue
           break
         case 'updatedAt':
         default:
@@ -317,7 +359,13 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
           color: editingNote.color || 'yellow',
           isPinned: editingNote.isPinned || false,
           folderId: editingNote.folderId || null,
-          tags: editingNote.tags || ''
+          tags: editingNote.tags || '',
+          // 待办事项字段
+          isTodo: editingNote.isTodo || false,
+          priority: editingNote.priority || 0,
+          dueDate: editingNote.dueDate || null,
+          // 标签颜色
+          tagColors: editingNote.tagColors || null
         }),
         credentials: 'include'
       })
@@ -383,6 +431,26 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
     }
   }
 
+  // 切换待办事项完成状态
+  const toggleTodoComplete = async (note: Note) => {
+    try {
+      const isCompleted = !!note.completedAt
+      const res = await fetch(`/api/v2/notes/${note.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          completedAt: isCompleted ? null : new Date().toISOString()
+        }),
+        credentials: 'include'
+      })
+      if (res.ok) {
+        fetchData()
+      }
+    } catch (error) {
+      console.error('更新待办事项失败:', error)
+    }
+  }
+
   // 导出笔记
   const exportNote = (note: Note) => {
     const blob = new Blob([`# ${note.title}\n\n${note.content}`], { type: 'text/markdown' })
@@ -421,16 +489,59 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
       const res = await fetch('/api/v2/notes/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newFolderName }),
+        body: JSON.stringify({
+          name: newFolderName,
+          parentId: creatingSubfolderOf
+        }),
         credentials: 'include'
       })
       if (res.ok) {
         setNewFolderName('')
+        setCreatingSubfolderOf(null)
+        // 自动展开父文件夹
+        if (creatingSubfolderOf) {
+          setExpandedFolders(prev => new Set([...prev, creatingSubfolderOf]))
+        }
         fetchData()
       }
     } catch (error) {
       console.error('创建文件夹失败:', error)
     }
+  }
+
+  // 切换文件夹展开状态
+  const toggleFolderExpand = (folderId: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev)
+      if (next.has(folderId)) {
+        next.delete(folderId)
+      } else {
+        next.add(folderId)
+      }
+      return next
+    })
+  }
+
+  // 开始创建子文件夹
+  const startCreateSubfolder = (parentId: string) => {
+    setCreatingSubfolderOf(parentId)
+    // 自动展开父文件夹
+    setExpandedFolders(prev => new Set([...prev, parentId]))
+  }
+
+  // 获取文件夹颜色样式
+  const getFolderColor = (color: string) => {
+    const colorMap: Record<string, string> = {
+      red: 'text-red-400',
+      orange: 'text-orange-400',
+      yellow: 'text-yellow-400',
+      green: 'text-green-400',
+      blue: 'text-blue-400',
+      purple: 'text-purple-400',
+      pink: 'text-pink-400',
+      gray: 'text-gray-400'
+    }
+    return colorMap[color] || 'text-yellow-400'
   }
 
   // 删除文件夹
@@ -468,6 +579,81 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
     if (!folderId) return '未分类'
     const folder = folders.find(f => f.id === folderId)
     return folder?.name || '未知文件夹'
+  }
+
+  // 获取标签颜色样式
+  const getTagColor = (tagColorsJson: string | null | undefined, tagName: string): string => {
+    if (!tagColorsJson) return 'bg-white/10 text-white/60'
+    try {
+      const tagColors = JSON.parse(tagColorsJson)
+      const color = tagColors[tagName]
+      if (!color) return 'bg-white/10 text-white/60'
+
+      const colorStyles: Record<string, string> = {
+        red: 'bg-red-500/20 text-red-300 border border-red-500/30',
+        orange: 'bg-orange-500/20 text-orange-300 border border-orange-500/30',
+        yellow: 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30',
+        green: 'bg-green-500/20 text-green-300 border border-green-500/30',
+        blue: 'bg-blue-500/20 text-blue-300 border border-blue-500/30',
+        purple: 'bg-purple-500/20 text-purple-300 border border-purple-500/30',
+        pink: 'bg-pink-500/20 text-pink-300 border border-pink-500/30',
+        cyan: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30',
+        gray: 'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+      }
+      return colorStyles[color] || 'bg-white/10 text-white/60'
+    } catch {
+      return 'bg-white/10 text-white/60'
+    }
+  }
+
+  // 添加标签筛选
+  const addTagFilter = (tagName: string) => {
+    const currentSearch = filters.search
+    const tagFilter = `tag:${tagName}`
+    if (currentSearch.includes(tagFilter)) return
+    setFilters(prev => ({
+      ...prev,
+      search: currentSearch ? `${currentSearch} ${tagFilter}` : tagFilter
+    }))
+  }
+
+  // 处理标签变化
+  const handleTagsChange = (value: string) => {
+    setEditingNote(prev => ({ ...prev, tags: value }))
+  }
+
+  // 从当前编辑状态获取标签颜色
+  const getTagColorFromState = (tagName: string): string | null => {
+    if (!editingNote?.tagColors) return null
+    try {
+      const colors = JSON.parse(editingNote.tagColors)
+      return colors[tagName] || null
+    } catch {
+      return null
+    }
+  }
+
+  // 设置标签颜色
+  const setTagColor = (tagName: string, color: string | null) => {
+    setEditingNote(prev => {
+      let colors: Record<string, string> = {}
+      if (prev?.tagColors) {
+        try {
+          colors = JSON.parse(prev.tagColors)
+        } catch {
+          colors = {}
+        }
+      }
+      if (color) {
+        colors[tagName] = color
+      } else {
+        delete colors[tagName]
+      }
+      return {
+        ...prev,
+        tagColors: Object.keys(colors).length > 0 ? JSON.stringify(colors) : null
+      }
+    })
   }
 
   // 获取颜色方案
@@ -520,13 +706,50 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
         />
 
         {/* 标签输入 */}
-        <input
-          type="text"
-          placeholder="标签，用逗号分隔"
-          value={editingNote?.tags || ''}
-          onChange={e => setEditingNote(prev => ({ ...prev, tags: e.target.value }))}
-          className="w-full px-3 py-2 mt-3 rounded bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
-        />
+        <div className="mt-3">
+          <input
+            type="text"
+            placeholder="标签，用逗号分隔"
+            value={editingNote?.tags || ''}
+            onChange={e => handleTagsChange(e.target.value)}
+            className="w-full px-3 py-2 rounded bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
+          />
+          {/* 标签颜色选择 */}
+          {editingNote?.tags && editingNote.tags.split(',').some(t => t.trim()) && (
+            <div className="mt-2 space-y-1">
+              {editingNote.tags.split(',').map((tag, idx) => {
+                const tagName = tag.trim()
+                if (!tagName) return null
+                const currentColor = getTagColorFromState(tagName)
+                return (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="text-xs text-white/60">#{tagName}</span>
+                    <div className="flex items-center gap-1">
+                      {TAG_COLORS.map((color) => (
+                        <button
+                          key={color.name}
+                          onClick={() => setTagColor(tagName, color.name)}
+                          className={cn(
+                            "w-4 h-4 rounded-full border transition-all",
+                            color.bg,
+                            currentColor === color.name ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                          )}
+                          title={color.name}
+                        />
+                      ))}
+                      <button
+                        onClick={() => setTagColor(tagName, null)}
+                        className="text-xs text-white/40 hover:text-white/70 ml-1"
+                      >
+                        清除
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
 
         {/* 文件夹选择 */}
         <select
@@ -555,6 +778,71 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
               title={color.name}
             />
           ))}
+        </div>
+
+        {/* 待办事项选项 */}
+        <div className="mt-3 p-3 rounded bg-white/5 border border-white/10">
+          <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer mb-2">
+            <input
+              type="checkbox"
+              checked={editingNote?.isTodo || false}
+              onChange={e => setEditingNote(prev => ({ ...prev, isTodo: e.target.checked }))}
+              className="rounded border-white/30"
+            />
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            设为待办事项
+          </label>
+
+          {editingNote?.isTodo && (
+            <div className="space-y-2 pl-6">
+              {/* 优先级选择 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/50">优先级:</span>
+                <div className="flex items-center gap-1">
+                  {PRIORITIES.map((priority) => (
+                    <button
+                      key={priority.level}
+                      onClick={() => setEditingNote(prev => ({ ...prev, priority: priority.level }))}
+                      className={cn(
+                        "px-2 py-1 rounded text-xs transition-all flex items-center gap-1",
+                        editingNote?.priority === priority.level
+                          ? cn(priority.bg, priority.color, "ring-1 ring-white/30")
+                          : "bg-white/5 text-white/50 hover:bg-white/10"
+                      )}
+                    >
+                      {(() => {
+                        const PriorityIcon = priority.icon
+                        return <PriorityIcon className="w-3 h-3" />
+                      })()}
+                      {priority.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 截止日期 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/50">截止日期:</span>
+                <input
+                  type="datetime-local"
+                  value={editingNote?.dueDate ? new Date(editingNote.dueDate).toISOString().slice(0, 16) : ''}
+                  onChange={e => setEditingNote(prev => ({
+                    ...prev,
+                    dueDate: e.target.value ? new Date(e.target.value).toISOString() : undefined
+                  }))}
+                  className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-white/30"
+                />
+                {editingNote?.dueDate && (
+                  <button
+                    onClick={() => setEditingNote(prev => ({ ...prev, dueDate: undefined }))}
+                    className="text-xs text-white/40 hover:text-white/70"
+                  >
+                    清除
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 选项 */}
@@ -593,6 +881,75 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
 
   // 文件夹管理模式
   if (showFolderManager) {
+    // 递归渲染文件夹树
+    const renderFolderTree = (parentId: string | null = null, level: number = 0) => {
+      const childFolders = folders.filter(f => f.parentId === parentId)
+
+      return childFolders.map(folder => {
+        const hasChildren = folders.some(f => f.parentId === folder.id)
+        const isExpanded = expandedFolders.has(folder.id)
+        const noteCount = notes.filter(n => n.folderId === folder.id).length
+        const childCount = folders.filter(f => f.parentId === folder.id).length
+
+        return (
+          <div key={folder.id}>
+            <div
+              className={cn(
+                "flex items-center justify-between rounded cursor-pointer transition-colors group",
+                filters.folderId === folder.id ? 'bg-white/10' : 'hover:bg-white/5'
+              )}
+              style={{ paddingLeft: `${12 + level * 20}px`, paddingRight: '12px', paddingTop: '8px', paddingBottom: '8px' }}
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {hasChildren ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); toggleFolderExpand(folder.id) }}
+                    className="p-0.5 rounded hover:bg-white/10 flex-shrink-0"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-white/40" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+                    )}
+                  </button>
+                ) : (
+                  <span className="w-5 flex-shrink-0" />
+                )}
+                <Folder className={cn("w-4 h-4 flex-shrink-0", folder.color ? getFolderColor(folder.color) : "text-yellow-400")} />
+                <span
+                  className="text-sm text-white truncate flex-1"
+                  onClick={() => { setFilters(prev => ({ ...prev, folderId: folder.id })); setShowFolderManager(false) }}
+                >
+                  {folder.name}
+                </span>
+                <span className="text-xs text-white/40 flex-shrink-0">
+                  {noteCount > 0 && `(${noteCount})`}
+                  {childCount > 0 && ` +${childCount}`}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                <button
+                  onClick={(e) => { e.stopPropagation(); startCreateSubfolder(folder.id) }}
+                  className="p-1 rounded hover:bg-white/10"
+                  title="新建子文件夹"
+                >
+                  <Plus className="w-3.5 h-3.5 text-white/50" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteFolder(folder.id) }}
+                  className="p-1 rounded hover:bg-red-500/20"
+                  title="删除文件夹"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                </button>
+              </div>
+            </div>
+            {isExpanded && hasChildren && renderFolderTree(folder.id, level + 1)}
+          </div>
+        )
+      })
+    }
+
     return (
       <div className="rounded-lg bg-white/5 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
@@ -613,12 +970,20 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
           <div className="flex items-center gap-2 mb-4">
             <input
               type="text"
-              placeholder="新文件夹名称"
+              placeholder={creatingSubfolderOf ? `在 "${getFolderName(creatingSubfolderOf)}" 下新建子文件夹` : "新文件夹名称"}
               value={newFolderName}
               onChange={e => setNewFolderName(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && createFolder()}
               className="flex-1 px-3 py-2 rounded bg-white/5 border border-white/10 text-sm text-white placeholder-white/30 focus:outline-none focus:border-white/30"
             />
+            {creatingSubfolderOf && (
+              <button
+                onClick={() => setCreatingSubfolderOf(null)}
+                className="px-2 py-2 rounded bg-white/5 hover:bg-white/10 text-xs text-white/60"
+              >
+                取消
+              </button>
+            )}
             <button
               onClick={createFolder}
               disabled={!newFolderName.trim()}
@@ -629,7 +994,7 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
           </div>
 
           {/* 文件夹列表 */}
-          <div className="space-y-1">
+          <div className="space-y-1 max-h-80 overflow-y-auto">
             <div
               onClick={() => { setFilters(prev => ({ ...prev, folderId: null })); setShowFolderManager(false) }}
               className={cn(
@@ -658,32 +1023,8 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
               </div>
             </div>
 
-            {folders.map(folder => (
-              <div
-                key={folder.id}
-                className={cn(
-                  "flex items-center justify-between px-3 py-2 rounded cursor-pointer transition-colors",
-                  filters.folderId === folder.id ? 'bg-white/10' : 'hover:bg-white/5'
-                )}
-              >
-                <div
-                  className="flex items-center gap-2 flex-1"
-                  onClick={() => { setFilters(prev => ({ ...prev, folderId: folder.id })); setShowFolderManager(false) }}
-                >
-                  <Folder className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm text-white">{folder.name}</span>
-                  <span className="text-xs text-white/40">
-                    ({notes.filter(n => n.folderId === folder.id).length})
-                  </span>
-                </div>
-                <button
-                  onClick={(e) => { e.stopPropagation(); deleteFolder(folder.id) }}
-                  className="p-1 rounded hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                </button>
-              </div>
-            ))}
+            {/* 树形文件夹列表 */}
+            {renderFolderTree(null)}
           </div>
         </div>
       </div>
@@ -761,6 +1102,8 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
             <option value="updatedAt">更新时间</option>
             <option value="createdAt">创建时间</option>
             <option value="title">标题</option>
+            <option value="priority">优先级</option>
+            <option value="dueDate">截止日期</option>
           </select>
 
           <button
@@ -769,6 +1112,34 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
           >
             {filters.sortOrder === 'desc' ? '↓' : '↑'}
           </button>
+
+          <button
+            onClick={() => setFilters(prev => ({ ...prev, showTodoOnly: !prev.showTodoOnly }))}
+            className={cn(
+              "px-2 py-1 rounded text-xs flex items-center gap-1 transition-colors",
+              filters.showTodoOnly
+                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10"
+            )}
+          >
+            <CheckCircle2 className="w-3 h-3" />
+            待办
+          </button>
+
+          <select
+            value={filters.priorityFilter ?? ''}
+            onChange={e => setFilters(prev => ({
+              ...prev,
+              priorityFilter: e.target.value ? parseInt(e.target.value) : null
+            }))}
+            className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-white focus:outline-none"
+          >
+            <option value="">全部优先级</option>
+            <option value="3">🔴 紧急</option>
+            <option value="2">🟠 高</option>
+            <option value="1">🟡 中</option>
+            <option value="0">🟢 低</option>
+          </select>
 
           <label className="flex items-center gap-1 text-xs text-white/60 cursor-pointer">
             <input
@@ -816,15 +1187,48 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
                 {/* 标题栏 */}
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {note.isTodo && (
+                        <button
+                          onClick={() => toggleTodoComplete(note)}
+                          className="flex-shrink-0"
+                          title={note.completedAt ? '标记为未完成' : '标记为已完成'}
+                        >
+                          {note.completedAt ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-400" />
+                          ) : (
+                            <Circle className="w-4 h-4 text-white/40 hover:text-white/60" />
+                          )}
+                        </button>
+                      )}
                       {note.isPinned && (
                         <Pin className="w-3 h-3 text-yellow-400 flex-shrink-0" />
                       )}
                       {note.isArchived && (
                         <Archive className="w-3 h-3 text-white/40 flex-shrink-0" />
                       )}
+                      {note.priority && note.priority > 0 && (
+                        <span className={cn("text-xs px-1.5 py-0.5 rounded flex items-center gap-1", getPriorityConfig(note.priority).bg)}>
+                          {(() => {
+                            const PriorityIcon = getPriorityConfig(note.priority).icon
+                            return <PriorityIcon className={cn("w-3 h-3", getPriorityConfig(note.priority).color)} />
+                          })()}
+                          <span className={getPriorityConfig(note.priority).color}>{getPriorityConfig(note.priority).name}</span>
+                        </span>
+                      )}
+                      {note.dueDate && (
+                        <span className={cn(
+                          "text-xs px-1.5 py-0.5 rounded flex items-center gap-1",
+                          new Date(note.dueDate) < new Date() && !note.completedAt
+                            ? "bg-red-500/20 text-red-300"
+                            : "bg-blue-500/20 text-blue-300"
+                        )}>
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(note.dueDate)}
+                        </span>
+                      )}
                       {note.title && (
-                        <h4 className={cn("text-sm font-medium truncate", colorScheme.text)}>
+                        <h4 className={cn("text-sm font-medium truncate", colorScheme.text, note.completedAt && "line-through opacity-60")}>
                           {note.title}
                         </h4>
                       )}
@@ -888,16 +1292,24 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
                 {/* 标签 */}
                 {note.tags && (
                   <div className="flex items-center gap-1 flex-wrap mb-2">
-                    {note.tags.split(',').map((tag, idx) => (
-                      tag.trim() && (
+                    {note.tags.split(',').map((tag, idx) => {
+                      const tagName = tag.trim()
+                      if (!tagName) return null
+                      const tagColor = getTagColor(note.tagColors, tagName)
+                      return (
                         <span
                           key={idx}
-                          className="px-1.5 py-0.5 rounded bg-white/10 text-xs text-white/60"
+                          className={cn(
+                            "px-1.5 py-0.5 rounded text-xs transition-colors cursor-pointer hover:opacity-80",
+                            tagColor
+                          )}
+                          onClick={(e) => { e.stopPropagation(); addTagFilter(tagName) }}
+                          title={`筛选标签: ${tagName}`}
                         >
-                          #{tag.trim()}
+                          #{tagName}
                         </span>
                       )
-                    ))}
+                    })}
                   </div>
                 )}
 

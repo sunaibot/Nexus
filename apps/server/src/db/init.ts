@@ -393,6 +393,13 @@ function createTables(db: SqlJsDatabase): void {
       folderId TEXT,
       isPinned INTEGER DEFAULT 0,
       isArchived INTEGER DEFAULT 0,
+      -- 待办事项增强字段
+      isTodo INTEGER DEFAULT 0,
+      priority INTEGER DEFAULT 0,
+      dueDate TEXT,
+      completedAt TEXT,
+      -- 标签颜色（JSON格式存储标签和颜色映射）
+      tagColors TEXT,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     )
@@ -2818,6 +2825,36 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
       }
     } catch (e: any) {
       console.error('Migration error (default system configs):', e)
+    }
+
+    // 迁移：为 notes 表添加待办事项增强字段
+    const noteColumns = [
+      { name: 'isTodo', type: 'INTEGER DEFAULT 0' },
+      { name: 'priority', type: 'INTEGER DEFAULT 0' },
+      { name: 'dueDate', type: 'TEXT' },
+      { name: 'completedAt', type: 'TEXT' },
+      { name: 'tagColors', type: 'TEXT' }
+    ]
+
+    for (const column of noteColumns) {
+      try {
+        db.run(`ALTER TABLE notes ADD COLUMN ${column.name} ${column.type}`)
+        console.log(`✅ Migrated: Added ${column.name} column to notes table`)
+      } catch (e: any) {
+        if (!e.message?.includes('duplicate column')) {
+          console.error(`Migration error (${column.name}):`, e)
+        }
+      }
+    }
+
+    // 迁移：为 note_folders 表添加颜色字段
+    try {
+      db.run('ALTER TABLE note_folders ADD COLUMN color TEXT')
+      console.log('✅ Migrated: Added color column to note_folders table')
+    } catch (e: any) {
+      if (!e.message?.includes('duplicate column')) {
+        console.error('Migration error (folder color):', e)
+      }
     }
   } catch (error) {
     console.error('Migration error:', error)

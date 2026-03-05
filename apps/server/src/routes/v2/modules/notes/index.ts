@@ -35,6 +35,11 @@ const createNoteSchema = z.object({
   isMarkdown: z.boolean().optional(),
   tags: z.string().max(500, '标签不能超过500字符').optional(),
   folderId: z.string().optional(),
+  // 待办事项字段
+  isTodo: z.boolean().optional(),
+  priority: z.number().min(0).max(3).optional(),
+  dueDate: z.string().optional(),
+  tagColors: z.string().optional(),
 })
 
 // 更新笔记验证schema
@@ -46,6 +51,12 @@ const updateNoteSchema = z.object({
   folderId: z.string().optional(),
   isPinned: z.boolean().optional(),
   isArchived: z.boolean().optional(),
+  // 待办事项字段
+  isTodo: z.boolean().optional(),
+  priority: z.number().min(0).max(3).optional(),
+  dueDate: z.string().optional(),
+  completedAt: z.string().optional(),
+  tagColors: z.string().optional(),
 })
 
 // ========== 管理员接口（必须在动态路由之前定义）==========
@@ -109,12 +120,16 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
 router.post('/', authMiddleware, validateBody(createNoteSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { title, content, isMarkdown, tags, folderId } = req.body
+    const { title, content, isMarkdown, tags, folderId, isTodo, priority, dueDate, tagColors } = req.body
 
     const note = createNote(user.id, title, content || '', {
       isMarkdown,
       tags,
-      folderId
+      folderId,
+      isTodo,
+      priority,
+      dueDate,
+      tagColors
     })
 
     if (!note) {
@@ -128,7 +143,7 @@ router.post('/', authMiddleware, validateBody(createNoteSchema), (req: Request, 
       action: 'CREATE_NOTE',
       resourceType: 'note',
       resourceId: note.id,
-      details: { title, isMarkdown },
+      details: { title, isMarkdown, isTodo },
       ip: String(req.ip || 'unknown'),
       userAgent: String(req.headers['user-agent'] || ''),
       riskLevel: 'low'
@@ -164,7 +179,7 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
   try {
     const user = (req as any).user
     const id = req.params.id as string
-    const { title, content, isMarkdown, tags, folderId, isPinned, isArchived } = req.body
+    const { title, content, isMarkdown, tags, folderId, isPinned, isArchived, isTodo, priority, dueDate, completedAt, tagColors } = req.body
 
     // 验证所有权
     const existing = getNoteById(id, user.id)
@@ -180,6 +195,12 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
     if (folderId !== undefined) updates.folderId = folderId
     if (isPinned !== undefined) updates.isPinned = isPinned
     if (isArchived !== undefined) updates.isArchived = isArchived
+    // 待办事项字段
+    if (isTodo !== undefined) updates.isTodo = isTodo
+    if (priority !== undefined) updates.priority = priority
+    if (dueDate !== undefined) updates.dueDate = dueDate
+    if (completedAt !== undefined) updates.completedAt = completedAt
+    if (tagColors !== undefined) updates.tagColors = tagColors
 
     if (Object.keys(updates).length === 0) {
       return errorResponse(res, '没有要更新的字段', 400)
@@ -265,19 +286,20 @@ router.get('/folders/list', authMiddleware, (req: Request, res: Response) => {
 const createFolderSchema = z.object({
   name: z.string().min(1, '名称不能为空').max(100, '名称不能超过100字符'),
   parentId: z.string().optional(),
+  color: z.string().optional(),
 })
 
 router.post('/folders', authMiddleware, validateBody(createFolderSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { name, parentId } = req.body
+    const { name, parentId, color } = req.body
 
     // 获取最大orderIndex
     const folders = getUserNoteFolders(user.id)
     const maxOrder = folders.length > 0 ? Math.max(...folders.map(f => f.orderIndex)) : 0
     const orderIndex = maxOrder + 1
 
-    const folder = createNoteFolder(user.id, name, parentId, orderIndex)
+    const folder = createNoteFolder(user.id, name, parentId, orderIndex, color)
     if (!folder) {
       return errorResponse(res, '创建文件夹失败', 500)
     }
@@ -293,13 +315,14 @@ router.post('/folders', authMiddleware, validateBody(createFolderSchema), (req: 
 const updateFolderSchema = z.object({
   name: z.string().min(1, '名称不能为空').max(100, '名称不能超过100字符').optional(),
   parentId: z.string().optional(),
+  color: z.string().optional(),
 })
 
 router.patch('/folders/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateFolderSchema), (req: Request, res: Response) => {
   try {
     const user = (req as any).user
     const id = req.params.id as string
-    const { name, parentId } = req.body
+    const { name, parentId, color } = req.body
 
     // 验证所有权
     const existing = getNoteFolderById(id, user.id)
@@ -310,6 +333,7 @@ router.patch('/folders/:id', authMiddleware, validateParams(idParamSchema), vali
     const updates: Partial<NoteFolder> = {}
     if (name !== undefined) updates.name = name
     if (parentId !== undefined) updates.parentId = parentId
+    if (color !== undefined) updates.color = color
 
     if (Object.keys(updates).length === 0) {
       return errorResponse(res, '没有要更新的字段', 400)
