@@ -23,6 +23,13 @@ export interface BookmarkCardStyle {
   padding: string
   margin: string
   gap: string
+  // 尺寸
+  width?: string
+  height?: string
+  minWidth?: string
+  minHeight?: string
+  maxWidth?: string
+  maxHeight?: string
   // 字体样式
   titleFontSize: string
   titleFontWeight: string
@@ -54,6 +61,20 @@ export interface BookmarkCardStyle {
   tagTextColor?: string
   tagBorderRadius: string
   tagFontSize: string
+  // 图标透明度
+  iconOpacity: number
+  // 圆形卡片样式
+  isCircular: boolean
+  circleSize: string
+  circleBackgroundColor?: string
+  circleBorderWidth: string
+  circleBorderColor?: string
+  // 布局配置
+  layoutType: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
+  iconPosition: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'
+  showTitle: boolean
+  showDescription: boolean
+  textAlign: 'left' | 'center' | 'right'
   // 配置范围
   scope: 'global' | 'role' | 'user'
   userId?: string
@@ -87,6 +108,13 @@ export interface CreateBookmarkCardStyleData {
   padding: string
   margin: string
   gap: string
+  // 尺寸
+  width?: string
+  height?: string
+  minWidth?: string
+  minHeight?: string
+  maxWidth?: string
+  maxHeight?: string
   // 字体样式
   titleFontSize: string
   titleFontWeight: string
@@ -109,6 +137,19 @@ export interface CreateBookmarkCardStyleData {
   iconColor?: string
   iconBackgroundColor?: string
   iconBorderRadius: string
+  iconOpacity: number
+  // 圆形卡片样式
+  isCircular: boolean
+  circleSize: string
+  circleBackgroundColor?: string
+  circleBorderWidth: string
+  circleBorderColor?: string
+  // 布局配置
+  layoutType: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
+  iconPosition: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'
+  showTitle: boolean
+  showDescription: boolean
+  textAlign: 'left' | 'center' | 'right'
   // 图片样式
   imageHeight: string
   imageBorderRadius: string

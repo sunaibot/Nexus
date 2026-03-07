@@ -427,14 +427,200 @@ const apiModules = {
       {
         method: 'PUT', path: '/api/v2/settings/site', auth: true, admin: true,
         name: '更新站点设置',
-        desc: '更新站点设置（管理员）',
+        desc: '更新站点设置（管理员），包含完整的壁纸高级设置',
         body: [
           { name: 'siteTitle', type: 'string', required: false, desc: '站点标题' },
           { name: 'siteFavicon', type: 'string', required: false, desc: '站点图标' },
           { name: 'enableWeather', type: 'boolean', required: false, desc: '启用天气' },
-          { name: 'enableLunar', type: 'boolean', required: false, desc: '启用农历' }
+          { name: 'enableLunar', type: 'boolean', required: false, desc: '启用农历' },
+          { name: 'wallpaper', type: 'object', required: false, desc: '壁纸设置对象（详见下方壁纸设置字段说明）' }
         ],
         response: { code: 200, desc: '更新成功', example: { success: true, message: '更新成功' } }
+      },
+      // 壁纸设置字段详细说明
+      {
+        method: 'GET', path: '/api/v2/settings/site/wallpaper/schema', auth: false, admin: false,
+        name: '获取壁纸设置字段说明',
+        desc: '获取壁纸设置的完整字段结构和说明（文档端点）',
+        response: { 
+          code: 200, 
+          desc: '壁纸设置字段说明', 
+          example: { 
+            success: true, 
+            data: {
+              description: '壁纸设置支持单张壁纸、轮播、动态壁纸、每日壁纸四种模式，以及丰富的视觉效果',
+              fields: {
+                enabled: { type: 'boolean', default: false, desc: '是否启用壁纸' },
+                mode: { type: 'string', enum: ['single', 'slideshow', 'dynamic', 'daily'], default: 'single', desc: '壁纸显示模式' },
+                source: { type: 'string', enum: ['upload', 'url', 'unsplash', 'pexels', 'preset', 'video', 'gif'], default: 'upload', desc: '壁纸来源类型' },
+                currentWallpaperId: { type: 'string', desc: '当前壁纸ID（引用壁纸库）' },
+                imageUrl: { type: 'string', desc: '当前图片URL' },
+                videoUrl: { type: 'string', desc: '视频壁纸URL（动态模式）' },
+                gifUrl: { type: 'string', desc: 'GIF壁纸URL（动态模式）' },
+                blur: { type: 'number', min: 0, max: 20, default: 0, desc: '模糊度(px)' },
+                overlay: { type: 'number', min: 0, max: 100, default: 0, desc: '遮罩不透明度(%)' },
+                brightness: { type: 'number', min: 50, max: 150, default: 100, desc: '亮度(%)' },
+                contrast: { type: 'number', min: 50, max: 150, default: 100, desc: '对比度(%)' },
+                saturation: { type: 'number', min: 0, max: 200, default: 100, desc: '饱和度(%)' },
+                display: {
+                  type: 'object',
+                  desc: '显示设置',
+                  fields: {
+                    fit: { type: 'string', enum: ['cover', 'contain', 'stretch', 'tile', 'center'], default: 'cover', desc: '填充模式' },
+                    attachment: { type: 'string', enum: ['fixed', 'scroll'], default: 'fixed', desc: '背景固定方式' },
+                    position: { type: 'string', enum: ['center', 'top', 'bottom', 'left', 'right'], default: 'center', desc: '背景位置' }
+                  }
+                },
+                slideshow: {
+                  type: 'object',
+                  desc: '轮播设置（mode=slideshow时生效）',
+                  fields: {
+                    enabled: { type: 'boolean', default: false, desc: '是否启用轮播' },
+                    interval: { type: 'number', min: 10, max: 3600, default: 60, desc: '切换间隔(秒)' },
+                    transition: { type: 'string', enum: ['fade', 'slide', 'zoom', 'blur'], default: 'fade', desc: '过渡效果' },
+                    transitionDuration: { type: 'number', min: 100, max: 5000, default: 1000, desc: '过渡时长(ms)' },
+                    shuffle: { type: 'boolean', default: false, desc: '是否随机播放' },
+                    pauseOnHover: { type: 'boolean', default: true, desc: '悬停时暂停' },
+                    wallpapers: { type: 'array', itemType: 'string', desc: '轮播壁纸ID列表' }
+                  }
+                },
+                dynamic: {
+                  type: 'object',
+                  desc: '动态壁纸设置（mode=dynamic时生效）',
+                  fields: {
+                    enabled: { type: 'boolean', default: false, desc: '是否启用动态壁纸' },
+                    muted: { type: 'boolean', default: true, desc: '是否静音' },
+                    playbackSpeed: { type: 'number', min: 0.25, max: 2, default: 1, desc: '播放速度' }
+                  }
+                },
+                daily: {
+                  type: 'object',
+                  desc: '每日壁纸设置（mode=daily时生效）',
+                  fields: {
+                    enabled: { type: 'boolean', default: false, desc: '是否启用每日壁纸' },
+                    source: { type: 'string', enum: ['unsplash', 'pexels', 'picsum', 'bing'], default: 'unsplash', desc: '图片来源' },
+                    category: { type: 'string', desc: '图片分类/主题' },
+                    keywords: { type: 'array', itemType: 'string', desc: '搜索关键词' },
+                    updateTime: { type: 'string', pattern: 'HH:mm', default: '08:00', desc: '每日更新时间' },
+                    saveToLibrary: { type: 'boolean', default: true, desc: '是否保存到壁纸库' }
+                  }
+                },
+                effects: {
+                  type: 'object',
+                  desc: '高级视觉效果设置',
+                  fields: {
+                    vignette: {
+                      type: 'object',
+                      desc: '暗角效果',
+                      fields: {
+                        enabled: { type: 'boolean', default: false, desc: '是否启用' },
+                        intensity: { type: 'number', min: 0, max: 100, default: 30, desc: '强度(%)' },
+                        color: { type: 'string', default: '#000000', desc: '暗角颜色' }
+                      }
+                    },
+                    colorFilter: {
+                      type: 'object',
+                      desc: '颜色滤镜',
+                      fields: {
+                        enabled: { type: 'boolean', default: false, desc: '是否启用' },
+                        type: { type: 'string', enum: ['none', 'grayscale', 'sepia', 'warm', 'cool', 'vintage', 'noir'], default: 'none', desc: '滤镜类型' },
+                        intensity: { type: 'number', min: 0, max: 100, default: 50, desc: '强度(%)' }
+                      }
+                    },
+                    gradient: {
+                      type: 'object',
+                      desc: '渐变叠加',
+                      fields: {
+                        enabled: { type: 'boolean', default: false, desc: '是否启用' },
+                        type: { type: 'string', enum: ['none', 'linear', 'radial', 'angular'], default: 'linear', desc: '渐变类型' },
+                        angle: { type: 'number', min: 0, max: 360, default: 180, desc: '角度(线性渐变)' },
+                        colors: { type: 'array', desc: '渐变颜色数组 [{color, position}]' },
+                        opacity: { type: 'number', min: 0, max: 100, default: 30, desc: '不透明度(%)' }
+                      }
+                    },
+                    particles: {
+                      type: 'object',
+                      desc: '粒子效果',
+                      fields: {
+                        enabled: { type: 'boolean', default: false, desc: '是否启用' },
+                        type: { type: 'string', enum: ['snow', 'rain', 'bubbles', 'stars', 'fireflies'], default: 'snow', desc: '粒子类型' },
+                        density: { type: 'number', min: 0, max: 100, default: 50, desc: '密度' },
+                        speed: { type: 'number', min: 0, max: 100, default: 50, desc: '速度' },
+                        color: { type: 'string', default: '#ffffff', desc: '粒子颜色' }
+                      }
+                    },
+                    animation: {
+                      type: 'object',
+                      desc: '动画效果',
+                      fields: {
+                        enabled: { type: 'boolean', default: false, desc: '是否启用' },
+                        type: { type: 'string', enum: ['ken-burns', 'parallax', 'zoom', 'pulse'], default: 'ken-burns', desc: '动画类型' },
+                        speed: { type: 'number', min: 0, max: 100, default: 50, desc: '速度' }
+                      }
+                    }
+                  }
+                },
+                schedule: {
+                  type: 'object',
+                  desc: '定时切换设置',
+                  fields: {
+                    enabled: { type: 'boolean', default: false, desc: '是否启用定时切换' },
+                    type: { type: 'string', enum: ['interval', 'timeOfDay', 'sunriseSunset'], default: 'interval', desc: '定时类型' },
+                    interval: { type: 'number', min: 1, max: 1440, default: 60, desc: '间隔分钟数（interval模式）' },
+                    timeSlots: { type: 'array', desc: '时间段设置（timeOfDay模式）[{time, wallpaperId}]' },
+                    sunriseSunset: {
+                      type: 'object',
+                      desc: '日出日落设置（sunriseSunset模式）',
+                      fields: {
+                        latitude: { type: 'number', desc: '纬度' },
+                        longitude: { type: 'number', desc: '经度' },
+                        useCurrentLocation: { type: 'boolean', default: true, desc: '使用当前位置' },
+                        dawnWallpaper: { type: 'string', desc: '黎明壁纸ID' },
+                        dayWallpaper: { type: 'string', desc: '白天壁纸ID' },
+                        duskWallpaper: { type: 'string', desc: '黄昏壁纸ID' },
+                        nightWallpaper: { type: 'string', desc: '夜晚壁纸ID' }
+                      }
+                    }
+                  }
+                },
+                multiScreen: {
+                  type: 'object',
+                  desc: '多屏显示设置',
+                  fields: {
+                    enabled: { type: 'boolean', default: false, desc: '是否启用多屏' },
+                    screens: { type: 'array', desc: '屏幕配置 [{screenId, wallpaperId, span}]' }
+                  }
+                }
+              },
+              example: {
+                enabled: true,
+                mode: 'slideshow',
+                source: 'preset',
+                imageUrl: 'https://example.com/wallpaper.jpg',
+                blur: 5,
+                overlay: 20,
+                brightness: 110,
+                contrast: 105,
+                saturation: 100,
+                display: { fit: 'cover', attachment: 'fixed', position: 'center' },
+                slideshow: {
+                  enabled: true,
+                  interval: 300,
+                  transition: 'fade',
+                  transitionDuration: 1500,
+                  shuffle: true,
+                  pauseOnHover: true,
+                  wallpapers: ['wp1', 'wp2', 'wp3']
+                },
+                effects: {
+                  vignette: { enabled: true, intensity: 40, color: '#000000' },
+                  colorFilter: { enabled: false, type: 'none', intensity: 50 },
+                  particles: { enabled: true, type: 'snow', density: 30, speed: 40, color: '#ffffff' }
+                }
+              }
+            }
+          } 
+        }
       },
       {
         method: 'PATCH', path: '/api/v2/settings', auth: true, admin: false,
@@ -1610,44 +1796,152 @@ const apiModules = {
     id: 'wallpaper',
     name: '壁纸管理',
     icon: '🖼️',
-    description: '壁纸上传和管理',
+    description: '壁纸库管理、每日壁纸获取、高级壁纸设置（轮播、动态壁纸、定时切换、视觉效果）',
     apis: [
+      // ========== 壁纸库管理 ==========
       {
-        method: 'GET', path: '/api/v2/wallpapers', auth: true, admin: false,
-        name: '获取壁纸列表',
-        desc: '获取所有壁纸',
-        response: { code: 200, desc: '壁纸列表', example: { success: true, data: [{ id: 'wp1', name: '风景', url: '/uploads/wallpaper1.jpg' }] } } }
-      ,
+        method: 'GET', path: '/api/v2/wallpaper/library', auth: true, admin: false,
+        name: '获取壁纸库列表',
+        desc: '获取所有已保存的壁纸列表，支持分类、收藏筛选',
+        response: { 
+          code: 200, 
+          desc: '壁纸库列表', 
+          example: { 
+            success: true, 
+            data: [
+              { 
+                id: 'wp1', 
+                name: '山脉晨曦', 
+                url: 'https://example.com/wallpaper1.jpg',
+                thumbnail: 'https://example.com/wallpaper1_thumb.jpg',
+                source: 'upload',
+                category: 'nature',
+                tags: ['mountain', 'sunrise'],
+                isFavorite: true,
+                createdAt: '2024-01-15T08:00:00Z',
+                usedAt: '2024-01-20T10:00:00Z',
+                useCount: 5
+              }
+            ] 
+          } 
+        }
+      },
       {
-        method: 'POST', path: '/api/v2/wallpapers', auth: true, admin: true,
-        name: '上传壁纸',
-        desc: '上传新壁纸（管理员）',
+        method: 'POST', path: '/api/v2/wallpaper/library', auth: true, admin: false,
+        name: '添加壁纸到库',
+        desc: '将壁纸添加到个人壁纸库',
         body: [
-          { name: 'file', type: 'file', required: true, desc: '壁纸文件' },
-          { name: 'name', type: 'string', required: false, desc: '壁纸名称' }
+          { name: 'name', type: 'string', required: true, desc: '壁纸名称' },
+          { name: 'url', type: 'string', required: true, desc: '壁纸URL' },
+          { name: 'thumbnail', type: 'string', required: false, desc: '缩略图URL' },
+          { name: 'source', type: 'string', required: false, desc: '来源类型: upload/url/unsplash/pexels/preset' },
+          { name: 'category', type: 'string', required: false, desc: '分类: nature/abstract/city/minimal/dark/anime/scenery/architecture/space/other' },
+          { name: 'tags', type: 'array', required: false, desc: '标签数组' },
+          { name: 'fileSize', type: 'number', required: false, desc: '文件大小(字节)' },
+          { name: 'width', type: 'number', required: false, desc: '图片宽度' },
+          { name: 'height', type: 'number', required: false, desc: '图片高度' }
         ],
-        response: { code: 201, desc: '上传成功', example: { success: true, data: { id: 'wp1', url: '/uploads/wallpaper1.jpg' } } } }
-      ,
+        response: { 
+          code: 201, 
+          desc: '添加成功', 
+          example: { 
+            success: true, 
+            data: { 
+              id: 'wp1', 
+              name: '山脉晨曦',
+              url: 'https://example.com/wallpaper1.jpg',
+              thumbnail: 'https://example.com/wallpaper1_thumb.jpg',
+              source: 'upload',
+              category: 'nature',
+              tags: ['mountain', 'sunrise'],
+              isFavorite: false,
+              createdAt: '2024-01-15T08:00:00Z',
+              useCount: 0
+            } 
+          } 
+        }
+      },
       {
-        method: 'DELETE', path: '/api/v2/wallpapers/:id', auth: true, admin: true,
-        name: '删除壁纸',
-        desc: '删除壁纸（管理员）',
+        method: 'PUT', path: '/api/v2/wallpaper/library/:id', auth: true, admin: false,
+        name: '更新壁纸信息',
+        desc: '更新壁纸库中壁纸的名称、分类、标签、收藏状态',
         params: [{ name: 'id', type: 'string', required: true, desc: '壁纸ID' }],
-        response: { code: 200, desc: '删除成功', example: { success: true } } }
-      ,
+        body: [
+          { name: 'name', type: 'string', required: false, desc: '壁纸名称' },
+          { name: 'category', type: 'string', required: false, desc: '分类' },
+          { name: 'tags', type: 'array', required: false, desc: '标签数组' },
+          { name: 'isFavorite', type: 'boolean', required: false, desc: '是否收藏' }
+        ],
+        response: { code: 200, desc: '更新成功', example: { success: true } }
+      },
       {
-        method: 'GET', path: '/api/v2/wallpapers/current', auth: true, admin: false,
-        name: '获取当前壁纸',
-        desc: '获取当前用户设置的壁纸',
-        response: { code: 200, desc: '当前壁纸', example: { success: true, data: { id: 'wp1', url: '/uploads/wallpaper1.jpg' } } } }
-      ,
+        method: 'DELETE', path: '/api/v2/wallpaper/library/:id', auth: true, admin: false,
+        name: '删除壁纸',
+        desc: '从壁纸库中删除指定壁纸',
+        params: [{ name: 'id', type: 'string', required: true, desc: '壁纸ID' }],
+        response: { code: 200, desc: '删除成功', example: { success: true } }
+      },
       {
-        method: 'PUT', path: '/api/v2/wallpapers/current', auth: true, admin: false,
-        name: '设置当前壁纸',
-        desc: '设置当前壁纸',
-        body: [{ name: 'wallpaperId', type: 'string', required: true, desc: '壁纸ID' }],
-        response: { code: 200, desc: '设置成功', example: { success: true } } }
-      
+        method: 'POST', path: '/api/v2/wallpaper/library/:id/use', auth: true, admin: false,
+        name: '记录壁纸使用',
+        desc: '记录壁纸被使用，更新使用次数和最后使用时间',
+        params: [{ name: 'id', type: 'string', required: true, desc: '壁纸ID' }],
+        response: { code: 200, desc: '记录成功', example: { success: true } }
+      },
+      {
+        method: 'POST', path: '/api/v2/wallpaper/library/:id/favorite', auth: true, admin: false,
+        name: '切换收藏状态',
+        desc: '切换壁纸的收藏状态',
+        params: [{ name: 'id', type: 'string', required: true, desc: '壁纸ID' }],
+        body: [{ name: 'isFavorite', type: 'boolean', required: true, desc: '是否收藏' }],
+        response: { code: 200, desc: '操作成功', example: { success: true } }
+      },
+      // ========== 预设壁纸 ==========
+      {
+        method: 'GET', path: '/api/v2/wallpaper/presets', auth: true, admin: false,
+        name: '获取预设壁纸列表',
+        desc: '获取系统预设的壁纸列表',
+        response: { 
+          code: 200, 
+          desc: '预设壁纸列表', 
+          example: { 
+            success: true, 
+            data: [
+              { 
+                id: 'preset-nature-1', 
+                name: '山脉晨曦', 
+                url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920',
+                thumbnail: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+                category: 'nature',
+                tags: ['mountain', 'sunrise', 'landscape'],
+                source: 'preset'
+              }
+            ] 
+          } 
+        }
+      },
+      // ========== 每日壁纸 ==========
+      {
+        method: 'GET', path: '/api/v2/wallpaper/daily', auth: true, admin: false,
+        name: '获取每日壁纸',
+        desc: '从外部源获取每日壁纸URL（支持Unsplash、Pexels、Bing等）',
+        query: [
+          { name: 'source', type: 'string', required: false, desc: '图片来源: unsplash/pexels/picsum/bing' },
+          { name: 'category', type: 'string', required: false, desc: '图片分类/主题' },
+          { name: 'keywords', type: 'string', required: false, desc: '搜索关键词（逗号分隔）' }
+        ],
+        response: { 
+          code: 200, 
+          desc: '每日壁纸URL', 
+          example: { 
+            success: true, 
+            data: { 
+              url: 'https://images.unsplash.com/photo-xxx?w=1920',
+              source: 'unsplash'
+            } 
+          } 
+        }
+      }
     ]
   },
 

@@ -764,6 +764,21 @@ function createTables(db: SqlJsDatabase): void {
       iconColor TEXT,
       iconBackgroundColor TEXT,
       iconBorderRadius TEXT DEFAULT '8px',
+      iconOpacity REAL DEFAULT 1.0,
+      
+      -- 圆形卡片样式
+      isCircular INTEGER DEFAULT 0, -- 1=圆形卡片
+      circleSize TEXT DEFAULT '80px', -- 圆形大小
+      circleBackgroundColor TEXT, -- 圆形背景色
+      circleBorderWidth TEXT DEFAULT '0px',
+      circleBorderColor TEXT,
+      
+      -- 布局配置
+      layoutType TEXT DEFAULT 'standard', -- standard(标准), icon-top(图标在上), icon-bottom(图标在下), icon-bg(图标背景)
+      iconPosition TEXT DEFAULT 'left', -- left, right, top, bottom, center, background
+      showTitle INTEGER DEFAULT 1,
+      showDescription INTEGER DEFAULT 1,
+      textAlign TEXT DEFAULT 'left', -- left, center, right
       
       -- 图片样式
       imageHeight TEXT DEFAULT '120px',
@@ -911,6 +926,55 @@ function createTables(db: SqlJsDatabase): void {
       FOREIGN KEY (announcementId) REFERENCES announcements(id) ON DELETE CASCADE,
       FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
       UNIQUE(announcementId, userId)
+    )
+  `)
+
+  // 壁纸源配置表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS wallpaper_providers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT,
+      type TEXT DEFAULT 'api', -- builtin, api, rss, json, html
+      enabled INTEGER DEFAULT 1,
+      icon TEXT,
+      
+      -- API 配置
+      apiUrl TEXT,
+      apiKey TEXT,
+      
+      -- 请求配置
+      method TEXT DEFAULT 'GET',
+      headers TEXT, -- JSON 格式
+      params TEXT, -- JSON 格式
+      
+      -- 解析配置
+      parser TEXT, -- JSON 格式: { imageUrlPath, titlePath, authorPath, thumbnailPath }
+      
+      -- 缓存配置
+      cacheDuration INTEGER DEFAULT 60, -- 缓存时间（分钟）
+      
+      -- 限制配置
+      maxResults INTEGER DEFAULT 20,
+      
+      -- 元数据
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // 壁纸源缓存表（存储从第三方获取的壁纸）
+  db.run(`
+    CREATE TABLE IF NOT EXISTS wallpaper_provider_cache (
+      id TEXT PRIMARY KEY,
+      providerId TEXT NOT NULL,
+      url TEXT NOT NULL,
+      thumbnail TEXT,
+      title TEXT,
+      author TEXT,
+      sourceUrl TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (providerId) REFERENCES wallpaper_providers(id) ON DELETE CASCADE
     )
   `)
 }
@@ -1079,6 +1143,12 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
  * 初始化默认数据
  */
 async function initDefaultData(db: SqlJsDatabase): Promise<void> {
+  // 检查是否已有任何用户（用户名可以修改，所以检查是否有任何用户存在）
+  const existingUser = db.exec('SELECT COUNT(*) as count FROM users')
+  if (existingUser.length > 0 && existingUser[0].values.length > 0 && existingUser[0].values[0][0] > 0) {
+    return
+  }
+
   // 创建默认管理员用户 - 使用默认密码 admin123
   // 首次登录后系统会强制要求修改密码
   const defaultPassword = 'admin123'
@@ -1855,7 +1925,27 @@ async function ensureDefaultSettings(db: SqlJsDatabase): Promise<void> {
     { key: 'enableBeamAnimation', value: 'true' },
     { key: 'enableLiteMode', value: 'false' },
     { key: 'enableWeather', value: 'true' },
-    { key: 'enableLunar', value: 'true' }
+    { key: 'enableLunar', value: 'true' },
+    { key: 'wallpaper', value: JSON.stringify({
+      enabled: true,
+      mode: 'single',
+      source: 'preset',
+      presetId: 'nature-1',
+      imageUrl: '',
+      imageData: '',
+      videoUrl: '',
+      gifUrl: '',
+      blur: 0,
+      overlay: 30,
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      display: { fit: 'cover', attachment: 'fixed', position: 'center' },
+      slideshow: { enabled: false, interval: 60, transition: 'fade', transitionDuration: 1000, shuffle: false, pauseOnHover: true, wallpapers: [] },
+      dynamic: { enabled: false, muted: true, playbackSpeed: 1 },
+      daily: { enabled: false, source: 'unsplash', category: '', keywords: [], updateTime: '08:00', saveToLibrary: true },
+      effects: { vignette: { enabled: false, intensity: 30 }, particles: { enabled: false, type: 'snow', density: 50, speed: 50 }, mouse: { enabled: false, effect: 'trail', intensity: 50 } }
+    })}
   ]
   
   for (const setting of defaultSettings) {
@@ -1870,8 +1960,9 @@ async function ensureDefaultSettings(db: SqlJsDatabase): Promise<void> {
  * 确保默认用户存在
  */
 async function ensureDefaultUser(db: SqlJsDatabase): Promise<void> {
-  const result = db.exec('SELECT 1 FROM users WHERE username = ?', ['admin'])
-  if (result.length === 0) {
+  // 检查是否已有任何用户（用户名可以修改，所以检查是否有任何用户存在）
+  const result = db.exec('SELECT COUNT(*) as count FROM users')
+  if (result.length === 0 || result[0].values.length === 0 || result[0].values[0][0] === 0) {
     // 使用默认密码 admin123，首次登录强制修改
     const defaultPassword = 'admin123'
     const adminPasswordHash = await hashPassword(defaultPassword)
@@ -2574,16 +2665,62 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
       }
     }
 
+    // 迁移：为 bookmark_card_styles 表添加缺失的字段
+    const bookmarkCardStylesColumns = [
+      { name: 'iconOpacity', type: 'REAL DEFAULT 1.0' },
+      { name: 'isCircular', type: 'INTEGER DEFAULT 0' },
+      { name: 'circleSize', type: 'TEXT DEFAULT \'80px\'' },
+      { name: 'circleBackgroundColor', type: 'TEXT' },
+      { name: 'circleBorderWidth', type: 'TEXT DEFAULT \'0px\'' },
+      { name: 'circleBorderColor', type: 'TEXT' },
+      { name: 'layoutType', type: 'TEXT DEFAULT \'standard\'' },
+      { name: 'iconPosition', type: 'TEXT DEFAULT \'left\'' },
+      { name: 'showTitle', type: 'INTEGER DEFAULT 1' },
+      { name: 'showDescription', type: 'INTEGER DEFAULT 1' },
+      { name: 'textAlign', type: 'TEXT DEFAULT \'left\'' },
+      { name: 'imageHeight', type: 'TEXT DEFAULT \'120px\'' },
+      { name: 'imageBorderRadius', type: 'TEXT DEFAULT \'8px\'' },
+      { name: 'imageObjectFit', type: 'TEXT DEFAULT \'cover\'' },
+      { name: 'tagBackgroundColor', type: 'TEXT DEFAULT \'rgba(0, 0, 0, 0.1)\'' },
+      { name: 'tagTextColor', type: 'TEXT' },
+      { name: 'tagBorderRadius', type: 'TEXT DEFAULT \'4px\'' },
+      { name: 'tagFontSize', type: 'TEXT DEFAULT \'12px\'' },
+      { name: 'width', type: 'TEXT' },
+      { name: 'height', type: 'TEXT' },
+      { name: 'minWidth', type: 'TEXT' },
+      { name: 'minHeight', type: 'TEXT' },
+      { name: 'maxWidth', type: 'TEXT' },
+      { name: 'maxHeight', type: 'TEXT' },
+    ]
+
+    for (const col of bookmarkCardStylesColumns) {
+      try {
+        db.run(`ALTER TABLE bookmark_card_styles ADD COLUMN ${col.name} ${col.type}`)
+        logger.info(`✅ Migrated: Added ${col.name} column to bookmark_card_styles table`)
+      } catch (e: any) {
+        // 字段已存在时会报错，忽略
+        if (!e.message?.includes('duplicate column')) {
+          logger.error(`Migration error (${col.name})`, e)
+        }
+      }
+    }
+
     // 迁移：添加默认书签卡片样式预设
     try {
       const now = new Date().toISOString()
       const presetIds = [
         'preset-glassmorphism',
-        'preset-minimal', 
+        'preset-minimal',
         'preset-dark-elegant',
         'preset-gradient',
         'preset-soft-shadow',
         'preset-bordered',
+        'preset-circular',
+        'preset-circular-gradient',
+        'preset-circular-glass',
+        'preset-circular-minimal',
+        'preset-circular-neon',
+        'preset-circular-dark',
         'default-system'
       ]
       
@@ -2591,7 +2728,65 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
       const existingPresets = db.exec(`SELECT id FROM bookmark_card_styles WHERE id IN (${presetIds.map(() => '?').join(',')})`, presetIds)
       const existingIds = new Set(existingPresets.length > 0 ? existingPresets[0].values.map((row: any[]) => row[0]) : [])
       
-      const defaultStyles = [
+      const defaultStyles: Array<{
+        id: string
+        name: string
+        description: string
+        scope: string
+        backgroundColor?: string
+        backgroundGradient?: string
+        borderRadius?: string
+        borderWidth?: string
+        borderColor?: string
+        borderStyle?: string
+        shadowColor?: string
+        shadowBlur?: string
+        shadowSpread?: string
+        shadowX?: string
+        shadowY?: string
+        padding?: string
+        margin?: string
+        gap?: string
+        titleFontSize?: string
+        titleFontWeight?: string
+        titleColor?: string
+        descriptionFontSize?: string
+        descriptionFontWeight?: string
+        descriptionColor?: string
+        opacity?: number
+        backdropBlur?: string
+        backdropSaturate?: string
+        hoverBackgroundColor?: string
+        hoverBorderColor?: string
+        hoverShadowBlur?: string
+        hoverScale?: number
+        hoverTransition?: string
+        iconSize?: string
+        iconColor?: string
+        iconBackgroundColor?: string
+        iconBorderRadius?: string
+        iconOpacity?: number
+        imageHeight?: string
+        imageBorderRadius?: string
+        imageObjectFit?: string
+        tagBackgroundColor?: string
+        tagTextColor?: string
+        tagBorderRadius?: string
+        tagFontSize?: string
+        isEnabled: number
+        isDefault: number
+        priority: number
+        isCircular?: number
+        circleSize?: string
+        circleBackgroundColor?: string
+        circleBorderWidth?: string
+        circleBorderColor?: string
+        layoutType?: string
+        iconPosition?: string
+        showTitle?: number
+        showDescription?: number
+        textAlign?: string
+      }> = [
         {
           id: 'preset-glassmorphism',
           name: '玻璃拟态',
@@ -2695,6 +2890,182 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
           priority: 10,
         },
         {
+          id: 'preset-circular',
+          name: '圆形图标',
+          description: '圆形卡片样式，图标居中显示',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          borderWidth: '0px',
+          borderRadius: '0px',
+          shadowColor: 'transparent',
+          shadowBlur: '0px',
+          padding: '16px',
+          isCircular: 1,
+          circleSize: '80px',
+          circleBackgroundColor: 'rgba(99, 102, 241, 0.2)',
+          circleBorderWidth: '2px',
+          circleBorderColor: 'rgba(99, 102, 241, 0.4)',
+          layoutType: 'icon-top',
+          iconPosition: 'center',
+          showTitle: 1,
+          showDescription: 1,
+          textAlign: 'center',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-circular-gradient',
+          name: '圆形渐变',
+          description: '渐变背景的圆形图标样式',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          borderWidth: '0px',
+          borderRadius: '0px',
+          shadowColor: 'transparent',
+          shadowBlur: '0px',
+          padding: '20px',
+          isCircular: 1,
+          circleSize: '90px',
+          circleBackgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          circleBorderWidth: '3px',
+          circleBorderColor: 'rgba(255, 255, 255, 0.3)',
+          layoutType: 'icon-top',
+          iconPosition: 'center',
+          showTitle: 1,
+          showDescription: 0,
+          textAlign: 'center',
+          titleFontSize: '14px',
+          titleFontWeight: '500',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-circular-glass',
+          name: '圆形玻璃',
+          description: '毛玻璃效果的圆形图标',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          borderWidth: '0px',
+          borderRadius: '0px',
+          shadowColor: 'transparent',
+          shadowBlur: '0px',
+          padding: '16px',
+          isCircular: 1,
+          circleSize: '85px',
+          circleBackgroundColor: 'rgba(255, 255, 255, 0.15)',
+          circleBorderWidth: '1px',
+          circleBorderColor: 'rgba(255, 255, 255, 0.25)',
+          layoutType: 'icon-top',
+          iconPosition: 'center',
+          showTitle: 1,
+          showDescription: 0,
+          textAlign: 'center',
+          titleFontSize: '13px',
+          titleFontWeight: '500',
+          backdropBlur: '10px',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-circular-minimal',
+          name: '圆形极简',
+          description: '简约线条圆形图标',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          borderWidth: '0px',
+          borderRadius: '0px',
+          shadowColor: 'transparent',
+          shadowBlur: '0px',
+          padding: '12px',
+          isCircular: 1,
+          circleSize: '70px',
+          circleBackgroundColor: 'transparent',
+          circleBorderWidth: '2px',
+          circleBorderColor: 'rgba(156, 163, 175, 0.5)',
+          layoutType: 'icon-top',
+          iconPosition: 'center',
+          showTitle: 1,
+          showDescription: 0,
+          textAlign: 'center',
+          titleFontSize: '13px',
+          titleFontWeight: '400',
+          titleColor: 'rgba(255, 255, 255, 0.8)',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-circular-neon',
+          name: '圆形霓虹',
+          description: '发光效果的圆形图标',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          borderWidth: '0px',
+          borderRadius: '0px',
+          shadowColor: 'rgba(59, 130, 246, 0.5)',
+          shadowBlur: '20px',
+          padding: '20px',
+          isCircular: 1,
+          circleSize: '85px',
+          circleBackgroundColor: 'rgba(59, 130, 246, 0.2)',
+          circleBorderWidth: '2px',
+          circleBorderColor: '#3b82f6',
+          layoutType: 'icon-top',
+          iconPosition: 'center',
+          showTitle: 1,
+          showDescription: 0,
+          textAlign: 'center',
+          titleFontSize: '14px',
+          titleFontWeight: '600',
+          titleColor: '#60a5fa',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
+          id: 'preset-circular-dark',
+          name: '圆形暗色',
+          description: '深色背景的圆形图标',
+          scope: 'global',
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+          borderWidth: '0px',
+          borderRadius: '0px',
+          shadowColor: 'transparent',
+          shadowBlur: '0px',
+          padding: '16px',
+          isCircular: 1,
+          circleSize: '80px',
+          circleBackgroundColor: 'rgba(30, 30, 40, 0.8)',
+          circleBorderWidth: '2px',
+          circleBorderColor: 'rgba(255, 255, 255, 0.1)',
+          layoutType: 'icon-top',
+          iconPosition: 'center',
+          showTitle: 1,
+          showDescription: 0,
+          textAlign: 'center',
+          titleFontSize: '13px',
+          titleFontWeight: '500',
+          titleColor: '#e5e7eb',
+          hoverScale: 1.05,
+          isEnabled: 1,
+          isDefault: 0,
+          priority: 10,
+        },
+        {
           id: 'default-system',
           name: '系统默认',
           description: '系统默认样式配置',
@@ -2739,39 +3110,64 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
       let addedCount = 0
       for (const style of defaultStyles) {
         if (!existingIds.has(style.id)) {
+          const columns = [
+            'id', 'name', 'description', 'scope', 'backgroundColor', 'backgroundGradient',
+            'borderRadius', 'borderWidth', 'borderColor', 'borderStyle', 'shadowColor', 'shadowBlur',
+            'shadowSpread', 'shadowX', 'shadowY', 'padding', 'margin', 'gap',
+            'titleFontSize', 'titleFontWeight', 'titleColor', 'descriptionFontSize',
+            'descriptionFontWeight', 'descriptionColor', 'opacity', 'backdropBlur',
+            'backdropSaturate', 'hoverBackgroundColor', 'hoverBorderColor', 'hoverShadowBlur',
+            'hoverScale', 'hoverTransition', 'iconSize', 'iconColor', 'iconBackgroundColor',
+            'iconBorderRadius', 'iconOpacity', 'imageHeight', 'imageBorderRadius', 'imageObjectFit',
+            'tagBackgroundColor', 'tagTextColor', 'tagBorderRadius', 'tagFontSize',
+            'isEnabled', 'isDefault', 'priority', 'createdAt', 'updatedAt',
+            'isCircular', 'circleSize', 'circleBackgroundColor', 'circleBorderWidth', 'circleBorderColor',
+            'layoutType', 'iconPosition', 'showTitle', 'showDescription', 'textAlign'
+          ]
+          const values = [
+            style.id, style.name, style.description, style.scope,
+            style.backgroundColor || 'rgba(255, 255, 255, 0.1)',
+            style.backgroundGradient || null,
+            style.borderRadius || '12px', style.borderWidth || '1px',
+            style.borderColor || 'rgba(255, 255, 255, 0.1)',
+            style.borderStyle || 'solid',
+            style.shadowColor || 'rgba(0, 0, 0, 0.1)',
+            style.shadowBlur || '10px', style.shadowSpread || '0px',
+            style.shadowX || '0px', style.shadowY || '4px',
+            style.padding || '16px', style.margin || '8px', style.gap || '12px',
+            style.titleFontSize || '16px', style.titleFontWeight || '600',
+            style.titleColor || 'inherit', style.descriptionFontSize || '14px',
+            style.descriptionFontWeight || '400', style.descriptionColor || 'inherit',
+            style.opacity || 1.0, style.backdropBlur || '10px',
+            style.backdropSaturate || '180%',
+            style.hoverBackgroundColor || null,
+            style.hoverBorderColor || null,
+            style.hoverShadowBlur || null,
+            style.hoverScale || 1.02,
+            style.hoverTransition || 'all 0.3s ease',
+            style.iconSize || '24px',
+            style.iconColor || null,
+            style.iconBackgroundColor || null,
+            style.iconBorderRadius || '8px',
+            style.iconOpacity || 1.0,
+            style.imageHeight || '120px',
+            style.imageBorderRadius || '8px', style.imageObjectFit || 'cover',
+            style.tagBackgroundColor || 'rgba(0, 0, 0, 0.1)',
+            style.tagTextColor || null,
+            style.tagBorderRadius || '4px', style.tagFontSize || '12px',
+            style.isEnabled, style.isDefault, style.priority, now, now,
+            style.isCircular || 0, style.circleSize || '80px',
+            style.circleBackgroundColor || null, style.circleBorderWidth || '0px',
+            style.circleBorderColor || null, style.layoutType || 'standard',
+            style.iconPosition || 'left', style.showTitle !== undefined ? style.showTitle : 1,
+            style.showDescription !== undefined ? style.showDescription : 1,
+            style.textAlign || 'left'
+          ]
+          
+          const placeholders = columns.map(() => '?').join(', ')
           db.run(
-            `INSERT INTO bookmark_card_styles (
-              id, name, description, scope, backgroundColor, backgroundGradient,
-              borderRadius, borderWidth, borderColor, shadowColor, shadowBlur,
-              shadowSpread, shadowX, shadowY, padding, margin, gap,
-              titleFontSize, titleFontWeight, titleColor, descriptionFontSize,
-              descriptionFontWeight, descriptionColor, opacity, backdropBlur,
-              backdropSaturate, hoverScale, hoverTransition, iconSize, iconBorderRadius,
-              imageHeight, imageBorderRadius, imageObjectFit, tagBackgroundColor,
-              tagBorderRadius, tagFontSize, isEnabled, isDefault, priority, createdAt, updatedAt
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              style.id, style.name, style.description, style.scope,
-              style.backgroundColor || 'rgba(255, 255, 255, 0.1)',
-              style.backgroundGradient || null,
-              style.borderRadius || '12px', style.borderWidth || '1px',
-              style.borderColor || 'rgba(255, 255, 255, 0.1)',
-              style.shadowColor || 'rgba(0, 0, 0, 0.1)',
-              style.shadowBlur || '10px', style.shadowSpread || '0px',
-              style.shadowX || '0px', style.shadowY || '4px',
-              style.padding || '16px', style.margin || '8px', style.gap || '12px',
-              style.titleFontSize || '16px', style.titleFontWeight || '600',
-              style.titleColor || 'inherit', style.descriptionFontSize || '14px',
-              style.descriptionFontWeight || '400', style.descriptionColor || 'inherit',
-              style.opacity || 1.0, style.backdropBlur || '10px',
-              style.backdropSaturate || '180%', style.hoverScale || 1.02,
-              style.hoverTransition || 'all 0.3s ease', style.iconSize || '24px',
-              style.iconBorderRadius || '8px', style.imageHeight || '120px',
-              style.imageBorderRadius || '8px', style.imageObjectFit || 'cover',
-              style.tagBackgroundColor || 'rgba(0, 0, 0, 0.1)',
-              style.tagBorderRadius || '4px', style.tagFontSize || '12px',
-              style.isEnabled, style.isDefault, style.priority, now, now
-            ]
+            `INSERT INTO bookmark_card_styles (${columns.join(', ')}) VALUES (${placeholders})`,
+            values
           )
           addedCount++
         }
@@ -2781,7 +3177,7 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
         logger.info(`✅ Migrated: Added ${addedCount} default bookmark card styles`)
       }
     } catch (e: any) {
-      logger.error('Migration error (bookmark card styles)', e)
+      logger.error('Migration error (bookmark card styles)', e.message || e, e.stack)
     }
 
     // 迁移：创建系统配置表（如果不存在）

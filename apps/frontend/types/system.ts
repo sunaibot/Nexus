@@ -15,9 +15,10 @@ export interface MenuVisibility {
 
 export interface WallpaperSettings {
   enabled?: boolean
-  source?: 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels'
+  source?: 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels' | 'preset' | 'provider'
   imageData?: string
   imageUrl?: string
+  presetId?: string
   blur?: number
   overlay?: number
 }
@@ -30,6 +31,10 @@ export interface ThemeColors {
   buttonPrimaryText?: string
   buttonSecondaryBg?: string
   buttonSecondaryText?: string
+  // 文字颜色
+  textPrimary?: string      // 主要文字颜色（分类名称、标题等）
+  textSecondary?: string    // 次要文字颜色
+  textMuted?: string        // 淡化文字颜色
 }
 
 export interface NetworkEnvConfig {

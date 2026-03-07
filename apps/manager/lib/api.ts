@@ -664,6 +664,10 @@ export interface ThemeColors {
   buttonPrimaryText?: string    // 主按钮文字
   buttonSecondaryBg?: string    // 次按钮背景
   buttonSecondaryText?: string  // 次按钮文字
+  // 文字颜色
+  textPrimary?: string      // 主要文字颜色（分类名称、标题等）
+  textSecondary?: string    // 次要文字颜色
+  textMuted?: string        // 淡化文字颜色
 }
 
 export interface NetworkEnvConfig {

@@ -218,13 +218,21 @@ export function useHomePage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // 计算当前显示的 activeTabId（包含稍后阅读虚拟 TAB）
+  const displayActiveTabId = useMemo(() => {
+    if (showReadLaterOnly) {
+      return '__read_later__'
+    }
+    return activeTabId
+  }, [showReadLaterOnly, activeTabId])
+
   return {
     // 数据
     bookmarks,
     categories,
     customIcons,
     tabs,
-    activeTabId,
+    activeTabId: displayActiveTabId,
     filteredCategories,
     filteredBookmarks,
     readLaterBookmarks,

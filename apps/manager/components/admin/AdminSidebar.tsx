@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
   Server,
   Activity,
+  Monitor,
   FileCode,
   type LucideIcon
 } from 'lucide-react'
@@ -244,6 +245,11 @@ export function AdminSidebar({
     status: 'checking',
     lastChecked: new Date()
   })
+  const [frontendStatus, setFrontendStatus] = useState<ServiceStatus>({
+    name: '前台服务',
+    status: 'checking',
+    lastChecked: new Date()
+  })
 
   // 检测后端服务状态 - 使用 useCallback 避免重复创建
   const checkServerStatus = useCallback(async () => {
@@ -283,6 +289,39 @@ export function AdminSidebar({
       latency: loadTime,
       lastChecked: new Date()
     }))
+  }, [])
+
+  // 检测前台服务状态
+  const checkFrontendStatus = useCallback(async () => {
+    const startTime = Date.now()
+    try {
+      // 尝试通过 fetch 检测前台服务是否在线
+      // 前台服务运行在 localhost:5173，尝试获取其根路径
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 3000)
+      
+      const response = await fetch('http://localhost:5173/', {
+        method: 'HEAD',
+        mode: 'no-cors',
+        signal: controller.signal
+      })
+      clearTimeout(timeoutId)
+      
+      const latency = Date.now() - startTime
+      setFrontendStatus(prev => ({
+        ...prev,
+        status: 'online',
+        latency,
+        lastChecked: new Date()
+      }))
+    } catch (error) {
+      console.error('Frontend status check failed:', error)
+      setFrontendStatus(prev => ({
+        ...prev,
+        status: 'offline',
+        lastChecked: new Date()
+      }))
+    }
   }, [])
 
   // 刷新菜单统计
@@ -334,15 +373,17 @@ export function AdminSidebar({
     // 初始检测服务状态
     checkServerStatus()
     checkManagerStatus()
+    checkFrontendStatus()
     
     // 定时检测服务状态（每30秒）
     const interval = setInterval(() => {
       checkServerStatus()
       checkManagerStatus()
+      checkFrontendStatus()
     }, 30000)
     
     return () => clearInterval(interval)
-  }, [checkServerStatus, checkManagerStatus])
+  }, [checkServerStatus, checkManagerStatus, checkFrontendStatus])
 
   // 当切换到书签或分类页面时，刷新统计
   useEffect(() => {
@@ -488,6 +529,24 @@ export function AdminSidebar({
                 <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                   {managerStatus.status === 'online' ? '管理在线' : 
                    managerStatus.status === 'offline' ? '管理离线' : 
+                   '检测中'}
+                </span>
+              </div>
+              
+              {/* 分隔符 */}
+              <div className="w-px h-3" style={{ background: 'var(--color-border)' }} />
+              
+              {/* 前台服务状态 */}
+              <div className="flex items-center gap-1.5" title={`前台服务: ${frontendStatus.status === 'online' ? '运行中' : '离线'}${frontendStatus.latency ? ` (${frontendStatus.latency}ms)` : ''}`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  frontendStatus.status === 'online' ? 'bg-green-500' : 
+                  frontendStatus.status === 'offline' ? 'bg-red-500' : 
+                  'bg-yellow-500 animate-pulse'
+                }`} />
+                <Monitor className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
+                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  {frontendStatus.status === 'online' ? '前台在线' : 
+                   frontendStatus.status === 'offline' ? '前台离线' : 
                    '检测中'}
                 </span>
               </div>

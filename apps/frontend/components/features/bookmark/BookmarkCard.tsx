@@ -43,7 +43,7 @@ export function BookmarkCard({
   const descRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const { isInternal } = useNetworkEnv()
-  const { cardStyle, hoverStyle, titleStyle, descriptionStyle, iconStyle } = useBookmarkCardStyle()
+  const { style, cardStyle, hoverStyle, titleStyle, descriptionStyle, iconStyle, isCircular, circleStyle, textAlign, showTitle, showDescription } = useBookmarkCardStyle()
 
   // 清理 timeout
   useEffect(() => {
@@ -97,12 +97,29 @@ export function BookmarkCard({
     }, beaconSent ? 100 : 0)
   }
 
+  // 计算实际透明度：合并卡片样式透明度和拖拽状态透明度
+  const baseOpacity = typeof cardStyle.opacity === 'number' ? cardStyle.opacity : 1
+  const finalOpacity = isDragging ? baseOpacity * 0.5 : baseOpacity
+
+  // 悬停状态
+  const [isHovered, setIsHovered] = useState(false)
+
+  // 合并悬停样式
+  const currentCardStyle = isHovered && (hoverStyle.background || hoverStyle.borderColor || hoverStyle.boxShadow)
+    ? { 
+        ...cardStyle, 
+        background: hoverStyle.background || cardStyle.background,
+        borderColor: hoverStyle.borderColor || cardStyle.borderColor,
+        boxShadow: hoverStyle.boxShadow || cardStyle.boxShadow,
+      }
+    : cardStyle
+
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      initial={{ opacity: baseOpacity, scale: 0.95, y: 20 }}
       animate={{ 
-        opacity: isDragging ? 0.5 : 1, 
+        opacity: finalOpacity, 
         scale: isDragging ? 1.05 : 1,
         y: 0,
       }}
@@ -119,15 +136,21 @@ export function BookmarkCard({
         damping: 25,
         layout: { duration: 0.3 }
       }}
-      // 2. 视觉层：使用 vibe-card 全局能量类
+      // 2. 视觉层：使用自定义样式或默认样式
       className={cn(
-        'vibe-card vibe-card--glow group cursor-pointer h-full relative',
+        'group cursor-pointer h-full relative overflow-hidden rounded-2xl',
         isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
-      style={cardStyle}
+      style={currentCardStyle}
       onClick={handleClick}
-      onMouseEnter={() => setShowMenu(true)}
-      onMouseLeave={() => setShowMenu(false)}
+      onMouseEnter={() => {
+        setIsHovered(true)
+        setShowMenu(true)
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false)
+        setShowMenu(false)
+      }}
     >
       {/* 3. 唤醒层：扫描光效 (Shimmer) - 像扫描指纹 */}
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0 overflow-hidden rounded-[inherit]">
@@ -298,43 +321,59 @@ export function BookmarkCard({
 
       {/* 4. 内容层：z-10 保证在光效之上 */}
       <div className="relative z-10 p-5 h-full flex flex-col">
-        <div className="flex items-start gap-4 flex-1">
+        <div className={cn(
+          "flex flex-1",
+          isCircular ? "flex-col items-center justify-center gap-3" : "flex-row items-start gap-4"
+        )}>
           {/* Favicon/Icon - 图标微动：Hover 时轻轻摇晃，像是在对焦 */}
-          <motion.div 
+          <motion.div
             className={cn(
-              'flex-shrink-0 flex items-center justify-center p-1.5',
-              !iconStyle.width && 'w-12 h-12 rounded-xl bg-white/10'
+              'flex-shrink-0 flex items-center justify-center',
+              !isCircular && !iconStyle.width && 'w-12 h-12 rounded-xl bg-white/10 p-1.5'
             )}
-            style={{
+            style={isCircular ? circleStyle : {
               width: iconStyle.width,
               height: iconStyle.height,
               borderRadius: iconStyle.borderRadius,
               backgroundColor: iconStyle.backgroundColor || 'rgba(255,255,255,0.1)',
             }}
-            whileHover={{ 
-              rotate: [0, -5, 5, -3, 0], 
-              transition: { duration: 0.5, ease: 'easeInOut' } 
+            whileHover={{
+              rotate: isCircular ? 0 : [0, -5, 5, -3, 0],
+              transition: { duration: 0.5, ease: 'easeInOut' }
             }}
           >
             {bookmark.iconUrl ? (
               <img
                 src={bookmark.iconUrl}
                 alt=""
-                className="w-full h-full object-contain rounded-lg"
+                className={cn(
+                  "object-contain",
+                  isCircular ? "w-2/3 h-2/3 rounded-full" : "w-full h-full rounded-lg"
+                )}
                 onError={() => setImageError(true)}
               />
             ) : bookmark.favicon && !imageError ? (
               <img
                 src={bookmark.favicon}
                 alt=""
-                className="w-full h-full object-contain rounded-lg"
+                className={cn(
+                  "object-contain",
+                  isCircular ? "w-2/3 h-2/3 rounded-full" : "w-full h-full rounded-lg"
+                )}
                 onError={() => setImageError(true)}
               />
             ) : bookmark.icon ? (
-              <IconRenderer icon={bookmark.icon} className="w-7 h-7" style={{ color: iconStyle.color || 'var(--gradient-1)' }} />
+              <IconRenderer
+                icon={bookmark.icon}
+                className={isCircular ? "w-8 h-8" : "w-7 h-7"}
+                style={{ color: iconStyle.color || 'var(--gradient-1)' }}
+              />
             ) : (
-              <span 
-                className="text-xl font-semibold"
+              <span
+                className={cn(
+                  "font-semibold",
+                  isCircular ? "text-2xl" : "text-xl"
+                )}
                 style={{ color: iconStyle.color || 'var(--text-secondary)' }}
               >
                 {bookmark.title.charAt(0).toUpperCase()}
@@ -343,76 +382,91 @@ export function BookmarkCard({
           </motion.div>
 
           {/* 文本内容 */}
-          <div className="flex-1 min-w-0 flex flex-col h-full">
-            <h3 
-              className="truncate flex items-center gap-2"
-              style={{ 
-                color: titleStyle.color || 'var(--text-primary)',
-                fontSize: titleStyle.fontSize,
-                fontWeight: titleStyle.fontWeight,
-              }}
-            >
-              {bookmark.title}
-              <ExternalLink 
-                className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" 
-              />
-            </h3>
-            {/* 描述区域 - 固定高度保持对齐 */}
-            <div 
-              ref={descRef}
-              className="flex-1 mt-1"
-              onMouseEnter={bookmark.description ? handleDescMouseEnter : undefined}
-              onMouseLeave={bookmark.description ? handleDescMouseLeave : undefined}
-            >
-              <p 
-                className="card-desc cursor-default"
-                style={{ 
-                  color: descriptionStyle.color || 'var(--text-muted)',
-                  fontSize: descriptionStyle.fontSize,
-                  fontWeight: descriptionStyle.fontWeight,
+          <div
+            className={cn(
+              "flex flex-col",
+              isCircular ? "items-center text-center" : "flex-1 min-w-0 h-full"
+            )}
+            style={{ textAlign: textAlign }}
+          >
+            {showTitle && (
+              <h3
+                className={cn(
+                  "truncate flex items-center gap-2",
+                  isCircular && "justify-center"
+                )}
+                style={{
+                  color: titleStyle.color || 'var(--text-primary)',
+                  fontSize: titleStyle.fontSize,
+                  fontWeight: titleStyle.fontWeight,
                 }}
               >
-                {bookmark.description || ''}
-              </p>
-              
-              {/* 描述 Tooltip - 使用 Portal 渲染到 body，避免被 overflow:hidden 裁剪 */}
-              {showDescTooltip && bookmark.description && createPortal(
-                <AnimatePresence>
-                  <motion.div
-                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="fixed z-[9999] px-3 py-2 rounded-lg max-w-xs sm:max-w-sm pointer-events-none"
-                    style={{
-                      top: tooltipPosition.top,
-                      left: tooltipPosition.left,
-                      background: 'var(--color-bg-secondary)',
-                      border: '1px solid var(--color-glass-border)',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-                      backdropFilter: 'blur(16px)',
-                    }}
-                  >
-                    <p 
-                      className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-                      style={{ color: 'var(--text-secondary)' }}
-                    >
-                      {bookmark.description}
-                    </p>
-                    {/* 小三角指示器 */}
-                    <div 
-                      className="absolute -top-1.5 left-4 w-3 h-3 rotate-45"
+                {bookmark.title}
+                {!isCircular && (
+                  <ExternalLink
+                    className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0"
+                  />
+                )}
+              </h3>
+            )}
+            {/* 描述区域 - 固定高度保持对齐 */}
+            {showDescription && !isCircular && (
+              <div
+                ref={descRef}
+                className="flex-1 mt-1"
+                onMouseEnter={bookmark.description ? handleDescMouseEnter : undefined}
+                onMouseLeave={bookmark.description ? handleDescMouseLeave : undefined}
+              >
+                <p
+                  className="card-desc cursor-default"
+                  style={{
+                    color: descriptionStyle.color || 'var(--text-muted)',
+                    fontSize: descriptionStyle.fontSize,
+                    fontWeight: descriptionStyle.fontWeight,
+                  }}
+                >
+                  {bookmark.description || ''}
+                </p>
+
+                {/* 描述 Tooltip - 使用 Portal 渲染到 body，避免被 overflow:hidden 裁剪 */}
+                {showDescTooltip && bookmark.description && createPortal(
+                  <AnimatePresence>
+                    <motion.div
+                      initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="fixed z-[9999] px-3 py-2 rounded-lg max-w-xs sm:max-w-sm pointer-events-none"
                       style={{
+                        top: tooltipPosition.top,
+                        left: tooltipPosition.left,
                         background: 'var(--color-bg-secondary)',
-                        borderLeft: '1px solid var(--color-glass-border)',
-                        borderTop: '1px solid var(--color-glass-border)',
+                        border: '1px solid var(--color-glass-border)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                        backdropFilter: 'blur(16px)',
                       }}
-                    />
-                  </motion.div>
-                </AnimatePresence>,
-                document.body
-              )}
-            </div>
+                    >
+                      <p
+                        className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
+                        {bookmark.description}
+                      </p>
+                      {/* 小三角指示器 */}
+                      <div
+                        className="absolute -top-1.5 left-4 w-3 h-3 rotate-45"
+                        style={{
+                          background: 'var(--color-bg-secondary)',
+                          borderLeft: '1px solid var(--color-glass-border)',
+                          borderTop: '1px solid var(--color-glass-border)',
+                        }}
+                      />
+                    </motion.div>
+                  </AnimatePresence>,
+                  document.body
+                )}
+              </div>
+            )}
             {/* 域名固定在底部 */}
             <p 
               className="text-xs truncate mt-auto pt-2"

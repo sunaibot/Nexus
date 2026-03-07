@@ -651,7 +651,7 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
       }
       return {
         ...prev,
-        tagColors: Object.keys(colors).length > 0 ? JSON.stringify(colors) : null
+        tagColors: Object.keys(colors).length > 0 ? JSON.stringify(colors) : undefined
       }
     })
   }

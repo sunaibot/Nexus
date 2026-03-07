@@ -26,6 +26,10 @@ export function WallpaperPreview({ settings, title = '壁纸预览' }: Wallpaper
         return imageUrl || null
       case 'unsplash':
         return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80'
+      case 'preset':
+        return imageUrl || null
+      case 'provider':
+        return imageUrl || null
       default:
         return null
     }
@@ -121,7 +125,9 @@ export function WallpaperPreview({ settings, title = '壁纸预览' }: Wallpaper
               <div className="text-sm font-medium">
                 {source === 'upload' ? '本地上传' : 
                  source === 'url' ? '图片链接' : 
-                 source === 'unsplash' ? 'Unsplash' : '预设'}
+                 source === 'unsplash' ? 'Unsplash' : 
+                 source === 'preset' ? '预设壁纸' :
+                 source === 'provider' ? '壁纸源' : '预设'}
               </div>
             </div>
             <div className="p-2 rounded-lg text-center"

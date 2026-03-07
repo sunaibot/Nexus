@@ -17,28 +17,36 @@ const PRESET_WALLPAPERS: PresetWallpaper[] = [
     name: '山脉晨曦',
     url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=60',
-    category: 'nature'
+    category: 'nature',
+    tags: ['mountain', 'sunrise', 'landscape'],
+    source: 'preset'
   },
   {
     id: 'nature-2',
     name: '海洋日落',
     url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=60',
-    category: 'nature'
+    category: 'nature',
+    tags: ['ocean', 'sunset', 'beach'],
+    source: 'preset'
   },
   {
     id: 'nature-3',
     name: '森林小径',
     url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=60',
-    category: 'nature'
+    category: 'nature',
+    tags: ['forest', 'path', 'trees'],
+    source: 'preset'
   },
   {
     id: 'nature-4',
     name: '星空银河',
     url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&q=60',
-    category: 'nature'
+    category: 'nature',
+    tags: ['stars', 'galaxy', 'night'],
+    source: 'preset'
   },
   // 抽象艺术
   {
@@ -46,14 +54,18 @@ const PRESET_WALLPAPERS: PresetWallpaper[] = [
     name: '渐变流光',
     url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&q=60',
-    category: 'abstract'
+    category: 'abstract',
+    tags: ['gradient', 'colorful', 'abstract'],
+    source: 'preset'
   },
   {
     id: 'abstract-2',
     name: '几何图案',
     url: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1550684376-efcbd6e3f031?w=400&q=60',
-    category: 'abstract'
+    category: 'abstract',
+    tags: ['geometric', 'pattern', 'abstract'],
+    source: 'preset'
   },
   // 城市建筑
   {
@@ -61,14 +73,18 @@ const PRESET_WALLPAPERS: PresetWallpaper[] = [
     name: '城市夜景',
     url: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?w=400&q=60',
-    category: 'city'
+    category: 'city',
+    tags: ['city', 'night', 'lights'],
+    source: 'preset'
   },
   {
     id: 'city-2',
     name: '摩天大楼',
     url: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400&q=60',
-    category: 'city'
+    category: 'city',
+    tags: ['skyscraper', 'building', 'urban'],
+    source: 'preset'
   },
   // 极简风格
   {
@@ -76,14 +92,18 @@ const PRESET_WALLPAPERS: PresetWallpaper[] = [
     name: '纯白简约',
     url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=400&q=60',
-    category: 'minimal'
+    category: 'minimal',
+    tags: ['minimal', 'white', 'clean'],
+    source: 'preset'
   },
   {
     id: 'minimal-2',
     name: '灰色纹理',
     url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400&q=60',
-    category: 'minimal'
+    category: 'minimal',
+    tags: ['minimal', 'gray', 'texture'],
+    source: 'preset'
   },
   // 深色模式
   {
@@ -91,14 +111,18 @@ const PRESET_WALLPAPERS: PresetWallpaper[] = [
     name: '深邃星空',
     url: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&q=60',
-    category: 'dark'
+    category: 'dark',
+    tags: ['dark', 'stars', 'space'],
+    source: 'preset'
   },
   {
     id: 'dark-2',
     name: '暗夜极光',
     url: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1920&q=80',
     thumbnail: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&q=60',
-    category: 'dark'
+    category: 'dark',
+    tags: ['dark', 'aurora', 'night'],
+    source: 'preset'
   },
 ]
 

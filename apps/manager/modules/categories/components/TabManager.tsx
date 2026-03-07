@@ -92,8 +92,12 @@ export function TabManager({ categories }: TabManagerProps) {
   }, [loadTabs])
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(PointerSensor, { 
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, { 
+      coordinateGetter: sortableKeyboardCoordinates 
+    })
   )
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
@@ -188,7 +192,7 @@ export function TabManager({ categories }: TabManagerProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full overflow-y-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
@@ -212,18 +216,14 @@ export function TabManager({ categories }: TabManagerProps) {
       </div>
 
       {/* Tab Form */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="p-6 rounded-xl border space-y-4"
-            style={{
-              backgroundColor: 'var(--color-glass)',
-              borderColor: 'var(--color-glass-border)',
-            }}
-          >
+      {showForm && (
+        <div
+          className="p-6 rounded-xl border space-y-4"
+          style={{
+            backgroundColor: 'var(--color-glass)',
+            borderColor: 'var(--color-glass-border)',
+          }}
+        >
             <div className="flex items-center justify-between">
               <h3 className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
                 {editingTab ? '编辑 Tab' : '创建 Tab'}
@@ -297,38 +297,33 @@ export function TabManager({ categories }: TabManagerProps) {
                   </button>
                 </div>
 
-                <AnimatePresence>
-                  {showIconPicker && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-4 p-4 rounded-lg border"
-                      style={{
-                        backgroundColor: 'var(--color-bg-secondary)',
-                        borderColor: 'var(--color-border)',
-                      }}
-                    >
-                      <div className="grid grid-cols-10 gap-2">
-                        {presetTabIcons.map((iconKey) => (
-                          <button
-                            key={iconKey}
-                            onClick={() => {
-                              setFormData({ ...formData, icon: iconKey })
-                              setShowIconPicker(false)
-                            }}
-                            className={cn(
-                              "p-2 rounded-lg transition-colors",
-                              formData.icon === iconKey && "bg-blue-500/20 ring-1 ring-blue-500"
-                            )}
-                          >
-                            <IconRenderer icon={iconKey} className="w-5 h-5 mx-auto" />
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {showIconPicker && (
+                  <div
+                    className="mt-4 p-4 rounded-lg border"
+                    style={{
+                      backgroundColor: 'var(--color-bg-secondary)',
+                      borderColor: 'var(--color-border)',
+                    }}
+                  >
+                    <div className="grid grid-cols-10 gap-2">
+                      {presetTabIcons.map((iconKey) => (
+                        <button
+                          key={iconKey}
+                          onClick={() => {
+                            setFormData({ ...formData, icon: iconKey })
+                            setShowIconPicker(false)
+                          }}
+                          className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            formData.icon === iconKey && "bg-blue-500/20 ring-1 ring-blue-500"
+                          )}
+                        >
+                          <IconRenderer icon={iconKey} className="w-5 h-5 mx-auto" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Default Tab Toggle */}
@@ -416,9 +411,8 @@ export function TabManager({ categories }: TabManagerProps) {
                 </motion.button>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
       {/* Tab List */}
       {loading ? (
@@ -426,7 +420,7 @@ export function TabManager({ categories }: TabManagerProps) {
           加载中...
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} id="tab-manager-dnd">
           <SortableContext items={tabs.map(t => t.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {tabs.map((tab) => (

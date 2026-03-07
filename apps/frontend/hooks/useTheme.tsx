@@ -621,6 +621,10 @@ function applyTheme(theme: Theme) {
   root.style.setProperty('--color-button-primary-text', themeColors.buttonPrimaryText || '#ffffff')
   root.style.setProperty('--color-button-secondary-bg', themeColors.buttonSecondaryBg || (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#f4f4f5'))
   root.style.setProperty('--color-button-secondary-text', themeColors.buttonSecondaryText || (isDarkMode ? 'rgba(255, 255, 255, 0.9)' : '#171717'))
+  // 文字颜色（使用自定义值或主题默认值）
+  root.style.setProperty('--color-text-primary', themeColors.textPrimary || colors.textPrimary)
+  root.style.setProperty('--color-text-secondary', themeColors.textSecondary || colors.textSecondary)
+  root.style.setProperty('--color-text-muted', themeColors.textMuted || colors.textMuted)
 
   // 设置主题 class
   if (mode === 'dark') {

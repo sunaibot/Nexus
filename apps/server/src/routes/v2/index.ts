@@ -35,6 +35,8 @@ import quotesRouter from './modules/quotes/index.js'
 import widgetsRouter from './modules/widgets/index.js'
 import serviceMonitorsRouter from './modules/service-monitors/index.js'
 import customMetricsRouter from './modules/metrics/index.js'
+import wallpaperRouter from './modules/wallpaper/index.js'
+import wallpaperProvidersRouter from './wallpaper-providers.js'
 import visitsRouter from './modules/visits/index.js'
 import metadataRouter from './metadata.js'
 import tagsRouter from './tags.js'
@@ -105,6 +107,8 @@ router.use('/quotes', quotesRouter)
 router.use('/widgets', widgetsRouter)
 router.use('/service-monitors', serviceMonitorsRouter)
 router.use('/custom-metrics', customMetricsRouter)
+router.use('/wallpaper', wallpaperRouter)
+router.use('/wallpaper-providers', wallpaperProvidersRouter)
 router.use('/visits', visitsRouter)
 router.use('/metadata', metadataRouter)
 router.use('/tags', tagsRouter)

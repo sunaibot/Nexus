@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Settings, Home, Code, Bot, BookOpen, Wrench } from 'lucide-react'
+import { Plus, Settings, Home, Code, Bot, BookOpen, Wrench, BookMarked } from 'lucide-react'
 import { Tab } from '../types/tab'
 import { cn } from '../lib/utils'
 import { IconRenderer } from './IconRenderer'
@@ -12,6 +12,7 @@ interface TabSidebarProps {
   onAddTab?: () => void
   onManageTabs?: () => void
   isEditMode?: boolean
+  readLaterCount?: number
 }
 
 // 默认图标映射
@@ -30,8 +31,12 @@ export function TabSidebar({
   onAddTab,
   onManageTabs,
   isEditMode = false,
+  readLaterCount = 0,
 }: TabSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+
+  // 稍后阅读虚拟 TAB ID
+  const READ_LATER_TAB_ID = '__read_later__'
 
   return (
     <motion.div
@@ -146,6 +151,74 @@ export function TabSidebar({
                 </motion.span>
               )}
             </AnimatePresence>
+          </motion.button>
+        )}
+
+        {/* 稍后阅读虚拟 TAB - 当有稍后阅读书签时显示 */}
+        {readLaterCount > 0 && (
+          <motion.button
+            onClick={() => onTabChange(READ_LATER_TAB_ID)}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-3 rounded-xl',
+              'transition-all duration-200',
+              'hover:bg-[var(--hover)]',
+              activeTabId === READ_LATER_TAB_ID && 'bg-[var(--active)]'
+            )}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {/* 图标 */}
+            <div
+              className={cn(
+                'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
+                'transition-colors duration-200',
+                activeTabId === READ_LATER_TAB_ID ? 'text-white' : 'text-[var(--text-secondary)]'
+              )}
+              style={{
+                backgroundColor: activeTabId === READ_LATER_TAB_ID ? '#F97316' : 'transparent',
+              }}
+            >
+              <BookMarked className="w-5 h-5" />
+            </div>
+
+            {/* 名称 - 仅在展开时显示 */}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className={cn(
+                    'text-sm font-medium whitespace-nowrap overflow-hidden flex-1',
+                    activeTabId === READ_LATER_TAB_ID ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'
+                  )}
+                >
+                  稍后阅读
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* 数量徽章 */}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-medium"
+                >
+                  {readLaterCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* 激活指示器 */}
+            {activeTabId === READ_LATER_TAB_ID && (
+              <motion.div
+                layoutId="activeTabIndicator"
+                className="absolute left-0 w-1 h-8 rounded-r-full bg-orange-500"
+              />
+            )}
           </motion.button>
         )}
       </div>

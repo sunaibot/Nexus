@@ -23,6 +23,13 @@ export interface BookmarkCardStyle {
   padding: string
   margin: string
   gap: string
+  // 尺寸
+  width?: string
+  height?: string
+  minWidth?: string
+  minHeight?: string
+  maxWidth?: string
+  maxHeight?: string
   // 字体样式
   titleFontSize: string
   titleFontWeight: string
@@ -45,6 +52,19 @@ export interface BookmarkCardStyle {
   iconColor?: string
   iconBackgroundColor?: string
   iconBorderRadius: string
+  iconOpacity?: number
+  // 圆形卡片样式
+  isCircular?: boolean
+  circleSize?: string
+  circleBackgroundColor?: string
+  circleBorderWidth?: string
+  circleBorderColor?: string
+  // 布局配置
+  layoutType?: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
+  iconPosition?: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'
+  showTitle?: boolean
+  showDescription?: boolean
+  textAlign?: 'left' | 'center' | 'right'
   // 图片样式
   imageHeight: string
   imageBorderRadius: string
@@ -101,6 +121,13 @@ export function styleToCSS(style: BookmarkCardStyle | null): React.CSSProperties
     backdropFilter: `blur(${style.backdropBlur}) saturate(${style.backdropSaturate})`,
     // 过渡
     transition: style.hoverTransition,
+    // 尺寸
+    width: style.width,
+    height: style.height,
+    minWidth: style.minWidth,
+    minHeight: style.minHeight,
+    maxWidth: style.maxWidth,
+    maxHeight: style.maxHeight,
   }
 }
 

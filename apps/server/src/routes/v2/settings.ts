@@ -35,12 +35,91 @@ const defaultSiteSettings = {
     themeToggle: true,
   },
   wallpaper: {
-    enabled: false,
-    source: 'upload',
+    enabled: true,
+    mode: 'single',
+    source: 'preset',
     imageData: '',
     imageUrl: '',
+    videoUrl: '',
+    gifUrl: '',
+    presetId: 'nature-1',
     blur: 0,
     overlay: 30,
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    display: {
+      fit: 'cover',
+      attachment: 'fixed',
+      position: 'center'
+    },
+    slideshow: {
+      enabled: false,
+      interval: 60,
+      transition: 'fade',
+      transitionDuration: 1000,
+      shuffle: false,
+      pauseOnHover: true,
+      wallpapers: []
+    },
+    dynamic: {
+      enabled: false,
+      muted: true,
+      playbackSpeed: 1
+    },
+    daily: {
+      enabled: false,
+      source: 'unsplash',
+      category: '',
+      keywords: [],
+      updateTime: '08:00',
+      saveToLibrary: true
+    },
+    effects: {
+      vignette: {
+        enabled: false,
+        intensity: 50,
+        size: 50
+      },
+      colorFilter: {
+        enabled: false,
+        type: 'none',
+        intensity: 50
+      },
+      gradient: {
+        enabled: false,
+        type: 'linear',
+        angle: 180,
+        colors: [
+          { color: '#000000', position: 0 },
+          { color: 'transparent', position: 100 }
+        ],
+        opacity: 50
+      },
+      particles: {
+        enabled: false,
+        type: 'snow',
+        density: 50,
+        speed: 50,
+        color: '#ffffff'
+      },
+      animation: {
+        enabled: false,
+        type: 'ken-burns',
+        speed: 50
+      }
+    },
+    schedule: {
+      enabled: false,
+      type: 'interval',
+      interval: 60,
+      timeSlots: [],
+      sunriseSunset: {
+        useCurrentLocation: true,
+        latitude: 39.9,
+        longitude: 116.4
+      }
+    }
   },
   frontend: {
     buttons: {
@@ -142,6 +221,28 @@ router.get('/default', publicApiLimiter, (req, res) => {
   }
 })
 
+// 预设壁纸图片映射
+const PRESET_WALLPAPER_URLS: Record<string, string> = {
+  'nature-1': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920',
+  'city-1': 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1920',
+  'abstract-1': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=1920',
+  'minimal-1': 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=1920',
+  'space-1': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920',
+}
+
+// 获取壁纸图片URL
+function getWallpaperImageUrl(wallpaper: any): string {
+  if (!wallpaper) return ''
+  // 如果已有 imageUrl，直接返回
+  if (wallpaper.imageUrl) return wallpaper.imageUrl
+  if (wallpaper.imageData) return wallpaper.imageData
+  // 如果是预设壁纸，根据 presetId 返回对应 URL
+  if (wallpaper.source === 'preset' && wallpaper.presetId) {
+    return PRESET_WALLPAPER_URLS[wallpaper.presetId] || ''
+  }
+  return ''
+}
+
 // 获取站点设置（公开接口，兼容前端调用）
 router.get('/site', publicApiLimiter, (req, res) => {
   try {
@@ -165,6 +266,13 @@ router.get('/site', publicApiLimiter, (req, res) => {
       return field
     }
 
+    // 处理壁纸设置，确保有 imageUrl
+    const wallpaper = parseJsonField(settings.wallpaper, defaultSiteSettings.wallpaper)
+    const wallpaperWithImage = {
+      ...wallpaper,
+      imageUrl: getWallpaperImageUrl(wallpaper)
+    }
+
     res.json({
       success: true,
       data: {
@@ -178,7 +286,7 @@ router.get('/site', publicApiLimiter, (req, res) => {
         enableLiteMode: settings.enableLiteMode ?? defaultSiteSettings.enableLiteMode,
         enableWeather: settings.enableWeather ?? defaultSiteSettings.enableWeather,
         enableLunar: settings.enableLunar ?? defaultSiteSettings.enableLunar,
-        wallpaper: parseJsonField(settings.wallpaper, defaultSiteSettings.wallpaper),
+        wallpaper: wallpaperWithImage,
         frontend: parseJsonField(settings.frontend, defaultSiteSettings.frontend),
         themeColors: parseJsonField(settings.themeColors, defaultSiteSettings.themeColors),
         widgetVisibility: parseJsonField(settings.widgetVisibility, defaultSiteSettings.widgetVisibility),

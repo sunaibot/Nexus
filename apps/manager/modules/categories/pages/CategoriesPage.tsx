@@ -264,7 +264,7 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-6">
+    <div className="h-full flex gap-6">
       {/* 左侧主内容区 */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* 头部区域 */}
@@ -360,6 +360,23 @@ export default function CategoriesPage() {
 
           {/* 排序和视图 */}
           <div className="flex items-center gap-2 ml-4">
+            {/* 新建分类按钮 */}
+            <button
+              onClick={() => {
+                setEditingCategory(null)
+                setParentCategoryId(null)
+                setIsFormOpen(true)
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90"
+              style={{
+                backgroundColor: 'var(--color-primary)',
+                color: '#ffffff'
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              新建分类
+            </button>
+
             {/* 排序 */}
             <select
               value={sortBy}

@@ -278,19 +278,19 @@ function AdminContent() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto pt-14 pb-20 md:pt-0 md:pb-0">
+      <main className="flex-1 flex flex-col pt-14 pb-20 md:pt-0 md:pb-0 overflow-hidden">
         {/* Background Gradient */}
         <div 
           className="absolute inset-0 pointer-events-none transition-opacity duration-500"
           style={{ background: 'var(--color-bg-gradient)' }}
         />
         
-        <div className="relative p-4 md:p-8">
+        <div className="relative flex flex-col h-full p-4 md:p-8">
           {/* Header */}
           <motion.header 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-10"
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-10 flex-shrink-0"
           >
             <div>
               <h1 
@@ -332,193 +332,104 @@ function AdminContent() {
           </motion.header>
 
           {/* Content */}
-          <div className="min-h-[calc(100vh-12rem)]">
-          <AnimatePresence mode="sync">
+          <div className="flex-1 overflow-hidden relative min-h-0">
             {/* Bookmarks Tab */}
             {activeTab === 'bookmarks' && (
-              <motion.div
-                key="bookmarks"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <BookmarksPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Categories Tab */}
             {activeTab === 'categories' && (
-              <motion.div
-                key="categories"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="h-full"
-              >
+              <div className="h-full overflow-auto">
                 <CategoriesPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Analytics Tab */}
             {activeTab === 'analytics' && (
-              <motion.div
-                key="analytics"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="max-w-5xl"
-              >
+              <div className="h-full overflow-auto max-w-5xl">
                 <AnalyticsCard onShowToast={showToast} />
-              </motion.div>
+              </div>
             )}
 
             {/* Settings Tab */}
             {activeTab === 'settings' && (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="max-w-6xl"
-              >
+              <div className="h-full overflow-auto max-w-6xl">
                 <SettingsPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Plugins Tab */}
             {activeTab === 'plugins' && (
-              <motion.div
-                key="plugins"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <PluginsPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Menus Tab */}
             {activeTab === 'menus' && (
-              <motion.div
-                key="menus"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <MenusPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Users Tab */}
             {activeTab === 'users' && (
-              <motion.div
-                key="users"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <UsersPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Security Tab */}
             {activeTab === 'security' && (
-              <motion.div
-                key="security"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <SecurityPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Dock Tab */}
             {activeTab === 'dock' && (
-              <motion.div
-                key="dock"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <DockConfigsPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Settings Tabs Tab */}
             {activeTab === 'settings-tabs' && (
-              <motion.div
-                key="settings-tabs"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <SettingsTabsPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Nav Items Tab */}
             {activeTab === 'nav-items' && (
-              <motion.div
-                key="nav-items"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <NavItemsPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Theme Tab */}
             {activeTab === 'theme' && (
-              <motion.div
-                key="theme"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <ThemePage />
-              </motion.div>
+              </div>
             )}
 
             {/* Wallpaper Tab */}
             {activeTab === 'wallpaper' && (
-              <motion.div
-                key="wallpaper"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <WallpaperPage />
-              </motion.div>
+              </div>
             )}
 
             {/* Bookmark Card Styles Tab */}
             {activeTab === 'bookmark-card-styles' && (
-              <motion.div
-                key="bookmark-card-styles"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
+              <div className="h-full overflow-auto">
                 <BookmarkCardStylesPage />
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
           </div>
         </div>
       </main>

@@ -581,7 +581,26 @@ function getActionLabel(action: string): string {
     // 笔记操作
     'CREATE_NOTE': '创建笔记',
     'UPDATE_NOTE': '更新笔记',
-    'DELETE_NOTE': '删除笔记'
+    'DELETE_NOTE': '删除笔记',
+    'DELETE_NOTE_ADMIN': '管理员删除笔记',
+    'DELETE_NOTE_FOLDER_ADMIN': '管理员删除笔记文件夹',
+    // Tab 操作
+    'CREATE_TAB': '创建标签页',
+    'UPDATE_TAB': '更新标签页',
+    'DELETE_TAB': '删除标签页',
+    // 文件快传
+    'FILE_TRANSFER_UPLOAD': '文件上传',
+    'FILE_TRANSFER_DOWNLOAD': '文件下载',
+    // 系统配置
+    'UPDATE_SECURITY_CONFIG': '更新安全配置',
+    'UPDATE_FILE_TRANSFER_CONFIG': '更新文件传输配置',
+    'UPDATE_UPLOAD_CONFIG': '更新上传配置',
+    'UPDATE_NOTIFICATION_CONFIG': '更新通知配置',
+    'UPDATE_HEALTH_CHECK_CONFIG': '更新健康检查配置',
+    'UPDATE_RATE_LIMIT_CONFIG': '更新限流配置',
+    'UPDATE_SYSTEM_CONFIGS_BATCH': '批量更新系统配置',
+    // 基本登录
+    'LOGIN': '登录'
   }
   return labelMap[action] || action
 }

@@ -6,6 +6,7 @@
 import React from 'react'
 import { ThemeProvider } from '../hooks/useTheme'
 import { ErrorBoundary } from '../components/ErrorBoundary'
+import { ThemeColorProvider } from './ThemeColorProvider'
 
 interface AppProvidersProps {
   children: React.ReactNode
@@ -15,7 +16,9 @@ export function AppProviders({ children }: AppProvidersProps) {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        {children}
+        <ThemeColorProvider>
+          {children}
+        </ThemeColorProvider>
       </ThemeProvider>
     </ErrorBoundary>
   )

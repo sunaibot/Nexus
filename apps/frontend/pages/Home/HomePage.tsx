@@ -194,7 +194,15 @@ export function HomePage() {
           <TabSidebar
             tabs={tabs}
             activeTabId={activeTabId}
-            onTabChange={switchTab}
+            onTabChange={(tabId) => {
+              // 处理稍后阅读虚拟 TAB
+              if (tabId === '__read_later__') {
+                setShowReadLaterOnly(true)
+              } else {
+                setShowReadLaterOnly(false)
+                switchTab(tabId)
+              }
+            }}
             onAddTab={() => {
               // TODO: 打开添加 Tab 弹窗
               console.log('添加 Tab')
@@ -204,6 +212,7 @@ export function HomePage() {
               console.log('管理 Tab')
             }}
             isEditMode={isEditMode}
+            readLaterCount={readLaterBookmarks.length}
           />
         )}
 

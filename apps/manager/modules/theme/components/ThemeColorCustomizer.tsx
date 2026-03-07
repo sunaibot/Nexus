@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Palette, Eye, MousePointer2, Type, RefreshCw, Check } from 'lucide-react'
+import { Palette, Eye, MousePointer2, Type, RefreshCw, Check, Text } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
 import { updateSettings, type ThemeColors } from '../../../lib/api'
 import { cn } from '../../../lib/utils'
@@ -146,13 +146,13 @@ function ThemePreview({ colors, isDark }: { colors: ThemeColors; isDark: boolean
           <div>
             <div
               className="font-medium"
-              style={{ color: colors.iconPrimary || (isDark ? 'rgba(255,255,255,0.95)' : '#171717') }}
+              style={{ color: colors.textPrimary || (isDark ? 'rgba(255,255,255,0.95)' : '#171717') }}
             >
               分类标题
             </div>
             <div
               className="text-sm"
-              style={{ color: colors.iconMuted || (isDark ? 'rgba(255,255,255,0.45)' : '#a3a3a3') }}
+              style={{ color: colors.textMuted || (isDark ? 'rgba(255,255,255,0.45)' : '#a3a3a3') }}
             >
               12 个书签
             </div>
@@ -307,6 +307,39 @@ export default function ThemeColorCustomizer({
                 onChange={(v) => handleColorChange('iconMuted', v)}
                 icon={Eye}
                 description="禁用或提示性图标的颜色"
+              />
+            </div>
+          </div>
+
+          {/* 文字颜色 */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b" style={{ borderColor: 'var(--color-glass-border)' }}>
+              <Text className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+              <h4 className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                文字颜色
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <ColorInput
+                label="主要文字颜色"
+                value={colors.textPrimary || ''}
+                onChange={(v) => handleColorChange('textPrimary', v)}
+                icon={Text}
+                description="分类名称、标题等主要文字颜色"
+              />
+              <ColorInput
+                label="次要文字颜色"
+                value={colors.textSecondary || ''}
+                onChange={(v) => handleColorChange('textSecondary', v)}
+                icon={Text}
+                description="次要文字内容的颜色"
+              />
+              <ColorInput
+                label="淡化文字颜色"
+                value={colors.textMuted || ''}
+                onChange={(v) => handleColorChange('textMuted', v)}
+                icon={Text}
+                description="提示文字、禁用状态等淡化文字颜色"
               />
             </div>
           </div>

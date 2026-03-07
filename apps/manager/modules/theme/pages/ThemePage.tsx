@@ -9,39 +9,55 @@ import {
   Check,
   Sparkles,
   Palette,
+  Edit3,
 } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
 import { themes, darkThemes, lightThemes, ThemeId, Theme, useTheme } from '../../../hooks/useTheme'
 import { cn } from '../../../lib/utils'
 import { updateSettings, fetchSettings, type ThemeColors } from '../../../lib/api'
 import ThemeColorCustomizer from '../components/ThemeColorCustomizer'
+import ThemeEditModal from '../components/ThemeEditModal'
 
 // 主题预览卡片组件
 function ThemePreviewCard({
   theme,
   isActive,
   onClick,
+  onEdit,
   isCurrent
 }: {
   theme: Theme
   isActive: boolean
   onClick: () => void
+  onEdit?: (e: React.MouseEvent) => void
   isCurrent: boolean
 }) {
   return (
-    <motion.button
-      onClick={onClick}
+    <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        'relative p-4 rounded-xl text-left transition-all border-2',
+        'relative p-4 rounded-xl text-left transition-all border-2 cursor-pointer group',
         isActive ? 'border-[var(--color-primary)]' : 'border-transparent'
       )}
       style={{
         background: `linear-gradient(135deg, ${theme.colors.bgSecondary}, ${theme.colors.bgTertiary})`,
         boxShadow: isActive ? `0 0 20px ${theme.colors.glow}` : 'none'
       }}
+      onClick={onClick}
     >
+      {/* 编辑按钮 */}
+      {onEdit && (
+        <button
+          onClick={onEdit}
+          className="absolute top-2 left-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+          title="编辑主题颜色"
+        >
+          <Edit3 className="w-3.5 h-3.5 text-white" />
+        </button>
+      )}
+
       {/* 选中标记 */}
       {isActive && (
         <div
@@ -87,7 +103,7 @@ function ThemePreviewCard({
           />
         ))}
       </div>
-    </motion.button>
+    </motion.div>
   )
 }
 
@@ -112,6 +128,8 @@ export default function ThemePage() {
   const [previewTheme, setPreviewTheme] = useState<ThemeId>(themeId)
   const [themeColors, setThemeColors] = useState<ThemeColors>({})
   const [isLoadingColors, setIsLoadingColors] = useState(true)
+  const [editingTheme, setEditingTheme] = useState<Theme | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const { showToast } = useToast()
 
   // 加载保存的主题颜色
@@ -130,6 +148,13 @@ export default function ThemePage() {
     }
     loadThemeColors()
   }, [])
+
+  // 处理编辑主题
+  const handleEditTheme = (e: React.MouseEvent, theme: Theme) => {
+    e.stopPropagation()
+    setEditingTheme(theme)
+    setIsEditModalOpen(true)
+  }
 
   // 保存主题设置到后端
   const saveThemeSettings = async (newThemeId: ThemeId, newMode: 'light' | 'dark' | 'auto') => {
@@ -294,6 +319,7 @@ export default function ThemePage() {
                 isActive={previewTheme === theme.id}
                 isCurrent={themeId === theme.id}
                 onClick={() => handleThemeChange(theme.id)}
+                onEdit={(e) => handleEditTheme(e, theme)}
               />
             ))}
           </div>
@@ -328,17 +354,16 @@ export default function ThemePage() {
           </div>
         </motion.div>
 
-        {/* 颜色自定义 */}
-        {!isLoadingColors && (
-          <motion.div variants={itemVariants}>
-            <ThemeColorCustomizer
-              currentColors={themeColors}
-              isDark={isDark}
-              onColorsChange={setThemeColors}
-            />
-          </motion.div>
-        )}
       </motion.div>
+
+      {/* 主题编辑弹窗 */}
+      <ThemeEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        theme={editingTheme}
+        currentColors={themeColors}
+        onColorsChange={setThemeColors}
+      />
     </div>
   )
 }

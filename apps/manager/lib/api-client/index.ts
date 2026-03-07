@@ -147,3 +147,12 @@ export { dockConfigsApi } from './dock-configs'
 export { frontendNavApi } from './frontend-nav'
 export { systemConfigsApi } from './system-configs'
 export type { SystemConfigs, FileTransferConfig, UploadConfig, NotificationConfig } from './system-configs'
+
+// 导出壁纸管理模块
+export {
+  wallpaperLibraryApi,
+  wallpaperPresetsApi,
+  wallpaperDailyApi,
+  wallpaperSettingsApi,
+  wallpaperApi,
+} from './wallpaper'
