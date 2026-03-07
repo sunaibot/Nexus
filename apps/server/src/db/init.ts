@@ -9,6 +9,9 @@ import { setDatabase, forceSaveDatabase, getDbPath, hashPassword } from './core.
 import type { Database as SqlJsDatabase } from 'sql.js'
 import { createAllIndexes, analyzeQueries } from './migrations/addIndexes.js'
 import { initBuiltinPlugins } from './init-plugins.js'
+import { createLogger } from '../utils/simple-logger.js'
+
+const logger = createLogger('db')
 
 /**
  * 初始化数据库
@@ -22,12 +25,12 @@ export async function initDatabase(): Promise<SqlJsDatabase> {
   let db: SqlJsDatabase
   
   if (!isNewDatabase) {
-    console.log('📖 Loading existing database...')
+    logger.info('📖 Loading existing database...')
     const buffer = fs.readFileSync(dbPath)
     db = new SQL.Database(buffer)
     checkAndAddColumns(db)
   } else {
-    console.log('🆕 Creating new database...')
+    logger.info('🆕 Creating new database...')
     db = new SQL.Database()
   }
   
@@ -35,7 +38,7 @@ export async function initDatabase(): Promise<SqlJsDatabase> {
   createTables(db)
   
   if (isNewDatabase) {
-    console.log('📝 Initializing default data...')
+    logger.info('📝 Initializing default data...')
     await initDefaultData(db)
   } else {
     await ensureDefaultSettings(db)
@@ -922,11 +925,11 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
     if (result.length > 0) {
       const columns = result[0].values.map((row: any[]) => row[1])
       if (!columns.includes('visibility')) {
-        console.log('Adding visibility column to bookmarks table...')
+        logger.info('Adding visibility column to bookmarks table...')
         db.run("ALTER TABLE bookmarks ADD COLUMN visibility TEXT DEFAULT 'personal'")
       }
       if (!columns.includes('visitCount')) {
-        console.log('Adding visitCount column to bookmarks table...')
+        logger.info('Adding visitCount column to bookmarks table...')
         db.run("ALTER TABLE bookmarks ADD COLUMN visitCount INTEGER DEFAULT 0")
       }
     }
@@ -936,15 +939,15 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
     if (auditResult.length > 0) {
       const auditColumns = auditResult[0].values.map((row: any[]) => row[1])
       if (!auditColumns.includes('sessionId')) {
-        console.log('Adding sessionId column to audit_logs table...')
+        logger.info('Adding sessionId column to audit_logs table...')
         db.run('ALTER TABLE audit_logs ADD COLUMN sessionId TEXT')
       }
       if (!auditColumns.includes('deviceInfo')) {
-        console.log('Adding deviceInfo column to audit_logs table...')
+        logger.info('Adding deviceInfo column to audit_logs table...')
         db.run('ALTER TABLE audit_logs ADD COLUMN deviceInfo TEXT')
       }
       if (!auditColumns.includes('riskLevel')) {
-        console.log('Adding riskLevel column to audit_logs table...')
+        logger.info('Adding riskLevel column to audit_logs table...')
         db.run("ALTER TABLE audit_logs ADD COLUMN riskLevel TEXT DEFAULT 'low'")
       }
     }
@@ -960,7 +963,7 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
                            requiredColumns.some(col => !fileTransferColumns.includes(col))
       
       if (needsRebuild) {
-        console.log('Rebuilding file_transfers table with correct schema...')
+        logger.info('Rebuilding file_transfers table with correct schema...')
         
         // 备份旧数据
         const oldData = db.exec('SELECT * FROM file_transfers')
@@ -991,7 +994,7 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
         // 恢复数据（如果存在）
         if (oldData.length > 0 && oldData[0].values.length > 0) {
           const oldColumns = fileTransferResult[0].values.map((row: any[]) => row[1])
-          console.log(`Migrating ${oldData[0].values.length} existing records...`)
+          logger.info(`Migrating ${oldData[0].values.length} existing records...`)
           
           for (const row of oldData[0].values) {
             const id = row[0]
@@ -1013,7 +1016,7 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
               [id, userId, fileName, fileSize, fileType, null, extractCode, null, deleteCode, null, null, maxDownloads, downloadCount, expiryHours, createdAt, expiresAt]
             )
           }
-          console.log('Migration completed')
+          logger.info('Migration completed')
         }
       }
     }
@@ -1022,19 +1025,19 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
     if (pluginsResult.length > 0) {
       const pluginsColumns = pluginsResult[0].values.map((row: any[]) => row[1])
       if (!pluginsColumns.includes('visibility')) {
-        console.log('Adding visibility column to plugins table...')
+        logger.info('Adding visibility column to plugins table...')
         db.run("ALTER TABLE plugins ADD COLUMN visibility TEXT DEFAULT 'public'")
       }
       if (!pluginsColumns.includes('allowedRoles')) {
-        console.log('Adding allowedRoles column to plugins table...')
+        logger.info('Adding allowedRoles column to plugins table...')
         db.run("ALTER TABLE plugins ADD COLUMN allowedRoles TEXT")
       }
       if (!pluginsColumns.includes('builderData')) {
-        console.log('Adding builderData column to plugins table...')
+        logger.info('Adding builderData column to plugins table...')
         db.run("ALTER TABLE plugins ADD COLUMN builderData TEXT")
       }
       if (!pluginsColumns.includes('isCustom')) {
-        console.log('Adding isCustom column to plugins table...')
+        logger.info('Adding isCustom column to plugins table...')
         db.run("ALTER TABLE plugins ADD COLUMN isCustom INTEGER DEFAULT 0")
       }
     }
@@ -1044,11 +1047,11 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
     if (adminMenusResult.length > 0) {
       const adminMenusColumns = adminMenusResult[0].values.map((row: any[]) => row[1])
       if (!adminMenusColumns.includes('visibility')) {
-        console.log('Adding visibility column to admin_menus table...')
+        logger.info('Adding visibility column to admin_menus table...')
         db.run("ALTER TABLE admin_menus ADD COLUMN visibility TEXT DEFAULT 'public'")
       }
       if (!adminMenusColumns.includes('allowedRoles')) {
-        console.log('Adding allowedRoles column to admin_menus table...')
+        logger.info('Adding allowedRoles column to admin_menus table...')
         db.run("ALTER TABLE admin_menus ADD COLUMN allowedRoles TEXT")
       }
     }
@@ -1056,7 +1059,7 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
     // 检查 private_bookmark_passwords 表是否存在
     const tableResult = db.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_bookmark_passwords'")
     if (tableResult.length === 0) {
-      console.log('Creating private_bookmark_passwords table...')
+      logger.info('Creating private_bookmark_passwords table...')
       db.run(`
         CREATE TABLE IF NOT EXISTS private_bookmark_passwords (
           id TEXT PRIMARY KEY,
@@ -1068,7 +1071,7 @@ function checkAndAddColumns(db: SqlJsDatabase): void {
       `)
     }
   } catch (error) {
-    console.error('Error checking/adding columns:', error)
+    logger.error('Error checking/adding columns', error)
   }
 }
 
@@ -1088,9 +1091,9 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     ['admin', 'admin', adminPasswordHash, 'admin@example.com', 'admin', now, now]
   )
 
-  console.log('✅ Default admin user created')
-  console.log('⚠️  IMPORTANT: First login requires password change')
-  console.log('🔑  Default password: admin123')
+  logger.info('✅ Default admin user created')
+  logger.warn('⚠️  IMPORTANT: First login requires password change')
+  logger.info('🔑  Default password: admin123')
 
   // 初始化默认插件
   const defaultPlugins = [
@@ -1116,7 +1119,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default plugins created')
+  logger.info('✅ Default plugins created')
 
   // 初始化默认菜单
   const defaultMenus = [
@@ -1241,7 +1244,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default admin menus created')
+  logger.info('✅ Default admin menus created')
 
   // 初始化默认分类
   const defaultCategories = [
@@ -1295,7 +1298,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default categories created')
+  logger.info('✅ Default categories created')
 
   // 初始化默认 Tab（快速导航）
   const defaultTabs = [
@@ -1354,7 +1357,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default tabs created')
+  logger.info('✅ Default tabs created')
 
   // 初始化 Tab 和分类的关联
   const defaultTabCategories = [
@@ -1384,7 +1387,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default tab categories created')
+  logger.info('✅ Default tab categories created')
 
   // 初始化默认审计日志
   const defaultAuditLogs = [
@@ -1488,7 +1491,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default audit logs created')
+  logger.info('✅ Default audit logs created')
 
   // 初始化默认书签（国内可访问网站）
   const defaultBookmarks = [
@@ -1686,7 +1689,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     )
   }
 
-  console.log('✅ Default bookmarks created')
+  logger.info('✅ Default bookmarks created')
 
   // 初始化默认系统主题
   const defaultThemes = [
@@ -1839,7 +1842,7 @@ async function initDefaultData(db: SqlJsDatabase): Promise<void> {
     ['user', 'default-light', now, now]
   )
 
-  console.log('✅ Default themes created')
+  logger.info('✅ Default themes created')
 }
 
 /**
@@ -1878,9 +1881,9 @@ async function ensureDefaultUser(db: SqlJsDatabase): Promise<void> {
        VALUES (?, ?, ?, ?, ?, 1, 1, ?, ?)`,
       ['admin', 'admin', adminPasswordHash, 'admin@example.com', 'admin', now, now]
     )
-    console.log('✅ Default admin user created')
-    console.log('⚠️  IMPORTANT: First login requires password change')
-    console.log('🔑  Default password: admin123')
+    logger.info('✅ Default admin user created')
+    logger.warn('⚠️  IMPORTANT: First login requires password change')
+    logger.info('🔑  Default password: admin123')
   }
 }
 
@@ -1898,10 +1901,10 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       db.run('DELETE FROM admin_menus WHERE id = ? OR parentId = ?', ['audit', 'audit'])
       db.run('DELETE FROM user_menus WHERE menuId = ?', ['audit'])
       db.run('DELETE FROM role_menus WHERE menuId = ?', ['audit'])
-      console.log('🗑️ 已删除废弃的审计中心菜单')
+      logger.info('🗑️ 已删除废弃的审计中心菜单')
     }
   } catch (error) {
-    console.error('删除审计中心菜单时出错:', error)
+    logger.error('删除审计中心菜单时出错', error)
   }
 
   // 确保默认插件存在
@@ -1964,7 +1967,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [plugin.id, plugin.name, plugin.description, plugin.version, plugin.author, plugin.icon, plugin.isEnabled, plugin.isInstalled, plugin.visibility, plugin.orderIndex, now, now]
       )
-      console.log(`✅ Plugin "${plugin.name}" created`)
+      logger.info(`✅ Plugin "${plugin.name}" created`)
     }
   }
 
@@ -2062,7 +2065,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [menu.id, menu.name, menu.icon, menu.path, menu.isVisible, menu.isEnabled, menu.orderIndex, menu.visibility, now, now]
       )
-      console.log(`✅ Admin menu "${menu.name}" created`)
+      logger.info(`✅ Admin menu "${menu.name}" created`)
     }
   }
 
@@ -2074,15 +2077,15 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ['bookmark-card-styles', '书签样式', 'LayoutGrid', 'bookmark-card-styles', 1, 1, 6, 'public', now, now]
     )
-    console.log('✅ Admin menu "书签样式" created')
-    
+    logger.info('✅ Admin menu "书签样式" created')
+
     // 更新其他菜单的顺序
     db.run("UPDATE admin_menus SET orderIndex = 7 WHERE id = 'plugins'")
     db.run("UPDATE admin_menus SET orderIndex = 8 WHERE id = 'menus'")
     db.run("UPDATE admin_menus SET orderIndex = 9 WHERE id = 'users'")
     db.run("UPDATE admin_menus SET orderIndex = 10 WHERE id = 'settings'")
     db.run("UPDATE admin_menus SET orderIndex = 11 WHERE id = 'security'")
-    console.log('✅ Admin menu order indexes updated')
+    logger.info('✅ Admin menu order indexes updated')
   }
 
   // 迁移：删除系统配置的独立菜单（已合并到系统设置中）
@@ -2092,10 +2095,10 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
       db.run('DELETE FROM admin_menus WHERE id = ?', ['system-configs'])
       db.run('DELETE FROM user_menus WHERE menuId = ?', ['system-configs'])
       db.run('DELETE FROM role_menus WHERE menuId = ?', ['system-configs'])
-      console.log('🗑️ 已删除系统配置的独立菜单（已合并到系统设置）')
+      logger.info('🗑️ 已删除系统配置的独立菜单（已合并到系统设置）')
     }
   } catch (error) {
-    console.error('删除系统配置菜单时出错:', error)
+    logger.error('删除系统配置菜单时出错', error)
   }
 
   // 确保默认主题存在
@@ -2148,7 +2151,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
         [theme.id, theme.name, theme.description, theme.isDark, theme.isSystem, theme.isActive, theme.visibility, theme.colors, theme.layout, theme.font, theme.animation, theme.components, now, now]
       )
     }
-    console.log('✅ Default themes created')
+    logger.info('✅ Default themes created')
   }
 
   // 确保角色默认主题存在
@@ -2156,7 +2159,7 @@ async function ensureDefaultPluginsAndMenus(db: SqlJsDatabase): Promise<void> {
   if (roleThemesExist.length === 0) {
     db.run(`INSERT INTO role_default_themes (role, themeId, createdAt, updatedAt) VALUES (?, ?, ?, ?)`, ['admin', 'default-light', now, now])
     db.run(`INSERT INTO role_default_themes (role, themeId, createdAt, updatedAt) VALUES (?, ?, ?, ?)`, ['user', 'default-light', now, now])
-    console.log('✅ Role default themes created')
+    logger.info('✅ Role default themes created')
   }
 
   // 确保默认Dock配置存在
@@ -2187,7 +2190,7 @@ function ensureDefaultTabs(db: SqlJsDatabase): void {
     return
   }
 
-  console.log('📝 Creating default tabs...')
+  logger.info('📝 Creating default tabs...')
 
   // 初始化默认 Tab（快速导航）
   const defaultTabs = [
@@ -2246,7 +2249,7 @@ function ensureDefaultTabs(db: SqlJsDatabase): void {
     )
   }
 
-  console.log('✅ Default tabs created')
+  logger.info('✅ Default tabs created')
 
   // 获取所有分类
   const categoriesResult = db.exec('SELECT id FROM categories')
@@ -2272,7 +2275,7 @@ function ensureDefaultTabs(db: SqlJsDatabase): void {
     )
   }
 
-  console.log('✅ Default tab-category associations created')
+  logger.info('✅ Default tab-category associations created')
 }
 
 /**
@@ -2296,7 +2299,7 @@ function ensureDefaultDockConfigs(db: SqlJsDatabase, now: string): void {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ['default', '默认Dock配置', '系统默认Dock导航配置', defaultDockItems, 'global', 1, 1, now, now]
     )
-    console.log('✅ Default dock config created')
+    logger.info('✅ Default dock config created')
   }
 }
 
@@ -2322,7 +2325,7 @@ function ensureDefaultSettingsTabs(db: SqlJsDatabase, now: string): void {
         [tab.id, tab.tabId, tab.name, tab.labelKey, tab.descriptionKey, tab.icon, tab.gradient, tab.orderIndex, tab.visibility, now, now]
       )
     }
-    console.log('✅ Default settings tabs created')
+    logger.info('✅ Default settings tabs created')
   }
 }
 
@@ -2353,7 +2356,7 @@ function ensureDefaultFrontendNavItems(db: SqlJsDatabase, now: string): void {
         [item.id, item.navId, item.name, item.labelKey, item.icon, item.orderIndex, item.visibility, now, now]
       )
     }
-    console.log('✅ Default frontend nav items created')
+    logger.info('✅ Default frontend nav items created')
   }
 }
 
@@ -2544,7 +2547,7 @@ function ensureDefaultBookmarkCardStyles(db: SqlJsDatabase, now: string): void {
         ]
       )
     }
-    console.log('✅ Default bookmark card styles created')
+    logger.info('✅ Default bookmark card styles created')
   }
 }
 
@@ -2563,11 +2566,11 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
     // 迁移：为 categories 表添加 description 字段
     try {
       db.run('ALTER TABLE categories ADD COLUMN description TEXT')
-      console.log('✅ Migrated: Added description column to categories table')
+      logger.info('✅ Migrated: Added description column to categories table')
     } catch (e: any) {
       // 字段已存在时会报错，忽略
       if (!e.message?.includes('duplicate column')) {
-        console.error('Migration error (description):', e)
+        logger.error('Migration error (description)', e)
       }
     }
 
@@ -2775,10 +2778,10 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
       }
       
       if (addedCount > 0) {
-        console.log(`✅ Migrated: Added ${addedCount} default bookmark card styles`)
+        logger.info(`✅ Migrated: Added ${addedCount} default bookmark card styles`)
       }
     } catch (e: any) {
-      console.error('Migration error (bookmark card styles):', e)
+      logger.error('Migration error (bookmark card styles)', e)
     }
 
     // 迁移：创建系统配置表（如果不存在）
@@ -2791,9 +2794,9 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
           updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
         )
       `)
-      console.log('✅ Migrated: Ensured system_configs table exists')
+      logger.info('✅ Migrated: Ensured system_configs table exists')
     } catch (e: any) {
-      console.error('Migration error (system_configs):', e)
+      logger.error('Migration error (system_configs)', e)
     }
 
     // 迁移：初始化默认系统配置
@@ -2821,10 +2824,10 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
       }
 
       if (initCount > 0) {
-        console.log(`✅ Migrated: Initialized ${initCount} default system configs`)
+        logger.info(`✅ Migrated: Initialized ${initCount} default system configs`)
       }
     } catch (e: any) {
-      console.error('Migration error (default system configs):', e)
+      logger.error('Migration error (default system configs)', e)
     }
 
     // 迁移：为 notes 表添加待办事项增强字段
@@ -2839,10 +2842,10 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
     for (const column of noteColumns) {
       try {
         db.run(`ALTER TABLE notes ADD COLUMN ${column.name} ${column.type}`)
-        console.log(`✅ Migrated: Added ${column.name} column to notes table`)
+        logger.info(`✅ Migrated: Added ${column.name} column to notes table`)
       } catch (e: any) {
         if (!e.message?.includes('duplicate column')) {
-          console.error(`Migration error (${column.name}):`, e)
+          logger.error(`Migration error (${column.name})`, e)
         }
       }
     }
@@ -2850,14 +2853,14 @@ async function migrateDatabase(db: SqlJsDatabase): Promise<void> {
     // 迁移：为 note_folders 表添加颜色字段
     try {
       db.run('ALTER TABLE note_folders ADD COLUMN color TEXT')
-      console.log('✅ Migrated: Added color column to note_folders table')
+      logger.info('✅ Migrated: Added color column to note_folders table')
     } catch (e: any) {
       if (!e.message?.includes('duplicate column')) {
-        console.error('Migration error (folder color):', e)
+        logger.error('Migration error (folder color)', e)
       }
     }
   } catch (error) {
-    console.error('Migration error:', error)
+    logger.error('Migration error', error)
   }
 }
 
@@ -2890,12 +2893,12 @@ export function cleanupExpiredFileTransfers(db?: SqlJsDatabase): void {
         try {
           fs.unlinkSync(filePath)
         } catch (error) {
-          console.error('Failed to delete expired file:', filePath, error)
+          logger.error('Failed to delete expired file', error, { filePath })
         }
       }
     })
   }
 
   database.run('DELETE FROM file_transfers WHERE expiresAt < ?', [now])
-  console.log('🧹 Cleaned up expired file transfers')
+  logger.info('🧹 Cleaned up expired file transfers')
 }

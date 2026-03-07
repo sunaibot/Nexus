@@ -25,7 +25,9 @@ import {
 import { validateBody, validateParams, idParamSchema } from '../../../../schemas.js'
 import { z } from 'zod'
 import { logAudit } from '../../../../db/audit-enhanced.js'
+import { createLogger } from '../../../../utils/simple-logger.js'
 
+const logger = createLogger('notes')
 const router = Router()
 
 // 创建笔记验证schema
@@ -74,7 +76,7 @@ router.get('/all', authMiddleware, (req: Request, res: Response) => {
     const notes = getAllNotes()
     return successResponse(res, notes)
   } catch (error) {
-    console.error('获取所有笔记失败:', error)
+    logger.error('获取所有笔记失败', error)
     return errorResponse(res, '获取所有笔记失败')
   }
 })
@@ -92,7 +94,7 @@ router.get('/folders/all', authMiddleware, (req: Request, res: Response) => {
     const folders = getAllNoteFolders()
     return successResponse(res, folders)
   } catch (error) {
-    console.error('获取所有文件夹失败:', error)
+    logger.error('获取所有文件夹失败', error)
     return errorResponse(res, '获取所有文件夹失败')
   }
 })
@@ -111,7 +113,7 @@ router.get('/', authMiddleware, (req: Request, res: Response) => {
 
     return successResponse(res, notes)
   } catch (error) {
-    console.error('获取笔记列表失败:', error)
+    logger.error('获取笔记列表失败', error)
     return errorResponse(res, '获取笔记列表失败')
   }
 })
@@ -151,7 +153,7 @@ router.post('/', authMiddleware, validateBody(createNoteSchema), (req: Request, 
 
     return successResponse(res, note)
   } catch (error) {
-    console.error('创建笔记失败:', error)
+    logger.error('创建笔记失败', error)
     return errorResponse(res, '创建笔记失败')
   }
 })
@@ -169,7 +171,7 @@ router.get('/:id', authMiddleware, validateParams(idParamSchema), (req: Request,
 
     return successResponse(res, note)
   } catch (error) {
-    console.error('获取笔记失败:', error)
+    logger.error('获取笔记失败', error)
     return errorResponse(res, '获取笔记失败')
   }
 })
@@ -226,7 +228,7 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
 
     return successResponse(res, { id })
   } catch (error) {
-    console.error('更新笔记失败:', error)
+    logger.error('更新笔记失败', error)
     return errorResponse(res, '更新笔记失败')
   }
 })
@@ -263,7 +265,7 @@ router.delete('/:id', authMiddleware, validateParams(idParamSchema), (req: Reque
 
     return successResponse(res, { id })
   } catch (error) {
-    console.error('删除笔记失败:', error)
+    logger.error('删除笔记失败', error)
     return errorResponse(res, '删除笔记失败')
   }
 })
@@ -277,7 +279,7 @@ router.get('/folders/list', authMiddleware, (req: Request, res: Response) => {
     const folders = getUserNoteFolders(user.id)
     return successResponse(res, folders)
   } catch (error) {
-    console.error('获取文件夹列表失败:', error)
+    logger.error('获取文件夹列表失败', error)
     return errorResponse(res, '获取文件夹列表失败')
   }
 })
@@ -306,7 +308,7 @@ router.post('/folders', authMiddleware, validateBody(createFolderSchema), (req: 
 
     return successResponse(res, folder)
   } catch (error) {
-    console.error('创建文件夹失败:', error)
+    logger.error('创建文件夹失败', error)
     return errorResponse(res, '创建文件夹失败')
   }
 })
@@ -346,7 +348,7 @@ router.patch('/folders/:id', authMiddleware, validateParams(idParamSchema), vali
 
     return successResponse(res, { id })
   } catch (error) {
-    console.error('更新文件夹失败:', error)
+    logger.error('更新文件夹失败', error)
     return errorResponse(res, '更新文件夹失败')
   }
 })
@@ -377,7 +379,7 @@ router.delete('/folders/:id', authMiddleware, validateParams(idParamSchema), (re
 
     return successResponse(res, { id })
   } catch (error) {
-    console.error('删除文件夹失败:', error)
+    logger.error('删除文件夹失败', error)
     return errorResponse(res, '删除文件夹失败')
   }
 })
@@ -421,7 +423,7 @@ router.delete('/admin/:id', authMiddleware, validateParams(idParamSchema), (req:
 
     return successResponse(res, { id })
   } catch (error) {
-    console.error('删除笔记失败:', error)
+    logger.error('删除笔记失败', error)
     return errorResponse(res, '删除笔记失败')
   }
 })
@@ -470,7 +472,7 @@ router.delete('/folders/admin/:id', authMiddleware, validateParams(idParamSchema
 
     return successResponse(res, { id })
   } catch (error) {
-    console.error('删除文件夹失败:', error)
+    logger.error('删除文件夹失败', error)
     return errorResponse(res, '删除文件夹失败')
   }
 })
