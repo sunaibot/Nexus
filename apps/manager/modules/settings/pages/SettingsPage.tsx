@@ -25,6 +25,7 @@ import {
   FileText,
   Bell
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useToast } from '../../../components/admin/Toast'
 import { themes, useTheme } from '../../../hooks/useTheme'
 import { cn } from '../../../lib/utils'
@@ -2012,6 +2013,7 @@ function ConfigToggle({ label, checked, onChange }: {
 
 // 主组件
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const [activeModule, setActiveModule] = useState<SettingsModule>('site')
   const [settings, setSettings] = useState<Partial<SiteSettings>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -2025,13 +2027,13 @@ export default function SettingsPage() {
         const data = await fetchSettings()
         setSettings(data)
       } catch (error) {
-        showToast('error', '加载设置失败')
+        showToast('error', t('common.error'))
       } finally {
         setIsLoading(false)
       }
     }
     loadSettings()
-  }, [showToast])
+  }, [showToast, t])
 
   // 更新设置项
   const handleChange = (key: keyof SiteSettings, value: any) => {
@@ -2043,9 +2045,9 @@ export default function SettingsPage() {
     setIsSaving(true)
     try {
       await updateSettings(settings)
-      showToast('success', '设置已保存')
+      showToast('success', t('admin.settings.site.saved'))
     } catch (error) {
-      showToast('error', '保存失败')
+      showToast('error', t('common.error'))
     } finally {
       setIsSaving(false)
     }
@@ -2151,7 +2153,7 @@ export default function SettingsPage() {
                   ) : (
                     <Check className="w-4 h-4" />
                   )}
-                  保存设置
+                  {t('admin.settings.site.save')}
                 </motion.button>
               </div>
 

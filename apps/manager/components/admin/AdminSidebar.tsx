@@ -501,7 +501,7 @@ export function AdminSidebar({
           <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--color-border-light)' }}>
             <div className="flex items-center gap-3">
               {/* 后端服务状态 */}
-              <div className="flex items-center gap-1.5" title={`后端服务: ${serverStatus.status === 'online' ? '运行中' : serverStatus.status === 'offline' ? '离线' : '检测中'}${serverStatus.latency ? ` (${serverStatus.latency}ms)` : ''}`}>
+              <div className="flex items-center gap-1.5" title={`${t('admin.service.backend')}: ${serverStatus.status === 'online' ? t('admin.service.online') : serverStatus.status === 'offline' ? t('admin.service.offline') : t('admin.service.checking')}${serverStatus.latency ? ` (${serverStatus.latency}ms)` : ''}`}>
                 <div className={`w-2 h-2 rounded-full ${
                   serverStatus.status === 'online' ? 'bg-green-500' : 
                   serverStatus.status === 'offline' ? 'bg-red-500' : 
@@ -509,9 +509,9 @@ export function AdminSidebar({
                 }`} />
                 <Server className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
                 <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {serverStatus.status === 'online' ? '后端在线' : 
-                   serverStatus.status === 'offline' ? '后端离线' : 
-                   '检测中'}
+                  {serverStatus.status === 'online' ? t('admin.service.backend_online') : 
+                   serverStatus.status === 'offline' ? t('admin.service.backend_offline') : 
+                   t('admin.service.checking')}
                 </span>
               </div>
               
@@ -519,7 +519,7 @@ export function AdminSidebar({
               <div className="w-px h-3" style={{ background: 'var(--color-border)' }} />
               
               {/* 管理服务状态 */}
-              <div className="flex items-center gap-1.5" title={`管理服务: ${managerStatus.status === 'online' ? '运行中' : '离线'}${managerStatus.latency ? ` (加载${managerStatus.latency}ms)` : ''}`}>
+              <div className="flex items-center gap-1.5" title={`${t('admin.service.manager')}: ${managerStatus.status === 'online' ? t('admin.service.online') : t('admin.service.offline')}${managerStatus.latency ? ` (${managerStatus.latency}ms)` : ''}`}>
                 <div className={`w-2 h-2 rounded-full ${
                   managerStatus.status === 'online' ? 'bg-green-500' : 
                   managerStatus.status === 'offline' ? 'bg-red-500' : 
@@ -527,9 +527,9 @@ export function AdminSidebar({
                 }`} />
                 <Activity className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
                 <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {managerStatus.status === 'online' ? '管理在线' : 
-                   managerStatus.status === 'offline' ? '管理离线' : 
-                   '检测中'}
+                  {managerStatus.status === 'online' ? t('admin.service.manager_online') : 
+                   managerStatus.status === 'offline' ? t('admin.service.manager_offline') : 
+                   t('admin.service.checking')}
                 </span>
               </div>
               
@@ -537,7 +537,7 @@ export function AdminSidebar({
               <div className="w-px h-3" style={{ background: 'var(--color-border)' }} />
               
               {/* 前台服务状态 */}
-              <div className="flex items-center gap-1.5" title={`前台服务: ${frontendStatus.status === 'online' ? '运行中' : '离线'}${frontendStatus.latency ? ` (${frontendStatus.latency}ms)` : ''}`}>
+              <div className="flex items-center gap-1.5" title={`${t('admin.service.frontend')}: ${frontendStatus.status === 'online' ? t('admin.service.online') : t('admin.service.offline')}${frontendStatus.latency ? ` (${frontendStatus.latency}ms)` : ''}`}>
                 <div className={`w-2 h-2 rounded-full ${
                   frontendStatus.status === 'online' ? 'bg-green-500' : 
                   frontendStatus.status === 'offline' ? 'bg-red-500' : 
@@ -545,9 +545,9 @@ export function AdminSidebar({
                 }`} />
                 <Monitor className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
                 <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {frontendStatus.status === 'online' ? '前台在线' : 
-                   frontendStatus.status === 'offline' ? '前台离线' : 
-                   '检测中'}
+                  {frontendStatus.status === 'online' ? t('admin.service.frontend_online') : 
+                   frontendStatus.status === 'offline' ? t('admin.service.frontend_offline') : 
+                   t('admin.service.checking')}
                 </span>
               </div>
             </div>
@@ -558,15 +558,15 @@ export function AdminSidebar({
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-              <span className="ml-2 text-sm text-muted-foreground">加载中...</span>
+              <span className="ml-2 text-sm text-muted-foreground">{t('admin.service.loading')}</span>
             </div>
           ) : menus.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
                 <span className="text-destructive text-lg">!</span>
               </div>
-              <p className="text-sm text-muted-foreground">菜单加载失败</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">请检查后端服务状态</p>
+              <p className="text-sm text-muted-foreground">{t('admin.service.menu_load_failed')}</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">{t('admin.service.check_backend')}</p>
             </div>
           ) : (
             menus.map((item, index) => {
@@ -596,7 +596,7 @@ export function AdminSidebar({
             style={{ color: 'var(--color-text-muted)' }}
           >
             <FileCode className="w-5 h-5" />
-            <span className="text-sm font-medium">API 文档</span>
+            <span className="text-sm font-medium">{t('admin.service.api_docs')}</span>
           </motion.a>
 
           <motion.button
@@ -753,7 +753,7 @@ export function AdminSidebar({
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   <FileCode className="w-5 h-5" />
-                  <span className="text-sm font-medium">API 文档</span>
+                  <span className="text-sm font-medium">{t('admin.service.api_docs')}</span>
                 </motion.a>
 
                 <motion.button

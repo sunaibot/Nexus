@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Shield, AlertTriangle, Lock, Eye, Save, RefreshCw, Check, Info } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
 import { SSRFConfigPanel } from '../../../components/admin/SSRFConfig'
@@ -16,6 +17,7 @@ import {
 } from '../../../lib/api-client/security'
 
 export default function SecurityPage() {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const [config, setConfig] = useState<SecurityConfig | null>(null)
   const [stats, setStats] = useState<SecurityStats | null>(null)
@@ -238,10 +240,10 @@ export default function SecurityPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <Shield className="w-8 h-8" style={{ color: 'var(--color-primary)' }} />
-            安全管理
+            {t('admin.security.title')}
           </h1>
           <p className="mt-1" style={{ color: 'var(--color-text-muted)' }}>
-            管理系统安全配置、查看安全日志和监控异常活动
+            {t('admin.security.subtitle')}
           </p>
         </div>
         <button
@@ -254,7 +256,7 @@ export default function SecurityPage() {
           }}
         >
           <RefreshCw className="w-4 h-4" />
-          刷新
+          {t('common.refresh')}
         </button>
       </div>
 
@@ -266,44 +268,44 @@ export default function SecurityPage() {
             border: '1px solid var(--color-glass-border)'
           }}>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ color: 'var(--color-text-muted)' }}>今日请求</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.today_requests')}</span>
               <Eye className="h-4 w-4" style={{ color: 'var(--color-text-muted)' }} />
             </div>
             <div className="text-2xl font-bold">{stats.todayRequests}</div>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>总请求数</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.total_requests')}</p>
           </div>
           <div className="p-6 rounded-xl" style={{
             background: 'var(--color-bg-secondary)',
             border: '1px solid var(--color-glass-border)'
           }}>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ color: 'var(--color-text-muted)' }}>登录失败</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.failed_logins')}</span>
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
             </div>
             <div className="text-2xl font-bold">{stats.failedLogins}</div>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>24小时内</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.within_24h')}</p>
           </div>
           <div className="p-6 rounded-xl" style={{
             background: 'var(--color-bg-secondary)',
             border: '1px solid var(--color-glass-border)'
           }}>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ color: 'var(--color-text-muted)' }}>CSRF 拦截</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.csrf_blocked')}</span>
               <Lock className="h-4 w-4 text-red-500" />
             </div>
             <div className="text-2xl font-bold">{stats.csrfBlocked}</div>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>24小时内</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.within_24h')}</p>
           </div>
           <div className="p-6 rounded-xl" style={{
             background: 'var(--color-bg-secondary)',
             border: '1px solid var(--color-glass-border)'
           }}>
             <div className="flex items-center justify-between mb-2">
-              <span style={{ color: 'var(--color-text-muted)' }}>安全状态</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.security_status')}</span>
               <Shield className="h-4 w-4 text-green-500" />
             </div>
-            <div className="text-2xl font-bold text-green-600">正常</div>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>系统运行中</p>
+            <div className="text-2xl font-bold text-green-600">{t('admin.security.stats.normal')}</div>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.security.stats.system_running')}</p>
           </div>
         </div>
       )}
@@ -320,10 +322,10 @@ export default function SecurityPage() {
                 color: activeTab === tab ? 'var(--color-primary)' : 'var(--color-text-muted)'
               }}
             >
-              {tab === 'csrf' && 'CSRF 防护'}
-              {tab === 'ssrf' && 'SSRF 防护'}
-              {tab === 'logs' && '安全日志'}
-              {tab === 'alerts' && '异常告警'}
+              {tab === 'csrf' && 'CSRF'}
+              {tab === 'ssrf' && 'SSRF'}
+              {tab === 'logs' && t('admin.security.tabs.logs')}
+              {tab === 'alerts' && t('admin.security.tabs.alerts')}
               {activeTab === tab && (
                 <div
                   className="absolute bottom-0 left-0 right-0 h-0.5"
