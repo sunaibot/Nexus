@@ -134,55 +134,147 @@
 
 ```
 nexus-project/
-├── apps/
-│   ├── frontend/          # 前端用户界面
-│   │   ├── components/    # 组件目录
-│   │   ├── pages/         # 页面目录
-│   │   ├── plugins/       # 插件系统
-│   │   └── ...
-│   ├── manager/           # 管理后台
-│   │   ├── modules/       # 功能模块
-│   │   ├── components/    # 组件目录
-│   │   └── ...
-│   └── server/            # 后端 API 服务 (模块化架构)
-│       ├── src/
-│       │   ├── routes/    # API路由 (模块化)
-│       │   │   └── v2/
-│       │   │       └── modules/     # 路由模块
-│       │   │           ├── bookmarks/      # 书签模块
-│       │   │           ├── categories/     # 分类模块
-│       │   │           ├── plugins/        # 统一插件模块
-│       │   │           ├── widgets/        # 小部件模块
-│       │   │           ├── rss/            # RSS模块
-│       │   │           ├── notes/          # 笔记模块
-│       │   │           ├── notepads/       # 便签模块
-│       │   │           ├── quotes/         # 名言模块
-│       │   │           ├── visits/         # 访问统计模块
-│       │   │           ├── service-monitors/ # 服务监控模块
-│       │   │           └── metrics/        # 指标模块
-│       │   ├── db/        # 数据库 (模块化)
-│       │   │   └── modules/         # 数据库模块
-│       │   │       ├── bookmarks/    # 书签数据操作
-│       │   │       ├── categories/   # 分类数据操作
-│       │   │       ├── plugins/      # 插件数据操作
-│       │   │       ├── widgets/      # 小部件数据操作
-│       │   │       ├── rss/          # RSS数据操作
-│       │   │       ├── notes/        # 笔记数据操作
-│       │   │       ├── quotes/       # 名言数据操作
-│       │   │       └── ...           # 其他模块
-│       │   ├── features/  # 功能特性
-│       │   └── ...
-├── package.json           # 根项目配置
-└── README.md              # 项目说明
+├── 📁 apps/                          # 应用程序目录
+│   ├── 📁 frontend/                  # 🎨 前端用户界面 (React + Vite)
+│   │   ├── 📁 components/            # 公共组件
+│   │   │   ├── ui/                   # UI 基础组件
+│   │   │   ├── layout/               # 布局组件
+│   │   │   └── common/               # 通用组件
+│   │   ├── 📁 pages/                 # 页面组件
+│   │   │   ├── Home.tsx              # 首页
+│   │   │   ├── Bookmarks.tsx         # 书签页
+│   │   │   ├── Categories.tsx        # 分类页
+│   │   │   └── ...
+│   │   ├── 📁 plugins/               # 🔌 插件系统
+│   │   │   ├── core/                 # 插件核心
+│   │   │   ├── registry.ts           # 插件注册表
+│   │   │   └── built-in/             # 内置插件
+│   │   ├── 📁 hooks/                 # 自定义 Hooks
+│   │   ├── 📁 stores/                # 状态管理 (Zustand)
+│   │   ├── 📁 utils/                 # 工具函数
+│   │   ├── 📁 types/                 # TypeScript 类型定义
+│   │   ├── 📁 styles/                # 样式文件
+│   │   ├── 📁 i18n/                  # 国际化配置
+│   │   ├── index.html                # 入口 HTML
+│   │   ├── vite.config.ts            # Vite 配置
+│   │   └── package.json              # 前端依赖
+│   │
+│   ├── 📁 manager/                   # 🛠️ 管理后台 (React + Vite)
+│   │   ├── 📁 modules/               # 功能模块
+│   │   │   ├── dashboard/            # 仪表盘
+│   │   │   ├── bookmarks/            # 书签管理
+│   │   │   ├── categories/           # 分类管理
+│   │   │   ├── users/                # 用户管理
+│   │   │   ├── plugins/              # 插件管理
+│   │   │   ├── settings/             # 系统设置
+│   │   │   ├── security/             # 安全管理
+│   │   │   └── ...
+│   │   ├── 📁 components/            # 公共组件
+│   │   ├── 📁 hooks/                 # 自定义 Hooks
+│   │   ├── 📁 stores/                # 状态管理
+│   │   ├── 📁 utils/                 # 工具函数
+│   │   ├── 📁 types/                 # TypeScript 类型定义
+│   │   ├── index.html                # 入口 HTML
+│   │   ├── vite.config.ts            # Vite 配置
+│   │   └── package.json              # 管理端依赖
+│   │
+│   └── 📁 server/                    # 🔧 后端 API 服务 (Node.js + Express)
+│       ├── 📁 src/
+│       │   ├── 📁 routes/            # API 路由 (模块化)
+│       │   │   ├── v1/               # API v1 (旧版)
+│       │   │   └── 📁 v2/            # API v2 (当前版本)
+│       │   │       ├── index.ts      # 路由入口
+│       │   │       └── 📁 modules/   # 业务模块
+│       │   │           ├── bookmarks/      # 🔖 书签模块
+│       │   │           │   ├── index.ts    # 路由定义
+│       │   │           │   ├── schema.ts   # 数据校验
+│       │   │           │   └── types.ts    # 类型定义
+│       │   │           ├── categories/     # 📁 分类模块
+│       │   │           ├── plugins/        # 🔌 插件模块
+│       │   │           ├── widgets/        # 🎛️ 小部件模块
+│       │   │           ├── rss/            # 📡 RSS模块
+│       │   │           ├── notes/          # 📝 笔记模块
+│       │   │           ├── notepads/       # 📋 便签模块
+│       │   │           ├── quotes/         # 💬 名言模块
+│       │   │           ├── visits/         # 📊 访问统计模块
+│       │   │           ├── service-monitors/ # 📡 服务监控模块
+│       │   │           ├── metrics/        # 📈 指标模块
+│       │   │           ├── users/          # 👤 用户模块
+│       │   │           ├── auth/           # 🔐 认证模块
+│       │   │           ├── system/         # ⚙️ 系统模块
+│       │   │           ├── upload/         # 📤 文件上传模块
+│       │   │           └── ...
+│       │   │
+│       │   ├── 📁 db/                # 数据库层 (模块化)
+│       │   │   ├── index.ts          # 数据库入口
+│       │   │   ├── schema.ts         # 数据库结构定义
+│       │   │   ├── init.ts           # 初始化脚本
+│       │   │   └── 📁 modules/       # 数据操作模块
+│       │   │       ├── bookmarks.ts  # 书签数据操作
+│       │   │       ├── categories.ts # 分类数据操作
+│       │   │       ├── plugins.ts    # 插件数据操作
+│       │   │       ├── users.ts      # 用户数据操作
+│       │   │       ├── settings.ts   # 设置数据操作
+│       │   │       └── ...
+│       │   │
+│       │   ├── 📁 middleware/        # Express 中间件
+│       │   │   ├── auth.ts           # 认证中间件
+│       │   │   ├── error.ts          # 错误处理
+│       │   │   ├── cors.ts           # 跨域处理
+│       │   │   ├── rate-limit.ts     # 限流中间件
+│       │   │   └── security.ts       # 安全中间件
+│       │   │
+│       │   ├── 📁 utils/             # 工具函数
+│       │   │   ├── jwt.ts            # JWT 工具
+│       │   │   ├── password.ts       # 密码加密
+│       │   │   ├── ssrfProtection.ts # SSRF 防护
+│       │   │   ├── fileValidation.ts # 文件验证
+│       │   │   └── logger.ts         # 日志工具
+│       │   │
+       │   ├── 📁 features/          # 功能特性
+│       │   │   ├── webdav/           # WebDAV 同步
+│       │   │   ├── backup/           # 备份恢复
+│       │   │   └── sync/             # 数据同步
+│       │   │
+│       │   ├── 📁 types/             # 全局类型定义
+│       │   ├── index.ts              # 服务入口
+│       │   └── config.ts             # 配置文件
+│       │
+│       ├── 📁 scripts/               # 工具脚本
+│       ├── Dockerfile                # Docker 构建文件
+│       └── package.json              # 后端依赖
+│
+├── 📁 docs/                          # 📚 文档目录
+│   ├── deploy/                       # 部署文档
+│   │   └── fnos-docker-guide.md      # 飞牛 NAS 部署指南
+│   └── ...
+│
+├── 📁 data/                          # 💾 数据目录 (运行时生成)
+│   └── nexus.db                      # SQLite 数据库文件
+│
+├── 📄 docker-compose.yml             # Docker Compose 配置
+├── 📄 docker-compose.fnos.yml        # 飞牛 NAS 专用配置
+├── 📄 .env.example                   # 环境变量示例
+├── 📄 .gitignore                     # Git 忽略规则
+├── 📄 package.json                   # 根项目配置
+├── 📄 README.md                      # 项目说明
+├── 📄 LICENSE                        # 开源许可证
+├── 📄 SECURITY_AUDIT_REPORT.md       # 安全审计报告
+└── 📄 SECURITY_DEEP_ANALYSIS.md      # 安全深度分析
 ```
 
 ### 架构特点
 
-- **🧩 模块化设计** - 高内聚、低耦合的模块结构
-- **📦 独立数据库模块** - 每个模块拥有独立的数据访问层
-- **🔌 统一插件系统** - 内置插件和自定义插件统一管理
-- **🛡️ 分层权限控制** - 公开/个人/私有三级权限模型
-- **⚡ 缓存优化** - 模块级缓存策略，提升性能
+| 特性 | 说明 |
+|------|------|
+| **🧩 模块化设计** | 高内聚、低耦合的模块结构，每个模块独立开发、测试、部署 |
+| **📦 独立数据库层** | 每个业务模块拥有独立的数据访问层 (db/modules/*.ts) |
+| **🔌 统一插件系统** | 内置插件和自定义插件统一管理，支持动态加载 |
+| **🛡️ 分层权限控制** | 公开/个人/私有三级权限模型，细粒度 API 权限控制 |
+| **⚡ 缓存优化** | 模块级缓存策略，提升性能 |
+| **🔐 安全加固** | SSRF 防护、文件上传验证、密码加密、JWT 认证 |
+| **📱 响应式设计** | 前端完美适配桌面和移动设备 |
+| **🐳 Docker 支持** | 完整的容器化部署方案，支持 NAS 一键部署 |
 
 ---
 
