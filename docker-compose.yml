@@ -1,38 +1,45 @@
 # Nexus - 智能书签管理系统
-# NAS Docker Compose 配置
+# Docker Compose 配置文件
 # GitHub: https://github.com/sunaibot/Nexus
 #
-# ⚠️ 安全警告：部署前必须修改环境变量！
-#    1. 复制 .env.example 为 .env
-#    2. 修改 JWT_SECRET 和 SESSION_SECRET 为强随机字符串
-#    3. 建议修改默认端口映射
+# 🚀 快速开始：
+# 1. 复制 .env.example 为 .env
+# 2. 修改 .env 中的 JWT_SECRET 和 SESSION_SECRET
+# 3. 运行：docker-compose up -d
+#
+# 📖 飞牛 NAS 用户请看：docker-compose.fnos.yml
+# 📖 详细教程：docs/deploy/fnos-docker-guide.md
 
 version: '3.8'
 
 services:
-  # 后端服务
+  # ============================================
+  # 后端服务（API）
+  # ============================================
   nexus-server:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
     container_name: nexus-server
     restart: unless-stopped
-    # 安全：建议修改默认端口
     ports:
+      # 端口映射：主机端口:容器端口
+      # 如需修改，请同时修改 .env 中的 SERVER_PORT
       - "${SERVER_PORT:-8787}:8787"
     volumes:
-      # 数据持久化 - 飞牛 NAS 用户可修改此路径
+      # 数据持久化
+      # ${DATA_PATH} 在 .env 中定义，默认为 ./data
       - ${DATA_PATH:-./data}:/data
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=8787
       - DB_PATH=/data/zen-garden.db
-      # ⚠️ 必须修改：使用强随机字符串 (openssl rand -base64 32)
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
-      - SESSION_SECRET=${SESSION_SECRET:?SESSION_SECRET is required}
-      # 可选：限制允许访问的域名（生产环境建议设置）
+      # ⚠️ 安全密钥：必须在 .env 中设置！
+      - JWT_SECRET=${JWT_SECRET:?错误：请在 .env 中设置 JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET:?错误：请在 .env 中设置 SESSION_SECRET}
+      # 跨域设置（可选）
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
-      # 日志级别
+      # 日志级别：debug/info/warn/error
       - LOG_LEVEL=${LOG_LEVEL:-info}
     networks:
       - nexus-network
@@ -42,7 +49,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    # 安全：资源限制
+    # 资源限制（可根据 NAS 配置调整）
     deploy:
       resources:
         limits:
@@ -56,38 +63,41 @@ services:
     tmpfs:
       - /tmp:noexec,nosuid,size=100m
 
-  # 前端服务
+  # ============================================
+  # 前端服务（用户页面）
+  # ============================================
   nexus-frontend:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
     container_name: nexus-frontend
     restart: unless-stopped
-    # 安全：建议修改默认端口
     ports:
       - "${FRONTEND_PORT:-5173}:80"
     environment:
+      # API 地址（容器内部通信）
       - VITE_API_URL=http://nexus-server:8787
     networks:
       - nexus-network
     depends_on:
       nexus-server:
         condition: service_healthy
-    # 安全：资源限制
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 128M
 
-  # 管理后台（可选，如不需要可注释掉）
+  # ============================================
+  # 管理后台（可选）
+  # 如不需要可删除或注释掉此服务
+  # ============================================
   nexus-manager:
     build:
       context: .
       dockerfile: apps/manager/Dockerfile
     container_name: nexus-manager
     restart: unless-stopped
-    # 安全：建议修改默认端口
     ports:
       - "${MANAGER_PORT:-5174}:80"
     environment:
@@ -97,7 +107,6 @@ services:
     depends_on:
       nexus-server:
         condition: service_healthy
-    # 安全：资源限制
     deploy:
       resources:
         limits:
@@ -107,14 +116,53 @@ services:
 networks:
   nexus-network:
     driver: bridge
-    # 安全：内部网络隔离
-    internal: false
 
-# 安全部署检查清单：
-# □ 复制 .env.example 为 .env 并修改所有密钥
-# □ 修改默认端口映射（避免使用 5173, 5174, 8787）
-# □ 设置 ALLOWED_ORIGINS 限制访问来源
-# □ 配置 NAS 防火墙，只开放必要端口
-# □ 启用 HTTPS（建议使用反向代理）
-# □ 定期备份数据目录
-# □ 首次登录后立即修改管理员密码
+# ============================================
+# 🔧 部署步骤
+# ============================================
+#
+# 1. 准备环境变量文件
+#    cp .env.example .env
+#
+# 2. 编辑 .env 文件，修改以下必填项：
+#    - JWT_SECRET（运行：openssl rand -base64 32）
+#    - SESSION_SECRET（运行：openssl rand -base64 32）
+#    - 可选：修改默认端口（SERVER_PORT, FRONTEND_PORT, MANAGER_PORT）
+#
+# 3. 启动服务
+#    docker-compose up -d
+#
+# 4. 查看日志
+#    docker-compose logs -f
+#
+# 5. 访问服务
+#    - 前台：http://localhost:5173
+#    - 管理：http://localhost:5174
+#    - 默认账号：admin / admin123
+#
+# ============================================
+# ⚠️ 安全提示
+# ============================================
+#
+# 1. 必须修改默认密钥！
+#    使用命令生成：openssl rand -base64 32
+#
+# 2. 首次登录后必须修改密码
+#    默认密码：admin123
+#
+# 3. 公网访问建议：
+#    - 使用反向代理（Nginx/Caddy）
+#    - 配置 HTTPS
+#    - 设置 ALLOWED_ORIGINS 限制来源
+#
+# 4. 定期备份数据目录
+#    数据位置：./data（或你在 .env 中设置的路径）
+#
+# ============================================
+# 📞 获取帮助
+# ============================================
+#
+# - 飞牛 NAS 部署：docs/deploy/fnos-docker-guide.md
+# - 安全文档：SECURITY_DEEP_ANALYSIS.md
+# - GitHub Issues：https://github.com/sunaibot/Nexus/issues
+#
