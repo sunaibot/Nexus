@@ -341,9 +341,9 @@ export function useRenderCount(componentName: string) {
 
   useEffect(() => {
     count.current++
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[${componentName}] Render count:`, count.current)
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log(`[${componentName}] Render count:`, count.current)
+    // }
   })
 
   return count.current

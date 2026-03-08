@@ -90,13 +90,13 @@ export async function updateBookmark(
   id: string,
   data: UpdateBookmarkParams
 ): Promise<Bookmark> {
-  console.log('[updateBookmark] called with id:', id, 'data:', data)
+  // console.log('[updateBookmark] called with id:', id, 'data:', data)
   const response = await request<ApiResponse<Bookmark>>(`/v2/bookmarks/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
     requireAuth: true,
   })
-  console.log('[updateBookmark] response:', response)
+  // console.log('[updateBookmark] response:', response)
   invalidateCache('bookmarks:*')
   return response.data!
 }

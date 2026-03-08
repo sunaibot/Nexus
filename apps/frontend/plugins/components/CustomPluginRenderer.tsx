@@ -90,7 +90,7 @@ function renderComponent(comp: CanvasComponent, index: number): React.ReactNode 
           } : undefined}
           onClick={() => {
             // 处理点击事件
-            console.log('Button clicked:', comp.props.text)
+            // console.log('Button clicked:', comp.props.text)
           }}
         >
           {comp.props.text || '按钮'}

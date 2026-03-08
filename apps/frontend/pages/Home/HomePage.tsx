@@ -204,7 +204,7 @@ export function HomePage() {
             }}
             onAddTab={() => {
               // TODO: 打开添加 Tab 弹窗
-              console.log('添加 Tab')
+              // console.log('添加 Tab')
             }}
             isEditMode={isEditMode}
             readLaterCount={readLaterBookmarks.length}

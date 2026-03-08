@@ -272,7 +272,7 @@ function UserDropdown({ username, onLogout, onOpenCommand }: UserDropdownProps) 
       label: '个人设置',
       icon: Settings,
       onClick: () => {
-        console.log('打开个人设置')
+        // console.log('打开个人设置')
         setIsOpen(false)
       },
     },
@@ -281,7 +281,7 @@ function UserDropdown({ username, onLogout, onOpenCommand }: UserDropdownProps) 
       label: '安全中心',
       icon: Shield,
       onClick: () => {
-        console.log('打开安全中心')
+        // console.log('打开安全中心')
         setIsOpen(false)
       },
     },

@@ -321,17 +321,17 @@ export function useBookmarkStore() {
 
   // 切换置顶
   const togglePin = useCallback(async (id: string) => {
-    console.log('[togglePin] called with id:', id)
+    // console.log('[togglePin] called with id:', id)
     const bookmark = bookmarksRef.current.find(b => b.id === id)
     if (!bookmark) {
-      console.log('[togglePin] bookmark not found')
+      // console.log('[togglePin] bookmark not found')
       return
     }
 
     try {
-      console.log('[togglePin] calling updateBookmark with isPinned:', !bookmark.isPinned)
+      // console.log('[togglePin] calling updateBookmark with isPinned:', !bookmark.isPinned)
       const updated = await updateBookmark(id, { isPinned: !bookmark.isPinned })
-      console.log('[togglePin] updateBookmark success:', updated)
+      // console.log('[togglePin] updateBookmark success:', updated)
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '操作失败'

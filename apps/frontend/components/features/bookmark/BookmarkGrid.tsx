@@ -411,7 +411,7 @@ export function BookmarkGrid({
         {categoryTree.map(node => renderCategoryNode(node))}
 
         {/* 未分类书签 */}
-        {groupedBookmarks['uncategorized']?.filter(b => !b.isReadLater || b.isRead).length > 0 && (
+        {groupedBookmarks['uncategorized']?.filter(b => !b.isReadLater).length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

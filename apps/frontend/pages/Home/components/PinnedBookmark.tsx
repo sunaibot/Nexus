@@ -14,7 +14,7 @@ interface PinnedBookmarkProps {
 
 export function PinnedBookmark({ bookmark, onMarkRead }: PinnedBookmarkProps) {
   // 不显示稍后阅读的书签（它们只在稍后阅读标签页显示）
-  console.log('[PinnedBookmark] bookmark:', bookmark?.title, 'isReadLater:', bookmark?.isReadLater)
+  // console.log('[PinnedBookmark] bookmark:', bookmark?.title, 'isReadLater:', bookmark?.isReadLater)
   if (!bookmark || bookmark.isReadLater === true) return null
 
   return (

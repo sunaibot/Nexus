@@ -63,7 +63,7 @@ export function useHomePageData() {
   // 同步主题设置
   useEffect(() => {
     if (settingsLoaded && siteSettings.themeId && siteSettings.themeId !== themeId) {
-      console.log('[HomePage] Syncing theme from siteSettings:', siteSettings.themeId)
+      // console.log('[HomePage] Syncing theme from siteSettings:', siteSettings.themeId)
       setTheme(siteSettings.themeId as any)
     }
   }, [settingsLoaded, siteSettings.themeId, themeId, setTheme])

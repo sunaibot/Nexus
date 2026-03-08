@@ -277,7 +277,7 @@ export function showToast(options: ToastOptions) {
     toastCallback(options)
   } else {
     // 如果没有注册 Toast 处理器，使用 console
-    console.log(`[${options.type.toUpperCase()}] ${options.message}`)
+    // console.log(`[${options.type.toUpperCase()}] ${options.message}`)
   }
 }
 

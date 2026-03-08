@@ -131,7 +131,7 @@ export async function checkSessionAuthStatusAsync(): Promise<{
 // 清除 Session 认证状态
 export function clearSessionAuthStatus(): void {
   // Session 由后端管理，前端不需要做特殊处理
-  console.log('[SessionAuth] Auth status cleared')
+  // console.log('[SessionAuth] Auth status cleared')
 }
 
 // Session 认证 API 对象
