@@ -137,117 +137,713 @@ nexus-project/
 ├── 📁 apps/                          # 应用程序目录
 │   ├── 📁 frontend/                  # 🎨 前端用户界面 (React + Vite)
 │   │   ├── 📁 components/            # 公共组件
-│   │   │   ├── ui/                   # UI 基础组件
-│   │   │   ├── layout/               # 布局组件
-│   │   │   └── common/               # 通用组件
+│   │   │   ├── 📁 ui/                # UI 基础组件
+│   │   │   │   ├── spotlight-search.tsx      # 聚光灯搜索
+│   │   │   │   ├── spotlight-card.tsx        # 聚光灯卡片
+│   │   │   │   ├── floating-dock.tsx         # 浮动 Dock
+│   │   │   │   ├── mobile-floating-dock.tsx  # 移动端 Dock
+│   │   │   │   ├── bento-grid.tsx            # Bento 网格
+│   │   │   │   ├── 3d-card.tsx               # 3D 卡片效果
+│   │   │   │   ├── aurora-background.tsx     # 极光背景
+│   │   │   │   ├── background-beams-with-collision.tsx  # 光束背景
+│   │   │   │   ├── moving-border.tsx         # 流动边框
+│   │   │   │   ├── typewriter.tsx            # 打字机效果
+│   │   │   │   ├── scroll-to-top.tsx         # 返回顶部
+│   │   │   │   ├── sidebar-nav.tsx           # 侧边栏导航
+│   │   │   │   ├── effects.tsx               # 视觉效果
+│   │   │   │   ├── advanced-effects.tsx      # 高级特效
+│   │   │   │   ├── AnimatedNumber.tsx        # 动画数字
+│   │   │   │   ├── LazyImage.tsx             # 懒加载图片
+│   │   │   │   └── LazyComponent.tsx         # 懒加载组件
+│   │   │   ├── 📁 layout/            # 布局组件
+│   │   │   │   ├── Header.tsx        # 页面头部
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── 📁 home/              # 首页组件
+│   │   │   │   ├── HeroSection.tsx   # 英雄区域
+│   │   │   │   ├── EmptyState.tsx    # 空状态
+│   │   │   │   ├── WeatherDisplay.tsx # 天气显示
+│   │   │   │   ├── SearchHint.tsx    # 搜索提示
+│   │   │   │   ├── SortableCard.tsx  # 可排序卡片
+│   │   │   │   ├── LiteBackground.tsx # 轻量背景
+│   │   │   │   ├── BookmarkDragOverlay.tsx # 拖拽遮罩
+│   │   │   │   ├── PinnedBookmark.tsx # 固定书签
+│   │   │   │   ├── ReadLaterSection.tsx # 稍后阅读区
+│   │   │   │   ├── ReadLaterHero.tsx # 稍后阅读英雄区
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── 📁 admin/             # 管理组件
+│   │   │   │   ├── AdminSidebar.tsx  # 管理侧边栏
+│   │   │   │   ├── SiteSettingsCard.tsx # 站点设置卡片
+│   │   │   │   ├── WallpaperSettingsCard.tsx # 壁纸设置
+│   │   │   │   ├── WidgetSettingsCard.tsx # 小部件设置
+│   │   │   │   ├── ThemeCard.tsx     # 主题卡片
+│   │   │   │   ├── SecurityCard.tsx  # 安全卡片
+│   │   │   │   ├── QuotesCard.tsx    # 名言卡片
+│   │   │   │   ├── HealthCheckCard.tsx # 健康检查卡片
+│   │   │   │   ├── DataManagementCard.tsx # 数据管理卡片
+│   │   │   │   ├── AnalyticsCard.tsx # 分析卡片
+│   │   │   │   ├── SettingsPanel.tsx # 设置面板
+│   │   │   │   ├── Toast.tsx         # 提示组件
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── 📁 features/          # 功能组件
+│   │   │   │   ├── 📁 bookmark/      # 书签功能
+│   │   │   │   │   ├── BookmarkGrid.tsx      # 书签网格
+│   │   │   │   │   ├── BookmarkCard.tsx      # 书签卡片
+│   │   │   │   │   ├── AddBookmarkModal.tsx  # 添加书签弹窗
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   ├── 📁 category/      # 分类功能
+│   │   │   │   │   ├── CategoryEditModal.tsx # 分类编辑弹窗
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   └── 📁 system-monitor/ # 系统监控
+│   │   │   │       ├── SystemMonitorCard.tsx # 系统监控卡片
+│   │   │   │       └── index.ts              # 导出文件
+│   │   │   ├── 📁 plugin-system/     # 插件系统组件
+│   │   │   │   ├── PluginRenderer.tsx        # 插件渲染器
+│   │   │   │   ├── PluginSlot.tsx            # 插件插槽
+│   │   │   │   ├── PluginGridContainer.tsx   # 插件网格容器
+│   │   │   │   ├── CustomPluginList.tsx      # 自定义插件列表
+│   │   │   │   ├── CustomPluginRenderer.tsx  # 自定义插件渲染器
+│   │   │   │   ├── 📁 plugins/       # 内置插件组件
+│   │   │   │   │   ├── SearchPlugin.tsx      # 搜索插件
+│   │   │   │   │   ├── WeatherPlugin.tsx     # 天气插件
+│   │   │   │   │   ├── ClockPlugin.tsx       # 时钟插件
+│   │   │   │   │   └── QuotePlugin.tsx       # 名言插件
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── 📁 monitor/           # 监控组件
+│   │   │   │   ├── SystemMonitor.tsx         # 系统监控
+│   │   │   │   ├── MonitorWidget.tsx         # 监控小部件
+│   │   │   │   ├── MonitorTicker.tsx         # 监控滚动条
+│   │   │   │   ├── MonitorDashboard.tsx      # 监控仪表盘
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── 📁 file-transfer/     # 文件传输组件
+│   │   │   │   ├── FileTransferModal.tsx     # 文件传输弹窗
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── TabSidebar.tsx        # 标签侧边栏
+│   │   │   ├── HeroCard.tsx          # 英雄卡片
+│   │   │   ├── BookmarkGrid.tsx      # 书签网格
+│   │   │   ├── BookmarkCard.tsx      # 书签卡片
+│   │   │   ├── SortableBookmarkCard.tsx      # 可排序书签卡片
+│   │   │   ├── VirtualBookmarkList.tsx       # 虚拟书签列表
+│   │   │   ├── AddBookmarkModal.tsx  # 添加书签弹窗
+│   │   │   ├── CategoryEditModal.tsx # 分类编辑弹窗
+│   │   │   ├── CommandPalette.tsx    # 命令面板
+│   │   │   ├── ContextMenu.tsx       # 右键菜单
+│   │   │   ├── ErrorBoundary.tsx     # 错误边界
+│   │   │   ├── AdminLogin.tsx        # 管理员登录
+│   │   │   ├── ForcePasswordChange.tsx       # 强制修改密码
+│   │   │   ├── PrivatePasswordToggle.tsx     # 私有密码切换
+│   │   │   ├── IconifyPicker.tsx     # 图标选择器
+│   │   │   ├── IconRenderer.tsx      # 图标渲染器
+│   │   │   ├── IconManager.tsx       # 图标管理器
+│   │   │   ├── Spotlight.tsx         # 聚光灯效果
+│   │   │   ├── MeshGradient.tsx      # 网格渐变
+│   │   │   ├── HardwareIdentityCard.tsx      # 硬件身份卡片
+│   │   │   ├── HardwareSpecsCard.tsx         # 硬件规格卡片
+│   │   │   ├── VitalSignsCard.tsx    # 生命体征卡片
+│   │   │   ├── SystemMonitorCard.tsx # 系统监控卡片
+│   │   │   ├── ProcessMatrixCard.tsx # 进程矩阵卡片
+│   │   │   ├── NetworkTelemetryCard.tsx      # 网络遥测卡片
+│   │   │   └── BookmarkCardContent.tsx       # 书签卡片内容
+│   │   │
 │   │   ├── 📁 pages/                 # 页面组件
-│   │   │   ├── Home.tsx              # 首页
-│   │   │   ├── Bookmarks.tsx         # 书签页
-│   │   │   ├── Categories.tsx        # 分类页
-│   │   │   └── ...
+│   │   │   ├── 📁 Home/              # 首页
+│   │   │   │   ├── HomePage.tsx      # 首页主组件
+│   │   │   │   ├── index.ts          # 导出文件
+│   │   │   │   └── 📁 components/    # 首页子组件
+│   │   │   │       ├── BookmarkList.tsx      # 书签列表
+│   │   │   │       ├── PinnedBookmark.tsx    # 固定书签
+│   │   │   │       ├── WidgetSection.tsx     # 小部件区域
+│   │   │   │       ├── ReadLaterToggle.tsx   # 稍后阅读切换
+│   │   │   │       └── index.ts              # 导出文件
+│   │   │   ├── 📁 Admin/             # 管理页面
+│   │   │   │   ├── index.tsx         # 管理页面主组件
+│   │   │   │   ├── types.ts          # 类型定义
+│   │   │   │   ├── 📁 hooks/         # 管理页面 Hooks
+│   │   │   │   │   └── useAdminTabs.ts       # 管理标签页 Hook
+│   │   │   │   └── 📁 components/    # 管理页面组件
+│   │   │   │       ├── BookmarkManager.tsx   # 书签管理器
+│   │   │   │       └── CategoryManager.tsx   # 分类管理器
+│   │   │   ├── Admin.tsx             # 管理页面入口
+│   │   │   └── 📁 FileExtract/       # 文件提取页面
+│   │   │       └── index.tsx         # 文件提取组件
+│   │   │
 │   │   ├── 📁 plugins/               # 🔌 插件系统
-│   │   │   ├── core/                 # 插件核心
+│   │   │   ├── 📁 builtin/           # 内置插件
+│   │   │   │   ├── notes/            # 笔记插件
+│   │   │   │   │   ├── index.tsx     # 笔记插件入口
+│   │   │   │   │   └── TiptapEditor.tsx      # 富文本编辑器
+│   │   │   │   ├── todo-list/        # 待办事项插件
+│   │   │   │   │   └── index.tsx     # 待办事项入口
+│   │   │   │   ├── visits/           # 访问统计插件
+│   │   │   │   │   └── index.tsx     # 访问统计入口
+│   │   │   │   ├── rss/              # RSS 插件
+│   │   │   │   │   └── index.tsx     # RSS 入口
+│   │   │   │   ├── quote/            # 名言插件
+│   │   │   │   │   └── index.tsx     # 名言入口
+│   │   │   │   ├── weather/          # 天气插件
+│   │   │   │   │   └── index.tsx     # 天气入口
+│   │   │   │   └── file-transfer/    # 文件传输插件
+│   │   │   │       └── index.tsx     # 文件传输入口
+│   │   │   ├── 📁 components/        # 插件组件
+│   │   │   │   ├── PluginSlot.tsx            # 插件插槽
+│   │   │   │   ├── CustomPluginList.tsx      # 自定义插件列表
+│   │   │   │   └── CustomPluginRenderer.tsx  # 自定义插件渲染器
+│   │   │   ├── 📁 types/             # 插件类型
+│   │   │   │   ├── types.ts          # 基础类型
+│   │   │   │   └── builder.ts        # 构建器类型
+│   │   │   ├── 📁 hooks/             # 插件 Hooks
+│   │   │   │   └── usePluginSlots.ts # 插件插槽 Hook
 │   │   │   ├── registry.ts           # 插件注册表
-│   │   │   └── built-in/             # 内置插件
+│   │   │   ├── api.ts                # 插件 API
+│   │   │   └── index.ts              # 插件入口
+│   │   │
 │   │   ├── 📁 hooks/                 # 自定义 Hooks
+│   │   │   ├── 📁 domain/            # 领域 Hooks
+│   │   │   │   ├── useHomePageData.ts        # 首页数据 Hook
+│   │   │   │   ├── useUIState.ts             # UI 状态 Hook
+│   │   │   │   ├── useCategoryOperations.ts  # 分类操作 Hook
+│   │   │   │   ├── useBookmarkOperations.ts  # 书签操作 Hook
+│   │   │   │   └── index.ts          # 导出文件
+│   │   │   ├── useAuth.ts            # 认证 Hook
+│   │   │   ├── useBookmarkStore.ts   # 书签存储 Hook
+│   │   │   ├── useTheme.tsx          # 主题 Hook
+│   │   │   ├── useTime.ts            # 时间 Hook
+│   │   │   ├── useWeather.ts         # 天气 Hook
+│   │   │   ├── useServiceStatus.ts   # 服务状态 Hook
+│   │   │   ├── useSettingsSync.ts    # 设置同步 Hook
+│   │   │   ├── useSiteSettings.ts    # 站点设置 Hook
+│   │   │   ├── useDockConfigs.ts     # Dock 配置 Hook
+│   │   │   ├── useNetworkEnv.ts      # 网络环境 Hook
+│   │   │   ├── useSystemVital.ts     # 系统生命体征 Hook
+│   │   │   ├── usePerformance.ts     # 性能 Hook
+│   │   │   ├── useHomePage.ts        # 首页 Hook
+│   │   │   ├── useBookmarkCardStyle.ts       # 书签卡片样式 Hook
+│   │   │   ├── usePrivatePassword.ts # 私有密码 Hook
+│   │   │   ├── usePagination.ts      # 分页 Hook
+│   │   │   ├── useDragAndDrop.ts     # 拖拽 Hook
+│   │   │   ├── useForm.ts            # 表单 Hook
+│   │   │   ├── useAsync.ts           # 异步 Hook
+│   │   │   ├── useErrorHandler.ts    # 错误处理 Hook
+│   │   │   ├── useGlobalErrorHandler.ts      # 全局错误处理 Hook
+│   │   │   ├── useMemoizedSelectors.ts       # 记忆化选择器 Hook
+│   │   │   └── index.ts              # 导出文件
+│   │   │
 │   │   ├── 📁 stores/                # 状态管理 (Zustand)
+│   │   │   ├── settingsStore.ts      # 设置状态
+│   │   │   ├── uiStore.ts            # UI 状态
+│   │   │   └── index.ts              # 导出文件
+│   │   │
 │   │   ├── 📁 utils/                 # 工具函数
 │   │   ├── 📁 types/                 # TypeScript 类型定义
-│   │   ├── 📁 styles/                # 样式文件
-│   │   ├── 📁 i18n/                  # 国际化配置
+│   │   │   ├── bookmark.ts           # 书签类型
+│   │   │   ├── user.ts               # 用户类型
+│   │   │   ├── api.ts                # API 类型
+│   │   │   ├── tab.ts                # 标签类型
+│   │   │   ├── system.ts             # 系统类型
+│   │   │   └── index.ts              # 导出文件
+│   │   │
+│   │   ├── 📁 providers/             # React Providers
+│   │   │   ├── AppProviders.tsx      # 应用 Providers
+│   │   │   ├── ThemeColorProvider.tsx        # 主题颜色 Provider
+│   │   │   └── index.ts              # 导出文件
+│   │   │
+│   │   ├── 📁 routes/                # 路由配置
+│   │   │   └── index.tsx             # 路由定义
+│   │   │
+│   │   ├── 📁 __tests__/             # 测试文件
+│   │   │   ├── utils.test.ts         # 工具函数测试
+│   │   │   ├── usePagination.test.ts # 分页 Hook 测试
+│   │   │   ├── error-handling.test.ts        # 错误处理测试
+│   │   │   └── setup.ts              # 测试设置
+│   │   │
 │   │   ├── index.html                # 入口 HTML
+│   │   ├── index.css                 # 全局样式
 │   │   ├── vite.config.ts            # Vite 配置
+│   │   ├── tailwind.config.js        # Tailwind 配置
+│   │   ├── postcss.config.js         # PostCSS 配置
+│   │   ├── tsconfig.json             # TypeScript 配置
+│   │   ├── vite-env.d.ts             # Vite 环境类型
+│   │   ├── Dockerfile                # Docker 构建文件
 │   │   └── package.json              # 前端依赖
 │   │
 │   ├── 📁 manager/                   # 🛠️ 管理后台 (React + Vite)
 │   │   ├── 📁 modules/               # 功能模块
-│   │   │   ├── dashboard/            # 仪表盘
-│   │   │   ├── bookmarks/            # 书签管理
-│   │   │   ├── categories/           # 分类管理
-│   │   │   ├── users/                # 用户管理
-│   │   │   ├── plugins/              # 插件管理
-│   │   │   ├── settings/             # 系统设置
-│   │   │   ├── security/             # 安全管理
-│   │   │   └── ...
+│   │   │   ├── 📁 dashboard/         # 仪表盘模块
+│   │   │   │   └── index.tsx         # 仪表盘入口
+│   │   │   ├── 📁 bookmarks/         # 书签管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── config.ts         # 模块配置
+│   │   │   │   ├── types.ts          # 类型定义
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── BookmarksPage.tsx     # 书签页面
+│   │   │   │   ├── 📁 components/    # 组件
+│   │   │   │   │   ├── BookmarkManager.tsx   # 书签管理器
+│   │   │   │   │   ├── BookmarkTable.tsx     # 书签表格
+│   │   │   │   │   ├── BookmarkFormModal.tsx # 书签表单弹窗
+│   │   │   │   │   ├── SimpleBookmarkModal.tsx       # 简单书签弹窗
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   ├── 📁 hooks/         # Hooks
+│   │   │   │   │   ├── useBookmarks.ts       # 书签 Hook
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   │       └── ImportBookmarksModal.tsx      # 导入书签弹窗
+│   │   │   ├── 📁 categories/        # 分类管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── config.ts         # 模块配置
+│   │   │   │   ├── types.ts          # 类型定义
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── CategoriesPage.tsx    # 分类页面
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   │       ├── CategoryCard.tsx      # 分类卡片
+│   │   │   │       ├── CategoryTree.tsx      # 分类树
+│   │   │   │       ├── CategoryStats.tsx     # 分类统计
+│   │   │   │       ├── CategoryForm.tsx      # 分类表单
+│   │   │   │       ├── TabManager.tsx        # 标签管理器
+│   │   │   │       └── index.ts              # 导出文件
+│   │   │   ├── 📁 users/             # 用户管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── UsersPage.tsx         # 用户页面
+│   │   │   │   ├── 📁 components/    # 组件
+│   │   │   │   │   ├── UserCard.tsx          # 用户卡片
+│   │   │   │   │   ├── UserForm.tsx          # 用户表单
+│   │   │   │   │   ├── UserFilters.tsx       # 用户筛选
+│   │   │   │   │   ├── BatchActions.tsx      # 批量操作
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   ├── 📁 hooks/         # Hooks
+│   │   │   │   │   ├── useUsers.ts           # 用户 Hook
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   └── 📁 types/         # 类型
+│   │   │   │       └── user.ts               # 用户类型
+│   │   │   ├── 📁 plugins/           # 插件管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── api-unified.ts    # 统一 API
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── PluginsPage.tsx       # 插件页面
+│   │   │   │   ├── 📁 types/         # 类型
+│   │   │   │   │   ├── parts.ts              # 部件类型
+│   │   │   │   │   └── builder.ts            # 构建器类型
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   │       ├── UnifiedPluginManager/ # 统一插件管理器
+│   │   │   │       ├── PluginBuilder/        # 插件构建器
+│   │   │   │       ├── PartEditor/           # 部件编辑器
+│   │   │   │       ├── PartWorkshop/         # 部件工坊
+│   │   │   │       ├── QuoteManager/         # 名言管理器
+│   │   │   │       ├── RssManager/           # RSS 管理器
+│   │   │   │       ├── VisitsManager/        # 访问管理器
+│   │   │   │       ├── NotesManager/         # 笔记管理器
+│   │   │   │       ├── FileTransferManager/  # 文件传输管理器
+│   │   │   │       ├── NotificationManager/  # 通知管理器
+│   │   │   │       ├── WebDAVManager/        # WebDAV 管理器
+│   │   │   │       ├── SlotConfigManager/    # 插槽配置管理器
+│   │   │   │       └── PluginDisplayConfigManager/   # 插件显示配置
+│   │   │   ├── 📁 settings/          # 系统设置模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── api.ts            # API
+│   │   │   │   ├── types.ts          # 类型
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   ├── SettingsPage.tsx      # 设置页面
+│   │   │   │   │   └── SettingsTabsPage.tsx  # 设置标签页
+│   │   │   │   ├── 📁 hooks/         # Hooks
+│   │   │   │   │   ├── useSiteSettings.ts    # 站点设置 Hook
+│   │   │   │   │   ├── useWallpaperSettings.ts       # 壁纸设置 Hook
+│   │   │   │   │   ├── useThemeSettings.ts   # 主题设置 Hook
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   ├── 📁 security/          # 安全管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── SecurityPage.tsx      # 安全页面
+│   │   │   ├── 📁 wallpaper/         # 壁纸管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── types.ts          # 类型
+│   │   │   │   ├── api/              # API
+│   │   │   │   │   └── providers.ts          # 壁纸提供商 API
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── WallpaperPage.tsx     # 壁纸页面
+│   │   │   │   ├── 📁 hooks/         # Hooks
+│   │   │   │   │   ├── useWallpaper.ts       # 壁纸 Hook
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   │       ├── WallpaperPreview.tsx          # 壁纸预览
+│   │   │   │       ├── WallpaperProviderManager.tsx  # 壁纸提供商管理
+│   │   │   │       ├── PresetWallpaperGrid.tsx       # 预设壁纸网格
+│   │   │   │       ├── WallpaperLibrary.tsx          # 壁纸库
+│   │   │   │       ├── WallpaperUploader.tsx         # 壁纸上传器
+│   │   │   │       ├── DisplaySettings.tsx           # 显示设置
+│   │   │   │       ├── DailyWallpaperSettings.tsx    # 每日壁纸设置
+│   │   │   │       ├── DynamicWallpaperSettings.tsx  # 动态壁纸设置
+│   │   │   │       ├── SlideshowSettings.tsx         # 幻灯片设置
+│   │   │   │       ├── ScheduleSettings.tsx          # 计划设置
+│   │   │   │       └── AdvancedEffectsSettings.tsx   # 高级效果设置
+│   │   │   ├── 📁 theme/             # 主题管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── ThemePage.tsx         # 主题页面
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   │       ├── ThemeEditModal.tsx            # 主题编辑弹窗
+│   │   │   │       └── ThemeColorCustomizer.tsx      # 主题颜色自定义
+│   │   │   ├── 📁 system-monitor/    # 系统监控模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── SystemMonitorPage.tsx # 系统监控页面
+│   │   │   ├── 📁 analytics/         # 分析模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── AnalyticsPage.tsx     # 分析页面
+│   │   │   ├── 📁 system-configs/    # 系统配置模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── config.ts         # 配置
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── SystemConfigsPage.tsx # 系统配置页面
+│   │   │   ├── 📁 notes/             # 笔记模块
+│   │   │   │   └── index.tsx         # 模块入口
+│   │   │   ├── 📁 quotes/            # 名言模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── QuotesPage.tsx        # 名言页面
+│   │   │   ├── 📁 rss/               # RSS 模块
+│   │   │   │   └── index.tsx         # 模块入口
+│   │   │   ├── 📁 todo-list/         # 待办事项模块
+│   │   │   │   └── index.tsx         # 模块入口
+│   │   │   ├── 📁 file-transfer/     # 文件传输模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   ├── api.ts            # API
+│   │   │   │   ├── types.ts          # 类型
+│   │   │   │   ├── 📁 pages/         # 页面
+│   │   │   │   │   └── FileTransferPage.tsx  # 文件传输页面
+│   │   │   │   ├── 📁 hooks/         # Hooks
+│   │   │   │   │   ├── useFileTransfers.ts   # 文件传输 Hook
+│   │   │   │   │   └── index.ts              # 导出文件
+│   │   │   │   └── 📁 components/    # 组件
+│   │   │   ├── 📁 health-check/      # 健康检查模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── HealthCheckPage.tsx   # 健康检查页面
+│   │   │   ├── 📁 dock/              # Dock 配置模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── DockConfigsPage.tsx   # Dock 配置页面
+│   │   │   ├── 📁 menus/             # 菜单管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── MenusPage.tsx         # 菜单页面
+│   │   │   ├── 📁 navigation/        # 导航管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── NavItemsPage.tsx      # 导航项页面
+│   │   │   ├── 📁 icons/             # 图标管理模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── IconsPage.tsx         # 图标页面
+│   │   │   ├── 📁 bookmark-card-styles/      # 书签卡片样式模块
+│   │   │   │   ├── index.tsx         # 模块入口
+│   │   │   │   └── 📁 pages/         # 页面
+│   │   │   │       └── BookmarkCardStylesPage.tsx    # 书签卡片样式页面
+│   │   │   └── index.ts              # 模块导出
+│   │   │
 │   │   ├── 📁 components/            # 公共组件
-│   │   ├── 📁 hooks/                 # 自定义 Hooks
+│   │   │   ├── 📁 admin/             # 管理组件
+│   │   │   │   ├── AdminSidebar.tsx          # 管理侧边栏
+│   │   │   │   ├── SiteSettingsCard.tsx      # 站点设置卡片
+│   │   │   │   ├── WallpaperSettingsCard.tsx # 壁纸设置卡片
+│   │   │   │   ├── WidgetSettingsCard.tsx    # 小部件设置卡片
+│   │   │   │   ├── ThemeCard.tsx             # 主题卡片
+│   │   │   │   ├── SecurityCard.tsx          # 安全卡片
+│   │   │   │   ├── QuotesCard.tsx            # 名言卡片
+│   │   │   │   ├── HealthCheckCard.tsx       # 健康检查卡片
+│   │   │   │   ├── DataManagementCard.tsx    # 数据管理卡片
+│   │   │   │   ├── AnalyticsCard.tsx         # 分析卡片
+│   │   │   │   ├── SettingsPanel.tsx         # 设置面板
+│   │   │   │   ├── PrivatePasswordCard.tsx   # 私有密码卡片
+│   │   │   │   ├── Toast.tsx                 # 提示组件
+│   │   │   │   ├── SSRFConfig.tsx            # SSRF 配置
+│   │   │   │   └── index.ts                  # 导出文件
+│   │   │   ├── 📁 ui/                # UI 组件
+│   │   │   │   ├── spotlight-search.tsx      # 聚光灯搜索
+│   │   │   │   ├── spotlight-card.tsx        # 聚光灯卡片
+│   │   │   │   ├── floating-dock.tsx         # 浮动 Dock
+│   │   │   │   ├── mobile-floating-dock.tsx  # 移动端 Dock
+│   │   │   │   ├── bento-grid.tsx            # Bento 网格
+│   │   │   │   ├── 3d-card.tsx               # 3D 卡片
+│   │   │   │   ├── aurora-background.tsx     # 极光背景
+│   │   │   │   ├── background-beams-with-collision.tsx  # 光束背景
+│   │   │   │   ├── moving-border.tsx         # 流动边框
+│   │   │   │   ├── typewriter.tsx            # 打字机效果
+│   │   │   │   ├── scroll-to-top.tsx         # 返回顶部
+│   │   │   │   ├── sidebar-nav.tsx           # 侧边栏导航
+│   │   │   │   ├── effects.tsx               # 视觉效果
+│   │   │   │   ├── advanced-effects.tsx      # 高级特效
+│   │   │   │   ├── AnimatedNumber.tsx        # 动画数字
+│   │   │   │   └── index.ts                  # 导出文件
+│   │   │   ├── 📁 home/              # 首页组件
+│   │   │   │   ├── HeroSection.tsx           # 英雄区域
+│   │   │   │   ├── EmptyState.tsx            # 空状态
+│   │   │   │   ├── WeatherDisplay.tsx        # 天气显示
+│   │   │   │   ├── SearchHint.tsx            # 搜索提示
+│   │   │   │   ├── SortableCard.tsx          # 可排序卡片
+│   │   │   │   ├── LiteBackground.tsx        # 轻量背景
+│   │   │   │   ├── BookmarkDragOverlay.tsx   # 拖拽遮罩
+│   │   │   │   ├── ReadLaterSection.tsx      # 稍后阅读区
+│   │   │   │   ├── ReadLaterHero.tsx         # 稍后阅读英雄区
+│   │   │   │   └── index.ts                  # 导出文件
+│   │   │   ├── 📁 monitor/           # 监控组件
+│   │   │   │   ├── SystemMonitor.tsx         # 系统监控
+│   │   │   │   ├── MonitorWidget.tsx         # 监控小部件
+│   │   │   │   ├── MonitorTicker.tsx         # 监控滚动条
+│   │   │   │   ├── MonitorDashboard.tsx      # 监控仪表盘
+│   │   │   │   └── index.ts                  # 导出文件
+│   │   │   ├── AdminLogin.tsx        # 管理员登录
+│   │   │   ├── ForcePasswordChange.tsx       # 强制修改密码
+│   │   │   ├── PermissionWrapper.tsx # 权限包装器
+│   │   │   ├── Header.tsx            # 头部组件
+│   │   │   ├── CategoryEditModal.tsx # 分类编辑弹窗
+│   │   │   ├── BookmarkGrid.tsx      # 书签网格
+│   │   │   ├── BookmarkCard.tsx      # 书签卡片
+│   │   │   ├── BookmarkCardContent.tsx       # 书签卡片内容
+│   │   │   ├── SortableBookmarkCard.tsx      # 可排序书签卡片
+│   │   │   ├── VirtualBookmarkList.tsx       # 虚拟书签列表
+│   │   │   ├── BentoGrid.tsx         # Bento 网格
+│   │   │   ├── BentoCard.tsx         # Bento 卡片
+│   │   │   ├── CommandPalette.tsx    # 命令面板
+│   │   │   ├── ContextMenu.tsx       # 右键菜单
+│   │   │   ├── ErrorBoundary.tsx     # 错误边界
+│   │   │   ├── HeroCard.tsx          # 英雄卡片
+│   │   │   ├── Spotlight.tsx         # 聚光灯效果
+│   │   │   ├── MeshGradient.tsx      # 网格渐变
+│   │   │   ├── IconRenderer.tsx      # 图标渲染器
+│   │   │   ├── IconifyPicker.tsx     # 图标选择器
+│   │   │   ├── IconManager.tsx       # 图标管理器
+│   │   │   ├── HardwareIdentityCard.tsx      # 硬件身份卡片
+│   │   │   ├── HardwareSpecsCard.tsx         # 硬件规格卡片
+│   │   │   ├── VitalSignsCard.tsx    # 生命体征卡片
+│   │   │   ├── SystemMonitorCard.tsx # 系统监控卡片
+│   │   │   ├── ProcessMatrixCard.tsx # 进程矩阵卡片
+│   │   │   ├── NetworkTelemetryCard.tsx      # 网络遥测卡片
+│   │   │   └── TiptapEditor/         # 富文本编辑器
+│   │   │       ├── index.tsx         # 编辑器入口
+│   │   │       └── styles.css        # 编辑器样式
+│   │   │
+│   │   ├── 📁 pages/                 # 页面
+│   │   │   ├── Admin.tsx             # 管理页面
+│   │   │   ├── ForgotPassword.tsx    # 忘记密码
+│   │   │   └── ResetPassword.tsx     # 重置密码
+│   │   │
+│   │   ├── 📁 hooks/                 # Hooks
 │   │   ├── 📁 stores/                # 状态管理
 │   │   ├── 📁 utils/                 # 工具函数
-│   │   ├── 📁 types/                 # TypeScript 类型定义
+│   │   ├── 📁 types/                 # 类型定义
+│   │   ├── 📁 __tests__/             # 测试文件
 │   │   ├── index.html                # 入口 HTML
 │   │   ├── vite.config.ts            # Vite 配置
+│   │   ├── tailwind.config.js        # Tailwind 配置
+│   │   ├── postcss.config.js         # PostCSS 配置
+│   │   ├── tsconfig.json             # TypeScript 配置
+│   │   ├── vite-env.d.ts             # Vite 环境类型
+│   │   ├── Dockerfile                # Docker 构建文件
 │   │   └── package.json              # 管理端依赖
 │   │
 │   └── 📁 server/                    # 🔧 后端 API 服务 (Node.js + Express)
 │       ├── 📁 src/
-│       │   ├── 📁 routes/            # API 路由 (模块化)
-│       │   │   ├── v1/               # API v1 (旧版)
+│       │   ├── 📁 routes/            # API 路由
+│       │   │   ├── index.ts          # 路由入口
+│       │   │   ├── api-docs.ts       # API 文档
+│       │   │   ├── 📁 v1/            # API v1 (旧版)
 │       │   │   └── 📁 v2/            # API v2 (当前版本)
-│       │   │       ├── index.ts      # 路由入口
-│       │   │       └── 📁 modules/   # 业务模块
-│       │   │           ├── bookmarks/      # 🔖 书签模块
-│       │   │           │   ├── index.ts    # 路由定义
-│       │   │           │   ├── schema.ts   # 数据校验
-│       │   │           │   └── types.ts    # 类型定义
-│       │   │           ├── categories/     # 📁 分类模块
-│       │   │           ├── plugins/        # 🔌 插件模块
-│       │   │           ├── widgets/        # 🎛️ 小部件模块
-│       │   │           ├── rss/            # 📡 RSS模块
-│       │   │           ├── notes/          # 📝 笔记模块
-│       │   │           ├── notepads/       # 📋 便签模块
-│       │   │           ├── quotes/         # 💬 名言模块
-│       │   │           ├── visits/         # 📊 访问统计模块
-│       │   │           ├── service-monitors/ # 📡 服务监控模块
-│       │   │           ├── metrics/        # 📈 指标模块
-│       │   │           ├── users/          # 👤 用户模块
-│       │   │           ├── auth/           # 🔐 认证模块
-│       │   │           ├── system/         # ⚙️ 系统模块
-│       │   │           ├── upload/         # 📤 文件上传模块
-│       │   │           └── ...
+│       │   │       ├── index.ts      # v2 路由入口
+│       │   │       ├── auth.ts       # 认证路由
+│       │   │       ├── users.ts      # 用户路由
+│       │   │       ├── system.ts     # 系统路由
+│       │   │       ├── system-configs.ts     # 系统配置路由
+│       │   │       ├── settings.ts   # 设置路由
+│       │   │       ├── metadata.ts   # 元数据路由
+│       │   │       ├── data.ts       # 数据路由
+│       │   │       ├── security.ts   # 安全路由
+│       │   │       ├── stats.ts      # 统计路由
+│       │   │       ├── tabs.ts       # 标签路由
+│       │   │       ├── tags.ts       # 标签路由
+│       │   │       ├── theme.ts      # 主题路由
+│       │   │       ├── weather.ts    # 天气路由
+│       │   │       ├── wallpaper-providers.ts        # 壁纸提供商路由
+│       │   │       ├── bookmark-card-styles.ts       # 书签卡片样式路由
+│       │   │       ├── categories-enhanced.ts        # 增强分类路由
+│       │   │       ├── permissions.ts        # 权限路由
+│       │   │       ├── shares.ts     # 分享路由
+│       │   │       ├── batch.ts      # 批量操作路由
+│       │   │       ├── i18n.ts       # 国际化路由
+│       │   │       ├── admin.ts      # 管理员路由
+│       │   │       ├── admin-menus.ts        # 管理菜单路由
+│       │   │       ├── frontend-nav.ts       # 前端导航路由
+│       │   │       ├── settings-tabs.ts      # 设置标签路由
+│       │   │       ├── dock-configs.ts       # Dock 配置路由
+│       │   │       ├── plugin-slots.ts       # 插件插槽路由
+│       │   │       ├── plugin-display-configs.ts     # 插件显示配置路由
+│       │   │       ├── custom-icons.ts       # 自定义图标路由
+│       │   │       ├── announcements.ts      # 公告路由
+│       │   │       ├── audit-enhanced.ts     # 增强审计路由
+│       │   │       ├── ipFilters.ts  # IP 过滤路由
+│       │   │       ├── privateMode.ts        # 私有模式路由
+│       │   │       ├── session-auth.ts       # 会话认证路由
+│       │   │       └── 📁 modules/   # 业务模块路由
+│       │   │           ├── bookmarks/index.ts        # 书签模块
+│       │   │           ├── categories/index.ts       # 分类模块
+│       │   │           ├── plugins/index.ts          # 插件模块
+│       │   │           ├── widgets/index.ts          # 小部件模块
+│       │   │           ├── rss/index.ts              # RSS 模块
+│       │   │           ├── notes/index.ts            # 笔记模块
+│       │   │           ├── notepads/index.ts         # 便签模块
+│       │   │           ├── quotes/index.ts           # 名言模块
+│       │   │           ├── visits/index.ts           # 访问统计模块
+│       │   │           ├── service-monitors/index.ts # 服务监控模块
+│       │   │           ├── metrics/index.ts          # 指标模块
+│       │   │           └── wallpaper/index.ts        # 壁纸模块
 │       │   │
-│       │   ├── 📁 db/                # 数据库层 (模块化)
+│       │   ├── 📁 db/                # 数据库层
 │       │   │   ├── index.ts          # 数据库入口
-│       │   │   ├── schema.ts         # 数据库结构定义
+│       │   │   ├── core.ts           # 核心数据库操作
+│       │   │   ├── schema.ts         # 数据库结构
 │       │   │   ├── init.ts           # 初始化脚本
-│       │   │   └── 📁 modules/       # 数据操作模块
-│       │   │       ├── bookmarks.ts  # 书签数据操作
-│       │   │       ├── categories.ts # 分类数据操作
-│       │   │       ├── plugins.ts    # 插件数据操作
-│       │   │       ├── users.ts      # 用户数据操作
-│       │   │       ├── settings.ts   # 设置数据操作
-│       │   │       └── ...
+│       │   │   ├── init-plugins.ts   # 插件初始化
+│       │   │   ├── initial-data.ts   # 初始数据
+│       │   │   ├── users.ts          # 用户数据操作
+│       │   │   ├── bookmarks.ts      # 书签数据操作
+│       │   │   ├── settings.ts       # 设置数据操作
+│       │   │   ├── plugins.ts        # 插件数据操作
+│       │   │   ├── shares.ts         # 分享数据操作
+│       │   │   ├── tags.ts           # 标签数据操作
+│       │   │   ├── admin-menus.ts    # 管理菜单数据
+│       │   │   ├── audit-enhanced.ts # 增强审计数据
+│       │   │   ├── connection-pool.ts        # 连接池
+│       │   │   ├── 📁 migrations/    # 数据库迁移
+│       │   │   │   └── addIndexes.ts # 添加索引
+│       │   │   └── 📁 modules/       # 数据模块
+│       │   │       ├── bookmarks/index.ts    # 书签模块数据
+│       │   │       ├── categories/index.ts   # 分类模块数据
+│       │   │       ├── plugins/index.ts      # 插件模块数据
+│       │   │       ├── widgets/index.ts      # 小部件模块数据
+│       │   │       ├── rss/index.ts          # RSS 模块数据
+│       │   │       ├── notes/index.ts        # 笔记模块数据
+│       │   │       ├── notepads/index.ts     # 便签模块数据
+│       │   │       ├── quotes/index.ts       # 名言模块数据
+│       │   │       ├── visits/index.ts       # 访问统计模块数据
+│       │   │       ├── service-monitors/index.ts     # 服务监控数据
+│       │   │       ├── metrics/index.ts      # 指标模块数据
+│       │   │       ├── notifications/index.ts        # 通知模块数据
+│       │   │       ├── webdav/index.ts       # WebDAV 模块数据
+│       │   │       ├── file-transfer/index.ts        # 文件传输数据
+│       │   │       ├── settings-core/index.ts        # 设置核心数据
+│       │   │       ├── private-mode/index.ts # 私有模式数据
+│       │   │       ├── ip-filter/index.ts    # IP 过滤数据
+│       │   │       └── widgets/user-widgets.ts       # 用户小部件
 │       │   │
 │       │   ├── 📁 middleware/        # Express 中间件
+│       │   │   ├── index.ts          # 中间件入口
 │       │   │   ├── auth.ts           # 认证中间件
-│       │   │   ├── error.ts          # 错误处理
-│       │   │   ├── cors.ts           # 跨域处理
-│       │   │   ├── rate-limit.ts     # 限流中间件
-│       │   │   └── security.ts       # 安全中间件
+│       │   │   ├── sessionAuth.ts    # 会话认证中间件
+│       │   │   ├── permission.ts     # 权限中间件
+│       │   │   ├── csrf.ts           # CSRF 中间件
+│       │   │   ├── security.ts       # 安全中间件
+│       │   │   ├── securityValidator.ts      # 安全验证中间件
+│       │   │   ├── errorHandler.ts   # 错误处理中间件
+│       │   │   ├── errorLog.ts       # 错误日志中间件
+│       │   │   ├── auditLog.ts       # 审计日志中间件
+│       │   │   ├── auditAuto.ts      # 自动审计中间件
+│       │   │   ├── ipFilter.ts       # IP 过滤中间件
+│       │   │   ├── rateLimiter.ts    # 限流中间件
+│       │   │   └── apiCache.ts       # API 缓存中间件
 │       │   │
 │       │   ├── 📁 utils/             # 工具函数
+│       │   │   ├── index.ts          # 工具入口
 │       │   │   ├── jwt.ts            # JWT 工具
 │       │   │   ├── password.ts       # 密码加密
 │       │   │   ├── ssrfProtection.ts # SSRF 防护
 │       │   │   ├── fileValidation.ts # 文件验证
-│       │   │   └── logger.ts         # 日志工具
+│       │   │   ├── logger.ts         # 日志工具
+│       │   │   ├── simple-logger.ts  # 简单日志
+│       │   │   ├── cache.ts          # 缓存工具
+│       │   │   ├── database.ts       # 数据库工具
+│       │   │   ├── chunk-upload.ts   # 分片上传
+│       │   │   ├── ip-location.ts    # IP 定位
+│       │   │   ├── notifications.ts  # 通知工具
+│       │   │   ├── securityLock.ts   # 安全锁定
+│       │   │   ├── securityValidator.ts      # 安全验证
+│       │   │   ├── error-monitor.ts  # 错误监控
+│       │   │   └── envValidator.ts   # 环境验证
 │       │   │
-       │   ├── 📁 features/          # 功能特性
-│       │   │   ├── webdav/           # WebDAV 同步
-│       │   │   ├── backup/           # 备份恢复
-│       │   │   └── sync/             # 数据同步
+│       │   ├── 📁 services/          # 服务层
+│       │   │   ├── index.ts          # 服务入口
+│       │   │   ├── BaseService.ts    # 基础服务类
+│       │   │   ├── types.ts          # 服务类型
+│       │   │   ├── BookmarkService.ts        # 书签服务
+│       │   │   ├── UserService.ts    # 用户服务
+│       │   │   └── metadata.ts       # 元数据服务
 │       │   │
-│       │   ├── 📁 types/             # 全局类型定义
+│       │   ├── 📁 features/          # 功能特性
+│       │   │   ├── 📁 webdav/        # WebDAV 同步
+│       │   │   │   ├── routes.ts     # WebDAV 路由
+│       │   │   │   ├── service.ts    # WebDAV 服务
+│       │   │   │   └── types.ts      # WebDAV 类型
+│       │   │   ├── 📁 file-transfer/ # 文件传输
+│       │   │   │   ├── index.ts      # 入口
+│       │   │   │   ├── routes.ts     # 路由
+│       │   │   │   ├── service.ts    # 服务
+│       │   │   │   ├── repository.ts # 数据仓库
+│       │   │   │   └── types.ts      # 类型
+│       │   │   ├── 📁 notification/  # 通知功能
+│       │   │   │   ├── routes.ts     # 通知路由
+│       │   │   │   ├── service.ts    # 通知服务
+│       │   │   │   └── types.ts      # 通知类型
+│       │   │   ├── 📁 private-bookmark/      # 私有书签
+│       │   │   │   ├── index.ts      # 入口
+│       │   │   │   ├── routes.ts     # 路由
+│       │   │   │   ├── service.ts    # 服务
+│       │   │   │   ├── config.ts     # 配置
+│       │   │   │   └── types.ts      # 类型
+│       │   │   └── 📁 health-check/  # 健康检查
+│       │   │       ├── routes.ts     # 健康检查路由
+│       │   │       ├── service.ts    # 健康检查服务
+│       │   │       └── types.ts      # 健康检查类型
+│       │   │
+│       │   ├── 📁 core/              # 核心功能
+│       │   │   ├── 📁 config/        # 配置核心
+│       │   │   │   └── index.ts      # 配置入口
+│       │   │   └── 📁 permission/    # 权限核心
+│       │   │       ├── index.ts      # 权限入口
+│       │   │       ├── types.ts      # 权限类型
+│       │   │       ├── policies.ts   # 权限策略
+│       │   │       └── checker.ts    # 权限检查器
+│       │   │
+│       │   ├── 📁 routes/utils/      # 路由工具
+│       │   │   ├── index.ts          # 工具入口
+│       │   │   ├── routeHelpers.ts   # 路由辅助函数
+│       │   │   └── CrudRouter.ts     # CRUD 路由生成器
+│       │   │
+│       │   ├── 📁 types/             # 全局类型
+│       │   │   ├── index.ts          # 类型入口
+│       │   │   └── error-codes.ts    # 错误码定义
+│       │   │
+│       │   ├── 📁 data/              # 数据文件
+│       │   │   └── default-quotes.ts # 默认名言数据
+│       │   │
 │       │   ├── index.ts              # 服务入口
-│       │   └── config.ts             # 配置文件
+│       │   ├── config.ts             # 配置文件
+│       │   ├── schemas.ts            # 数据校验模式
+│       │   └── types.d.ts            # 类型声明
 │       │
 │       ├── 📁 scripts/               # 工具脚本
 │       ├── Dockerfile                # Docker 构建文件
 │       └── package.json              # 后端依赖
 │
 ├── 📁 docs/                          # 📚 文档目录
-│   ├── deploy/                       # 部署文档
-│   │   └── fnos-docker-guide.md      # 飞牛 NAS 部署指南
-│   └── ...
+│   ├── 📁 deploy/                    # 部署文档
+│   │   ├── fnos-docker-guide.md      # 飞牛 NAS Docker 指南
+│   │   ├── fn-nas-docker.md          # 飞牛 NAS 部署文档
+│   │   └── SECURITY.md               # 部署安全指南
+│   ├── PLUGIN_BUILDER_GUIDE.md       # 插件构建指南
+│   ├── BUILTIN_PLUGINS_BLUEPRINT.md  # 内置插件蓝图
+│   ├── QUICK_START.md                # 快速开始
+│   ├── INTERACTIVE_TUTORIAL.md       # 交互式教程
+│   ├── security-audit-report.md      # 安全审计报告
+│   └── security-deployment-guide.md  # 安全部署指南
 │
 ├── 📁 data/                          # 💾 数据目录 (运行时生成)
 │   └── nexus.db                      # SQLite 数据库文件
