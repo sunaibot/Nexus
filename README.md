@@ -238,195 +238,180 @@ Docker Compose 部署需要以下配置文件：
 | 文件 | 说明 | 必需 |
 |------|------|------|
 | `docker-compose.yml` | Docker Compose 主配置文件 | ✅ |
+| `docker-compose.fnos.yml` | 飞牛 NAS 专用配置（推荐飞牛用户使用） | ✅ |
 | `.env` | 环境变量配置文件 | ✅ |
 | `Dockerfile` (各应用) | 应用构建文件 (已包含在项目中) | ✅ |
 
 **快速配置步骤：**
-1. 复制项目中的 `docker-compose.yml` 和 `.env.example`
+1. 复制项目中的 `docker-compose.yml`（或 `docker-compose.fnos.yml`）和 `.env.example`
 2. 将 `.env.example` 重命名为 `.env`
 3. 修改 `.env` 中的配置（端口、密钥、数据路径）
 4. 执行 `docker-compose up -d` 启动服务
 
 ---
 
-### 📋 部署前准备
+### � 快速开始（3分钟部署）
 
-#### 1. 确认 Docker 环境
-
-确保您的 NAS 已安装 Docker 和 Docker Compose：
+#### 飞牛 NAS 用户（推荐）
 
 ```bash
-# 检查 Docker 版本
-docker --version
+# 1. 创建并进入目录
+mkdir -p /vol1/docker/nexus && cd /vol1/docker/nexus
 
-# 检查 Docker Compose 版本
-docker-compose --version
+# 2. 克隆项目
+git clone https://github.com/sunaibot/Nexus.git .
+
+# 3. 生成安全密钥（运行两次，分别用于 JWT_SECRET 和 SESSION_SECRET）
+openssl rand -base64 32
+
+# 4. 编辑 docker-compose.fnos.yml，填入上面生成的两个密钥
+# 修改 JWT_SECRET 和 SESSION_SECRET 的值
+
+# 5. 启动服务
+docker-compose -f docker-compose.fnos.yml up -d
 ```
 
-#### 2. 创建项目目录
+#### 其他 NAS / 通用部署
 
-在 NAS 上创建项目存放目录：
-
-**飞牛 NAS 示例：**
 ```bash
-# 通过 SSH 登录飞牛 NAS
-ssh root@你的飞牛IP
+# 1. 创建并进入目录
+mkdir -p /path/to/nexus && cd /path/to/nexus
 
-# 创建项目目录
-mkdir -p /vol1/1000/docker/nexus
-cd /vol1/1000/docker/nexus
-```
+# 2. 克隆项目
+git clone https://github.com/sunaibot/Nexus.git .
 
-**群晖 NAS 示例：**
-```bash
-# 通过 SSH 登录群晖
-ssh admin@你的群晖IP
+# 3. 复制环境变量文件
+cp .env.example .env
 
-# 创建项目目录
-mkdir -p /volume1/docker/nexus
-cd /volume1/docker/nexus
+# 4. 编辑 .env 文件，修改 JWT_SECRET 和 SESSION_SECRET
+# 生成密钥：openssl rand -base64 32
+
+# 5. 启动服务
+docker-compose up -d
 ```
 
 ---
 
-### 🚀 详细部署步骤
+### 📋 详细部署步骤
 
-#### 步骤 1：下载项目文件
+#### 步骤 1：准备环境
 
-**方式一：使用 Git 克隆（推荐）**
+**确认 Docker 环境：**
+```bash
+docker --version
+docker-compose --version
+```
+
+**创建项目目录：**
+```bash
+# 飞牛 NAS
+mkdir -p /vol1/docker/nexus
+cd /vol1/docker/nexus
+
+# 群晖 NAS
+mkdir -p /volume1/docker/nexus
+cd /volume1/docker/nexus
+```
+
+#### 步骤 2：下载项目
 
 ```bash
-# 进入项目目录
-cd /vol1/1000/docker/nexus  # 飞牛 NAS 示例路径
-
-# 克隆项目
 git clone https://github.com/sunaibot/Nexus.git .
 ```
 
-**方式二：手动下载上传**
+#### 步骤 3：生成安全密钥
 
-1. 在电脑上下载项目 ZIP 文件：`https://github.com/sunaibot/Nexus/archive/refs/heads/main.zip`
-2. 解压 ZIP 文件
-3. 通过 NAS 文件管理器上传到 `/vol1/1000/docker/nexus` 目录
-
-#### 步骤 2：创建 Docker Compose 配置文件
-
-在项目根目录创建 `docker-compose.yml` 文件：
-
-```yaml
-# Nexus - 智能书签管理系统
-# Docker Compose 配置文件
-
-version: '3.8'
-
-services:
-  # 后端 API 服务
-  nexus-server:
-    build:
-      context: ./apps/server
-      dockerfile: Dockerfile
-    container_name: nexus-server
-    restart: unless-stopped
-    ports:
-      - "${SERVER_PORT:-8787}:8787"
-    environment:
-      - NODE_ENV=${NODE_ENV:-production}
-      - PORT=8787
-      - JWT_SECRET=${JWT_SECRET}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - DATABASE_PATH=${DATABASE_PATH:-/app/data/nexus.db}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-    volumes:
-      - ${DATA_PATH:-./data}:/app/data
-    networks:
-      - nexus-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8787/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # 前端用户界面
-  nexus-frontend:
-    build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
-    container_name: nexus-frontend
-    restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-5173}:80"
-    environment:
-      - VITE_API_BASE_URL=http://nexus-server:8787
-    depends_on:
-      - nexus-server
-    networks:
-      - nexus-network
-
-  # 管理后台
-  nexus-manager:
-    build:
-      context: ./apps/manager
-      dockerfile: Dockerfile
-    container_name: nexus-manager
-    restart: unless-stopped
-    ports:
-      - "${MANAGER_PORT:-5174}:80"
-    environment:
-      - VITE_API_BASE_URL=http://nexus-server:8787
-    depends_on:
-      - nexus-server
-    networks:
-      - nexus-network
-
-networks:
-  nexus-network:
-    driver: bridge
+```bash
+# 运行两次，生成两个不同的密钥
+openssl rand -base64 32
 ```
 
-同时创建 `.env` 环境变量文件（参考项目根目录的 `.env.example`）：
+#### 步骤 4：配置环境变量
 
-```env
-# ============================================
-# Nexus 环境变量配置
-# ============================================
+**飞牛 NAS 用户：** 编辑 `docker-compose.fnos.yml`
 
-# 服务端口配置（可根据需要修改）
+**其他用户：** 编辑 `.env` 文件
+
+需要修改的关键配置：
+```yaml
+# 安全密钥（必须修改！）
+JWT_SECRET=你的第一个密钥
+SESSION_SECRET=你的第二个密钥
+
+# 端口（可选，建议修改避免冲突）
 SERVER_PORT=8787
 FRONTEND_PORT=5173
 MANAGER_PORT=5174
 
-# 数据存储路径（必须设置为绝对路径）
-# 飞牛 NAS 示例: /vol1/1000/docker/nexus/data
-# 群晖 NAS 示例: /volume1/docker/nexus/data
+# 数据路径（飞牛 NAS 建议修改）
+# 飞牛: /vol1/docker/nexus/data
+# 群晖: /volume1/docker/nexus/data
 DATA_PATH=./data
-
-# 安全密钥（必须修改！使用强随机字符串）
-# 生成命令: openssl rand -base64 32
-JWT_SECRET=your-jwt-secret-key-here
-SESSION_SECRET=your-session-secret-key-here
-
-# 运行环境
-NODE_ENV=production
-
-# 日志级别 (debug, info, warn, error)
-LOG_LEVEL=info
-
-# 数据库路径（容器内路径，一般不需要修改）
-DATABASE_PATH=/app/data/nexus.db
 ```
 
-#### 步骤 3：配置环境变量
-
-复制示例配置文件：
+#### 步骤 5：启动服务
 
 ```bash
-cp .env.example .env
+# 飞牛 NAS
+docker-compose -f docker-compose.fnos.yml up -d
+
+# 其他
+docker-compose up -d
 ```
 
-编辑 `.env` 文件，修改以下关键配置：
+#### 步骤 6：访问服务
 
-```env
+| 服务 | 访问地址 | 说明 |
+|------|----------|------|
+| **前台页面** | `http://你的NAS-IP:5173` | 用户导航主页 |
+| **管理后台** | `http://你的NAS-IP:5174` | 管理员界面 |
+| **默认账号** | `admin` / `admin123` | 首次登录后必须修改密码 |
+
+---
+
+### 🔐 首次配置（重要！）
+
+#### 1. 修改默认密码
+- 访问管理后台 `http://你的NAS-IP:5174`
+- 使用 `admin` / `admin123` 登录
+- 系统会强制要求修改密码
+
+#### 2. 配置 SSRF（NAS用户必做）
+由于是内网部署，需要开启内网访问：
+1. 登录管理后台
+2. 进入「安全管理」→「SSRF防护」
+3. 开启「允许访问内网地址」
+4. 保存配置
+
+这样你就可以监控内网服务（如路由器、其他 Docker 容器）了。
+
+---
+
+### 📖 详细教程
+
+- **飞牛 NAS 专属指南**：[docs/deploy/fnos-docker-guide.md](docs/deploy/fnos-docker-guide.md)
+- **通用部署指南**：本文档下方「详细配置说明」章节
+- **安全文档**：[SECURITY_DEEP_ANALYSIS.md](SECURITY_DEEP_ANALYSIS.md)
+
+---
+
+### ❓ 常见问题
+
+**Q: 端口冲突怎么办？**  
+A: 修改 `.env` 或 `docker-compose.fnos.yml` 中的端口配置，使用其他端口。
+
+**Q: 数据存储在哪里？**  
+A: 默认存储在 `./data` 目录，可通过 `DATA_PATH` 环境变量修改。
+
+**Q: 如何更新到新版？**  
+A: 执行 `git pull` 拉取最新代码，然后 `docker-compose up -d` 重启。
+
+**Q: 如何备份数据？**  
+A: 备份 `DATA_PATH` 指定的数据目录即可。
+
+---
+
+### 详细配置说明
 # ============================================
 # ⚠️ 必须修改：安全密钥（使用强随机字符串）
 # 生成方法: openssl rand -base64 32
