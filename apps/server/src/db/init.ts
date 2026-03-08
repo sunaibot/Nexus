@@ -96,6 +96,19 @@ function createTables(db: SqlJsDatabase): void {
     )
   `)
 
+  // 密码重置令牌表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expiresAt INTEGER NOT NULL,
+      used INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `)
+
   // 书签表
   db.run(`
     CREATE TABLE IF NOT EXISTS bookmarks (

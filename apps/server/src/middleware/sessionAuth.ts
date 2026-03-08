@@ -36,11 +36,6 @@ declare global {
  * 检查用户是否已登录（通过 Session）
  */
 export function sessionAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
-  // 调试日志
-  console.log('[Session Debug] Cookies:', req.headers.cookie)
-  console.log('[Session Debug] Session ID:', req.sessionID)
-  console.log('[Session Debug] Session:', req.session)
-
   // 检查 Session 中是否有用户信息
   if (req.session && req.session.userId && req.session.username && req.session.role) {
     // 将用户信息附加到请求对象
@@ -50,13 +45,11 @@ export function sessionAuthMiddleware(req: Request, res: Response, next: NextFun
       role: req.session.role,
       email: req.session.email
     }
-    console.log('[Session Debug] User authenticated:', req.sessionUser)
     next()
     return
   }
 
   // 未登录，返回 401
-  console.log('[Session Debug] User not authenticated')
   res.status(401).json({
     success: false,
     error: {

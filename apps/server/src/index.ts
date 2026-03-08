@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import session from 'express-session'
 import { initDatabase, cleanupExpiredFileTransfers } from './db/index.js'
 import { generalLimiter, errorHandler, notFoundHandler, requestLogger, sqlInjectionDetector, contentTypeValidator, doubleSubmitCsrf, refererCheck, autoAuditMiddleware, errorLogMiddleware } from './middleware/index.js'
@@ -43,22 +44,56 @@ console.log(`
 
 // ========== 中间件配置 ==========
 
+// Helmet 安全响应头
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'"],
+      mediaSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  xFrameOptions: { action: 'sameorigin' },
+  xContentTypeOptions: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginEmbedderPolicy: false, // 允许加载外部资源
+}));
+
 // CORS 配置
 app.use(cors({
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // 允许未定义的 origin（如 curl、Postman 等直接请求）
     if (!origin) return callback(null, true)
-    // 允许 localhost 来源（方便开发）
+    
+    // 生产环境严格限制
+    if (process.env.NODE_ENV === 'production') {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        : []
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+      console.error(`[Security] CORS blocked origin: ${origin}`)
+      return callback(new Error('Not allowed by CORS'))
+    }
+    
+    // 开发环境允许 localhost
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       return callback(null, true)
     }
-    // 生产环境配置具体的允许域名列表
-    const allowedOrigins = process.env.ALLOWED_ORIGINS 
-      ? process.env.ALLOWED_ORIGINS.split(',')
-      : []
-    if (process.env.NODE_ENV === 'development' || allowedOrigins.includes(origin)) {
-      return callback(null, true)
-    }
+    
     return callback(new Error('Not allowed by CORS'))
   },
   credentials: true,
@@ -125,7 +160,9 @@ app.use(doubleSubmitCsrf({
     '/api/v2/auth/admin/login',
     '/api/v2/auth/login',
     '/api/v2/auth/register',
-    '/api/v2/auth/verify',
+    '/api/v2/auth/forgot-password',
+    '/api/v2/auth/verify-reset-token',
+    '/api/v2/auth/reset-password',
     '/api/v2/users/login',
     '/api/v2/users/register',
     '/api/v2/admin/login',
@@ -136,6 +173,7 @@ app.use(doubleSubmitCsrf({
     // 公开数据接口
     '/api/v2/bookmarks/public',
     '/api/v2/quotes/random',
+    '/api/v2/categories/public',
     // 分享链接（公开访问）
     '/api/v2/shares/',
     // 元数据抓取（可能需要被第三方调用）
@@ -152,30 +190,9 @@ app.use(doubleSubmitCsrf({
     '/api/v2/admin/password-hint',
     // API 文档
     '/api/v2/docs',
-    // 管理菜单API
-    '/api/v2/admin-menus',
-    // 书签API
-    '/api/v2/bookmarks',
-    // 分类API
-    '/api/v2/categories',
-    // 用户API
-    '/api/v2/users',
-    // 设置API
-    '/api/v2/settings',
-    // 插件API
-    '/api/v2/plugins',
-    // 系统API
-    '/api/v2/system',
-    // 安全API
-    '/api/v2/security',
-    // Dock配置API
-    '/api/v2/dock-configs',
-    // 设置标签页API
-    '/api/v2/settings-tabs',
-    // 前端导航API
-    '/api/v2/frontend-nav',
-    // 服务监控API
-    '/api/v2/service-monitors',
+    // 文件快传 - 公开下载接口
+    '/api/file-transfers/extract',
+    '/api/file-transfers/download',
   ],
   // 开发环境：允许同源的请求自动通过（基于 Referer/Origin）
   allowSameOrigin: isDevelopment

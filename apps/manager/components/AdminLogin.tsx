@@ -11,9 +11,10 @@ interface AdminLoginProps {
   onLogin: (username: string, requirePasswordChange?: boolean) => void
   onBack: () => void
   isDark?: boolean
+  onForgotPassword?: () => void
 }
 
-export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) {
+export function AdminLogin({ onLogin, onBack, isDark = true, onForgotPassword }: AdminLoginProps) {
   const { t } = useTranslation()
   const isDemo = isDemoMode()
   const [username, setUsername] = useState('admin')
@@ -266,8 +267,8 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                 type="submit"
                 disabled={isLoading}
                 className={`w-full py-3.5 rounded-xl text-white font-medium relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-nebula-purple to-nebula-pink' 
+                  isDark
+                    ? 'bg-gradient-to-r from-nebula-purple to-nebula-pink'
                     : 'bg-gradient-to-r from-blue-500 to-purple-500'
                 }`}
                 whileHover={{ scale: isLoading ? 1 : 1.01 }}
@@ -281,11 +282,33 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                   {isLoading ? t('admin.login.logging_in') : t('admin.login.login')}
                 </span>
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-nebula-pink to-nebula-purple' 
+                  isDark
+                    ? 'bg-gradient-to-r from-nebula-pink to-nebula-purple'
                     : 'bg-gradient-to-r from-purple-500 to-blue-500'
                 }`} />
               </motion.button>
+
+              {/* Forgot Password Link */}
+              {onForgotPassword && (
+                <motion.div
+                  className="text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.65 }}
+                >
+                  <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className={`text-sm transition-colors ${
+                      isDark
+                        ? 'text-white/40 hover:text-nebula-purple'
+                        : 'text-slate-500 hover:text-blue-600'
+                    }`}
+                  >
+                    忘记密码？
+                  </button>
+                </motion.div>
+              )}
             </div>
           </form>
 

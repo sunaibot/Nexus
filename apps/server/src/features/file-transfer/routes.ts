@@ -108,24 +108,21 @@ router.get('/download/:downloadToken', async (req, res) => {
       ? storagePath 
       : pathModule.join(process.cwd(), storagePath)
     
-    // 安全检查：规范化路径并防止路径穿越攻击
-    // 使用path.normalize规范化路径，然后解析为绝对路径
-    const normalizedFilePath = pathModule.normalize(file.filePath).replace(/^(\.\.(\/|\\|$))+/, '')
-    const filePath = pathModule.resolve(uploadsDir, normalizedFilePath)
+    // 安全检查：严格防止路径穿越攻击
+    // 只允许文件名，不包含任何路径分隔符
+    const safeFileName = pathModule.basename(file.filePath).replace(/[\/\\]/g, '')
+    if (!safeFileName || safeFileName.startsWith('.') || safeFileName.trim() === '') {
+      console.error('[Security] Invalid file name:', file.filePath)
+      return res.status(403).json({ success: false, error: '非法文件路径' })
+    }
     
-    // 调试日志
-    console.log('[Download Debug] Storage path:', storagePath)
-    console.log('[Download Debug] Uploads dir:', uploadsDir)
-    console.log('[Download Debug] File path from DB:', file.filePath)
-    console.log('[Download Debug] Normalized path:', normalizedFilePath)
-    console.log('[Download Debug] Resolved file path:', filePath)
-    console.log('[Download Debug] File exists:', fs.existsSync(filePath))
+    const filePath = pathModule.join(uploadsDir, safeFileName)
     
-    // 安全检查：确保文件路径在允许目录内（使用解析后的路径）
+    // 安全检查：确保文件路径在允许目录内
     const resolvedUploadsDir = pathModule.resolve(uploadsDir)
     const resolvedFilePath = pathModule.resolve(filePath)
     
-    if (!resolvedFilePath.startsWith(resolvedUploadsDir + pathModule.sep) && resolvedFilePath !== resolvedUploadsDir) {
+    if (!resolvedFilePath.startsWith(resolvedUploadsDir + pathModule.sep)) {
       console.error('[Security] Path traversal attempt:', file.filePath)
       return res.status(403).json({ success: false, error: '非法文件路径' })
     }

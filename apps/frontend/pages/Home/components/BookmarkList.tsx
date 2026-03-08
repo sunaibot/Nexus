@@ -37,7 +37,7 @@ export function BookmarkList({
   onChangeCategory,
 }: BookmarkListProps) {
   if (bookmarks.length === 0) {
-    return <EmptyState onAddBookmark={() => {}} />
+    return <EmptyState onAddBookmark={() => {}} isLoggedIn={isLoggedIn} />
   }
 
   return (

@@ -7,7 +7,11 @@ import { useAuth } from './hooks/useAuth'
 import { useThemeContext } from './hooks/useTheme'
 import { cn } from './lib/utils'
 import { Admin } from './pages/Admin'
+import { ForgotPassword } from './pages/ForgotPassword'
+import { ResetPassword } from './pages/ResetPassword'
 import { useEffect, useState } from 'react'
+
+type AuthPage = 'login' | 'forgot-password' | 'reset-password'
 
 function App() {
   const { 
@@ -30,13 +34,20 @@ function App() {
   
   // 检查 URL 参数，如果 login=true 则强制显示登录页
   const [forceLogin, setForceLogin] = useState(false)
-  
+  // 当前认证页面状态
+  const [authPage, setAuthPage] = useState<AuthPage>('login')
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('login') === 'true') {
       setForceLogin(true)
       // 清除 URL 参数
       window.history.replaceState({}, '', window.location.pathname)
+    }
+    // 检查是否是重置密码页面
+    if (params.get('token')) {
+      setAuthPage('reset-password')
+      setForceLogin(true)
     }
   }, [])
 
@@ -91,12 +102,42 @@ function App() {
     window.location.href = 'http://localhost:5173'
   }
 
+  // 处理忘记密码
+  const handleForgotPassword = () => {
+    setAuthPage('forgot-password')
+  }
+
+  // 处理返回登录
+  const handleBackToLogin = () => {
+    setAuthPage('login')
+    // 清除URL中的token
+    window.history.replaceState({}, '', window.location.pathname)
+  }
+
   // 如果强制登录或用户未登录，显示登录页面
   if (forceLogin || !isLoggedIn) {
     return (
       <div className={`min-h-screen ${isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
         <ErrorBoundary>
-          <AdminLogin onLogin={handleLogin} onBack={handleBackToFrontend} />
+          {authPage === 'login' && (
+            <AdminLogin
+              onLogin={handleLogin}
+              onBack={handleBackToFrontend}
+              onForgotPassword={handleForgotPassword}
+            />
+          )}
+          {authPage === 'forgot-password' && (
+            <ForgotPassword
+              onBack={handleBackToLogin}
+              isDark={isDark}
+            />
+          )}
+          {authPage === 'reset-password' && (
+            <ResetPassword
+              onBack={handleBackToLogin}
+              isDark={isDark}
+            />
+          )}
         </ErrorBoundary>
       </div>
     )

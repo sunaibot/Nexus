@@ -582,6 +582,98 @@ export class UserService extends BaseService<
     )
     return rows.map(row => this.mapToEntity(row))
   }
+
+  // ========== 密码重置相关 ==========
+
+  /**
+   * 根据邮箱查找用户
+   */
+  async findByEmail(email: string): Promise<User | null> {
+    const { getUserByEmail } = await import('../db/users.js')
+    const row = getUserByEmail(email)
+    return row ? this.mapToEntity(row) : null
+  }
+
+  /**
+   * 创建密码重置令牌
+   */
+  async createPasswordResetToken(email: string): Promise<{ success: boolean; token?: string; error?: string }> {
+    const user = await this.findByEmail(email)
+    if (!user) {
+      return { success: false, error: '该邮箱未注册或账号已被禁用' }
+    }
+
+    // 生成随机令牌
+    const token = generateId() + generateId()
+    const expiresAt = Date.now() + 3600000 // 1小时后过期
+
+    const { createPasswordResetToken: createToken } = await import('../db/users.js')
+    createToken(user.id, token, expiresAt)
+
+    return { success: true, token }
+  }
+
+  /**
+   * 验证密码重置令牌
+   */
+  async verifyResetToken(token: string): Promise<{ success: boolean; user?: Omit<User, 'password'>; error?: string }> {
+    const { getUserByResetToken } = await import('../db/users.js')
+    const row = getUserByResetToken(token)
+    
+    if (!row) {
+      return { success: false, error: '令牌无效或已过期' }
+    }
+
+    const user = this.mapToEntity(row)
+    const { password: _, ...userWithoutPassword } = user
+    return { success: true, user: userWithoutPassword }
+  }
+
+  /**
+   * 重置密码（通过令牌）
+   */
+  async resetPasswordByToken(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    // 验证密码强度
+    if (newPassword.length < 6) {
+      return { success: false, error: '密码长度至少为6位' }
+    }
+
+    const { getUserByResetToken, markResetTokenUsed, updateUserPassword } = await import('../db/users.js')
+    const user = getUserByResetToken(token)
+    
+    if (!user) {
+      return { success: false, error: '令牌无效或已过期' }
+    }
+
+    // 更新密码
+    await updateUserPassword(user.id, newPassword)
+    
+    // 标记令牌已使用
+    markResetTokenUsed(token)
+
+    // 记录审计日志
+    logAudit({
+      userId: user.id,
+      username: user.username,
+      action: 'PASSWORD_RESET',
+      resourceType: 'user',
+      resourceId: user.id,
+      details: { method: 'token_reset' },
+      ip: 'unknown',
+      userAgent: '',
+      riskLevel: 'low'
+    })
+
+    return { success: true }
+  }
+
+  /**
+   * 清理过期的密码重置令牌
+   */
+  async cleanupExpiredResetTokens(): Promise<void> {
+    const { cleanupExpiredResetTokens: cleanup } = await import('../db/users.js')
+    cleanup()
+  }
 }
 
 // 导出单例实例

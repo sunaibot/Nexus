@@ -136,11 +136,8 @@ function isSameOrigin(req: Request): boolean {
   const host = req.get('host')
   const isDevelopment = process.env.NODE_ENV === 'development'
   
-  console.log(`[CSRF Debug] origin=${origin}, referer=${referer}, host=${host}, dev=${isDevelopment}`)
-  
   if (!origin && !referer) {
     // 没有 origin 和 referer，可能是直接请求（如 curl）
-    console.log('[CSRF Debug] No origin/referer, allowing')
     return true
   }
   
@@ -153,11 +150,9 @@ function isSameOrigin(req: Request): boolean {
       
       // 开发环境下允许 localhost/127.0.0.1 不同端口
       if (isDevelopment && ['localhost', '127.0.0.1'].includes(originHost) && ['localhost', '127.0.0.1'].includes(reqHost)) {
-        console.log(`[CSRF Debug] Development mode: allowing localhost cross-port`)
         return true
       }
       
-      console.log(`[CSRF Debug] origin host=${originUrl.host}, req host=${host}, match=${originUrl.host === host}`)
       if (originUrl.host === host) {
         return true
       }
@@ -175,11 +170,9 @@ function isSameOrigin(req: Request): boolean {
       
       // 开发环境下允许 localhost/127.0.0.1 不同端口
       if (isDevelopment && ['localhost', '127.0.0.1'].includes(refererHost) && ['localhost', '127.0.0.1'].includes(reqHost)) {
-        console.log(`[CSRF Debug] Development mode: allowing localhost cross-port (referer)`)
         return true
       }
       
-      console.log(`[CSRF Debug] referer host=${refererUrl.host}, req host=${host}, match=${refererUrl.host === host}`)
       if (refererUrl.host === host) {
         return true
       }
@@ -226,13 +219,10 @@ export function doubleSubmitCsrf(options: CsrfOptions = {}) {
     // 开发环境或同源请求：允许自动通过
     // 如果提供了Token则验证，否则自动生成
     const sameOrigin = isSameOrigin(req)
-    console.log(`[CSRF Debug] allowSameOrigin=${opts.allowSameOrigin}, sameOrigin=${sameOrigin}`)
     
     if (opts.allowSameOrigin && sameOrigin) {
       const cookieToken = req.cookies?.[opts.cookieName]
       const headerToken = req.get(opts.headerName)
-      
-      console.log(`[CSRF Debug] cookieToken=${cookieToken ? '存在' : '缺失'}, headerToken=${headerToken ? '存在' : '缺失'}`)
       
       // 如果提供了Token，尝试验证它
       if (cookieToken && headerToken) {
@@ -243,7 +233,6 @@ export function doubleSubmitCsrf(options: CsrfOptions = {}) {
           if (cookieBuffer.length === headerBuffer.length &&
               crypto.timingSafeEqual(cookieBuffer, headerBuffer)) {
             // Token验证通过，生成新Token继续
-            console.log('[CSRF Debug] Token验证通过')
             const newToken = generateToken(opts.tokenLength)
             res.cookie(opts.cookieName, newToken, {
               httpOnly: true,
@@ -255,19 +244,13 @@ export function doubleSubmitCsrf(options: CsrfOptions = {}) {
             res.setHeader('X-CSRF-Token', newToken)
             next()
             return
-          } else {
-            console.log('[CSRF Debug] Token不匹配')
           }
-        } catch (error) {
+        } catch {
           // Token验证失败（长度不匹配等），在开发环境下仍然允许通过
-          console.log('[CSRF Debug] Token验证异常:', error)
         }
-      } else {
-        console.log('[CSRF Debug] Token缺失，开发环境允许通过')
       }
       
       // 没有提供Token或验证失败，生成新Token并允许通过（开发环境）
-      console.log('[CSRF Debug] 生成新Token并允许通过')
       const token = generateToken(opts.tokenLength)
       res.cookie(opts.cookieName, token, {
         httpOnly: true,

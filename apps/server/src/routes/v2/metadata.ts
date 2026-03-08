@@ -5,6 +5,7 @@
 
 import { Router, Request, Response } from 'express'
 import { successResponse, errorResponse } from '../utils/routeHelpers.js'
+import { validateMetadataUrl } from '../../utils/ssrfProtection.js'
 
 const router = Router()
 
@@ -15,6 +16,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     if (!url) {
       return errorResponse(res, 'URL不能为空')
+    }
+
+    // SSRF防护：验证URL（元数据抓取使用严格模式，禁止内网地址）
+    const validation = validateMetadataUrl(url)
+    if (!validation.valid) {
+      console.warn(`[Security] SSRF attempt blocked: ${url}, reason: ${validation.error}`)
+      return errorResponse(res, `URL验证失败: ${validation.error}`, 400)
     }
 
     // 使用 cheerio 和 axios 获取网页元数据

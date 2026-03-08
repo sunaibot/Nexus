@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Shield, AlertTriangle, Lock, Eye, Save, RefreshCw, Check, Info } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
+import { SSRFConfigPanel } from '../../../components/admin/SSRFConfig'
 import {
   getSecurityConfig,
   updateCsrfConfig,
@@ -21,7 +22,7 @@ export default function SecurityPage() {
   const [logs, setLogs] = useState<SecurityLog[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState<'csrf' | 'logs' | 'alerts'>('csrf')
+  const [activeTab, setActiveTab] = useState<'csrf' | 'ssrf' | 'logs' | 'alerts'>('csrf')
   const [csrfCategoryTab, setCsrfCategoryTab] = useState<string>('')
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set())
   const [selectedLog, setSelectedLog] = useState<SecurityLog | null>(null)
@@ -310,7 +311,7 @@ export default function SecurityPage() {
       {/* 标签页 */}
       <div className="space-y-4">
         <div className="flex gap-2 border-b" style={{ borderColor: 'var(--color-glass-border)' }}>
-          {(['csrf', 'logs', 'alerts'] as const).map((tab) => (
+          {(['csrf', 'ssrf', 'logs', 'alerts'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -320,6 +321,7 @@ export default function SecurityPage() {
               }}
             >
               {tab === 'csrf' && 'CSRF 防护'}
+              {tab === 'ssrf' && 'SSRF 防护'}
               {tab === 'logs' && '安全日志'}
               {tab === 'alerts' && '异常告警'}
               {activeTab === tab && (
@@ -532,6 +534,11 @@ export default function SecurityPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* SSRF 配置 */}
+        {activeTab === 'ssrf' && (
+          <SSRFConfigPanel />
         )}
 
         {/* 安全日志 */}

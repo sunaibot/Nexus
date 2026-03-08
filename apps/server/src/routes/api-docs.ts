@@ -660,9 +660,13 @@ const apiModules = {
         body: [
           { name: 'title', type: 'string', required: true, desc: '标题' },
           { name: 'content', type: 'string', required: false, desc: '内容' },
-          { name: 'isMarkdown', type: 'boolean', required: false, desc: '是否Markdown', default: true },
+          { name: 'isMarkdown', type: 'boolean', required: false, desc: '是否Markdown', default: false },
           { name: 'tags', type: 'string', required: false, desc: '标签' },
-          { name: 'folderId', type: 'string', required: false, desc: '文件夹ID' }
+          { name: 'folderId', type: 'string', required: false, desc: '文件夹ID' },
+          { name: 'isTodo', type: 'boolean', required: false, desc: '是否待办事项', default: false },
+          { name: 'priority', type: 'number', required: false, desc: '优先级 (0-3)', default: 0 },
+          { name: 'dueDate', type: 'string', required: false, desc: '截止日期 (ISO 8601)' },
+          { name: 'tagColors', type: 'string', required: false, desc: '标签颜色配置 (JSON)' }
         ],
         response: { code: 201, desc: '创建成功', example: { success: true, data: { id: 'note1', title: '笔记标题' } } }
       },
@@ -685,7 +689,11 @@ const apiModules = {
           { name: 'tags', type: 'string', required: false, desc: '标签' },
           { name: 'folderId', type: 'string', required: false, desc: '文件夹ID' },
           { name: 'isPinned', type: 'boolean', required: false, desc: '是否置顶' },
-          { name: 'isArchived', type: 'boolean', required: false, desc: '是否归档' }
+          { name: 'isArchived', type: 'boolean', required: false, desc: '是否归档' },
+          { name: 'isTodo', type: 'boolean', required: false, desc: '是否待办事项' },
+          { name: 'priority', type: 'number', required: false, desc: '优先级 (0-3)' },
+          { name: 'dueDate', type: 'string', required: false, desc: '截止日期 (ISO 8601)' },
+          { name: 'tagColors', type: 'string', required: false, desc: '标签颜色配置 (JSON)' }
         ],
         response: { code: 200, desc: '更新成功', example: { success: true, data: { id: 'note1' } } }
       },
@@ -2337,16 +2345,93 @@ const apiModules = {
         response: { code: 200, desc: '当前样式', example: { success: true, data: { id: 'style1', name: '玻璃拟态', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' } } }
       },
       {
+        method: 'GET', path: '/api/v2/bookmark-card-styles/current', auth: true, admin: false,
+        name: '获取当前用户样式',
+        desc: '获取当前登录用户的卡片样式配置',
+        response: { code: 200, desc: '当前用户样式', example: { success: true, data: { id: 'style1', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', isCircular: false } } }
+      },
+      {
+        method: 'GET', path: '/api/v2/bookmark-card-styles/global', auth: false, admin: false,
+        name: '获取全局默认样式',
+        desc: '获取全局默认卡片样式（用于公开书签）',
+        response: { code: 200, desc: '全局默认样式', example: { success: true, data: { id: 'default', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' } } }
+      },
+      {
         method: 'POST', path: '/api/v2/bookmark-card-styles', auth: true, admin: true,
         name: '创建样式',
         desc: '创建新的卡片样式（管理员）',
         body: [
           { name: 'name', type: 'string', required: true, desc: '样式名称' },
           { name: 'description', type: 'string', required: false, desc: '样式描述' },
-          { name: 'scope', type: 'string', required: true, desc: '作用域 (global/role/user)' },
+          { name: 'scope', type: 'string', required: true, desc: '作用域 (global/role/user)', enum: ['global', 'role', 'user'] },
+          { name: 'isEnabled', type: 'boolean', required: false, desc: '是否启用', default: true },
+          { name: 'isDefault', type: 'boolean', required: false, desc: '是否默认样式', default: false },
+          // 基础样式
           { name: 'backgroundColor', type: 'string', required: false, desc: '背景颜色' },
+          { name: 'backgroundGradient', type: 'object', required: false, desc: '背景渐变 {from, to, angle}' },
           { name: 'borderRadius', type: 'string', required: false, desc: '边框圆角' },
-          { name: 'isEnabled', type: 'boolean', required: false, desc: '是否启用', default: true }
+          { name: 'borderWidth', type: 'string', required: false, desc: '边框宽度' },
+          { name: 'borderColor', type: 'string', required: false, desc: '边框颜色' },
+          { name: 'borderStyle', type: 'string', required: false, desc: '边框样式' },
+          // 阴影效果
+          { name: 'shadowColor', type: 'string', required: false, desc: '阴影颜色' },
+          { name: 'shadowBlur', type: 'string', required: false, desc: '阴影模糊度' },
+          { name: 'shadowSpread', type: 'string', required: false, desc: '阴影扩展' },
+          { name: 'shadowX', type: 'string', required: false, desc: '阴影X偏移' },
+          { name: 'shadowY', type: 'string', required: false, desc: '阴影Y偏移' },
+          // 间距和尺寸
+          { name: 'padding', type: 'string', required: false, desc: '内边距' },
+          { name: 'margin', type: 'string', required: false, desc: '外边距' },
+          { name: 'gap', type: 'string', required: false, desc: '卡片间距' },
+          { name: 'width', type: 'string', required: false, desc: '卡片宽度' },
+          { name: 'height', type: 'string', required: false, desc: '卡片高度' },
+          { name: 'minWidth', type: 'string', required: false, desc: '最小宽度' },
+          { name: 'minHeight', type: 'string', required: false, desc: '最小高度' },
+          // 字体样式
+          { name: 'titleFontSize', type: 'string', required: false, desc: '标题字体大小' },
+          { name: 'titleFontWeight', type: 'string', required: false, desc: '标题字体粗细' },
+          { name: 'titleColor', type: 'string', required: false, desc: '标题颜色' },
+          { name: 'descriptionFontSize', type: 'string', required: false, desc: '描述字体大小' },
+          { name: 'descriptionFontWeight', type: 'string', required: false, desc: '描述字体粗细' },
+          { name: 'descriptionColor', type: 'string', required: false, desc: '描述颜色' },
+          // 效果
+          { name: 'opacity', type: 'number', required: false, desc: '透明度 (0-1)' },
+          { name: 'backdropBlur', type: 'string', required: false, desc: '背景模糊' },
+          { name: 'backdropSaturate', type: 'string', required: false, desc: '背景饱和度' },
+          // 悬停效果
+          { name: 'hoverBackgroundColor', type: 'string', required: false, desc: '悬停背景色' },
+          { name: 'hoverBorderColor', type: 'string', required: false, desc: '悬停边框色' },
+          { name: 'hoverShadowBlur', type: 'string', required: false, desc: '悬停阴影模糊' },
+          { name: 'hoverScale', type: 'number', required: false, desc: '悬停缩放' },
+          { name: 'hoverTransition', type: 'string', required: false, desc: '悬停过渡动画' },
+          // 图标样式
+          { name: 'iconSize', type: 'string', required: false, desc: '图标大小' },
+          { name: 'iconColor', type: 'string', required: false, desc: '图标颜色' },
+          { name: 'iconBackgroundColor', type: 'string', required: false, desc: '图标背景色' },
+          { name: 'iconBorderRadius', type: 'string', required: false, desc: '图标圆角' },
+          { name: 'iconOpacity', type: 'number', required: false, desc: '图标透明度' },
+          // 图片样式
+          { name: 'imageHeight', type: 'string', required: false, desc: '图片高度' },
+          { name: 'imageBorderRadius', type: 'string', required: false, desc: '图片圆角' },
+          { name: 'imageObjectFit', type: 'string', required: false, desc: '图片填充方式' },
+          // 标签样式
+          { name: 'tagBackgroundColor', type: 'string', required: false, desc: '标签背景色' },
+          { name: 'tagTextColor', type: 'string', required: false, desc: '标签文字颜色' },
+          { name: 'tagBorderRadius', type: 'string', required: false, desc: '标签圆角' },
+          { name: 'tagFontSize', type: 'string', required: false, desc: '标签字体大小' },
+          // 圆形卡片
+          { name: 'isCircular', type: 'boolean', required: false, desc: '是否圆形卡片' },
+          { name: 'circleSize', type: 'string', required: false, desc: '圆形卡片尺寸' },
+          { name: 'circleBackgroundColor', type: 'string', required: false, desc: '圆形背景色' },
+          { name: 'circleBorderWidth', type: 'string', required: false, desc: '圆形边框宽度' },
+          { name: 'circleBorderColor', type: 'string', required: false, desc: '圆形边框颜色' },
+          { name: 'circleIconPosition', type: 'string', required: false, desc: '圆形图标位置 (center/top)' },
+          // 布局配置
+          { name: 'layoutType', type: 'string', required: false, desc: '布局类型', enum: ['standard', 'icon-top', 'icon-bottom', 'icon-bg'] },
+          { name: 'iconPosition', type: 'string', required: false, desc: '图标位置', enum: ['left', 'right', 'top', 'bottom', 'center', 'background'] },
+          { name: 'showTitle', type: 'boolean', required: false, desc: '显示标题' },
+          { name: 'showDescription', type: 'boolean', required: false, desc: '显示描述' },
+          { name: 'textAlign', type: 'string', required: false, desc: '文字对齐', enum: ['left', 'center', 'right'] }
         ],
         response: { code: 201, desc: '创建成功', example: { success: true, data: { id: 'style1', name: '玻璃拟态' } } }
       },
@@ -2355,6 +2440,13 @@ const apiModules = {
         name: '更新样式',
         desc: '更新指定样式（管理员）',
         params: [{ name: 'id', type: 'string', required: true, desc: '样式ID' }],
+        body: [
+          { name: 'name', type: 'string', required: false, desc: '样式名称' },
+          { name: 'description', type: 'string', required: false, desc: '样式描述' },
+          { name: 'isEnabled', type: 'boolean', required: false, desc: '是否启用' },
+          { name: 'isDefault', type: 'boolean', required: false, desc: '是否默认样式' }
+          // 其他字段同创建
+        ],
         response: { code: 200, desc: '更新成功', example: { success: true, data: { id: 'style1' } } }
       },
       {
@@ -2612,11 +2704,15 @@ const databaseSchema = {
         { name: 'userId', type: 'TEXT', desc: '用户ID' },
         { name: 'title', type: 'TEXT', desc: '标题' },
         { name: 'content', type: 'TEXT', desc: '内容' },
-        { name: 'isMarkdown', type: 'INTEGER', default: 1, desc: '是否Markdown' },
+        { name: 'isMarkdown', type: 'INTEGER', default: 0, desc: '是否Markdown' },
         { name: 'tags', type: 'TEXT', desc: '标签' },
         { name: 'folderId', type: 'TEXT', desc: '文件夹ID' },
         { name: 'isPinned', type: 'INTEGER', default: 0, desc: '是否置顶' },
         { name: 'isArchived', type: 'INTEGER', default: 0, desc: '是否归档' },
+        { name: 'isTodo', type: 'INTEGER', default: 0, desc: '是否待办事项' },
+        { name: 'priority', type: 'INTEGER', default: 0, desc: '优先级 (0-3)' },
+        { name: 'dueDate', type: 'TEXT', desc: '截止日期' },
+        { name: 'tagColors', type: 'TEXT', desc: '标签颜色配置 (JSON)' },
         { name: 'createdAt', type: 'TEXT', desc: '创建时间' },
         { name: 'updatedAt', type: 'TEXT', desc: '更新时间' }
       ]
@@ -2957,6 +3053,22 @@ const databaseSchema = {
         { name: 'tagTextColor', type: 'TEXT', desc: '标签文字颜色' },
         { name: 'tagBorderRadius', type: 'TEXT', desc: '标签圆角' },
         { name: 'tagFontSize', type: 'TEXT', desc: '标签字体大小' },
+        { name: 'iconOpacity', type: 'REAL', desc: '图标透明度' },
+        { name: 'isCircular', type: 'INTEGER', default: 0, desc: '是否圆形卡片' },
+        { name: 'circleSize', type: 'TEXT', desc: '圆形卡片尺寸' },
+        { name: 'circleBackgroundColor', type: 'TEXT', desc: '圆形背景色' },
+        { name: 'circleBorderWidth', type: 'TEXT', desc: '圆形边框宽度' },
+        { name: 'circleBorderColor', type: 'TEXT', desc: '圆形边框颜色' },
+        { name: 'circleIconPosition', type: 'TEXT', desc: '圆形图标位置 (center/top)' },
+        { name: 'layoutType', type: 'TEXT', desc: '布局类型' },
+        { name: 'iconPosition', type: 'TEXT', desc: '图标位置' },
+        { name: 'showTitle', type: 'INTEGER', default: 1, desc: '显示标题' },
+        { name: 'showDescription', type: 'INTEGER', default: 1, desc: '显示描述' },
+        { name: 'textAlign', type: 'TEXT', desc: '文字对齐' },
+        { name: 'width', type: 'TEXT', desc: '卡片宽度' },
+        { name: 'height', type: 'TEXT', desc: '卡片高度' },
+        { name: 'minWidth', type: 'TEXT', desc: '最小宽度' },
+        { name: 'minHeight', type: 'TEXT', desc: '最小高度' },
         { name: 'isEnabled', type: 'INTEGER', default: 1, desc: '是否启用' },
         { name: 'isDefault', type: 'INTEGER', default: 0, desc: '是否默认' },
         { name: 'priority', type: 'INTEGER', default: 0, desc: '优先级' },

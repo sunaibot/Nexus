@@ -196,12 +196,13 @@ router.post('/import', authMiddleware, adminMiddleware, (req: Request, res: Resp
             continue
           }
           
-          // 为缺失字段提供默认值，使用当前用户ID
+          // 为缺失字段提供默认值
           const name = cat.name || '未命名分类'
           const icon = cat.icon || 'Folder'
           const color = cat.color || '#6366f1'
           const orderIndex = cat.orderIndex ?? 0
-          const userId = cat.userId || user?.id || null
+          // 安全修复：强制使用当前用户ID，不使用导入数据中的userId（防止权限提升）
+          const userId = user?.id || null
           const parentId = cat.parentId || null
           
           if (existing) {
@@ -248,7 +249,8 @@ router.post('/import', authMiddleware, adminMiddleware, (req: Request, res: Resp
           const isPinned = bm.isPinned ? 1 : 0
           const isReadLater = bm.isReadLater ? 1 : 0
           const isRead = bm.isRead ? 1 : 0
-          const userId = bm.userId || user?.id || null
+          // 安全修复：强制使用当前用户ID，不使用导入数据中的userId（防止权限提升）
+          const userId = user?.id || null
           const internalUrl = bm.internalUrl || ''
           const notes = bm.notes || ''
           const visibility = bm.visibility || 'public'

@@ -5,8 +5,9 @@
 
 import { Router, Request, Response } from 'express'
 import { authMiddleware, adminMiddleware } from '../../middleware/index.js'
-import { queryOne } from '../../utils/index.js'
+import { queryOne, run } from '../../utils/index.js'
 import { getDatabase } from '../../db/index.js'
+import { clearSSRFConfigCache } from '../../utils/ssrfProtection.js'
 
 const router = Router()
 
@@ -272,6 +273,57 @@ router.get('/health', (req: Request, res: Response) => {
       error: '服务异常',
       timestamp: new Date().toISOString()
     })
+  }
+})
+
+// 获取SSRF安全设置（管理员）
+router.get('/security/ssrf', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  try {
+    const setting = queryOne('SELECT value FROM settings WHERE key = ?', ['security.ssrf.allowPrivateIPs'])
+    
+    res.json({
+      success: true,
+      data: {
+        allowPrivateIPs: setting?.value === 'true'
+      }
+    })
+  } catch (error) {
+    console.error('获取SSRF设置失败:', error)
+    res.status(500).json({ success: false, error: '获取设置失败' })
+  }
+})
+
+// 更新SSRF安全设置（管理员）
+router.put('/security/ssrf', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
+  try {
+    const { allowPrivateIPs } = req.body
+    
+    if (typeof allowPrivateIPs !== 'boolean') {
+      return res.status(400).json({ success: false, error: '参数必须是布尔值' })
+    }
+    
+    const now = new Date().toISOString()
+    const existing = queryOne('SELECT key FROM settings WHERE key = ?', ['security.ssrf.allowPrivateIPs'])
+    
+    if (existing) {
+      run('UPDATE settings SET value = ?, updatedAt = ? WHERE key = ?', 
+          [String(allowPrivateIPs), now, 'security.ssrf.allowPrivateIPs'])
+    } else {
+      run('INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)',
+          ['security.ssrf.allowPrivateIPs', String(allowPrivateIPs), now])
+    }
+    
+    // 清除配置缓存
+    clearSSRFConfigCache()
+    
+    res.json({
+      success: true,
+      message: '设置已更新',
+      data: { allowPrivateIPs }
+    })
+  } catch (error) {
+    console.error('更新SSRF设置失败:', error)
+    res.status(500).json({ success: false, error: '更新设置失败' })
   }
 })
 

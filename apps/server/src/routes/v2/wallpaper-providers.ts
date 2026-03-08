@@ -121,8 +121,8 @@ function stringifyJsonField(value: any): string | null {
 }
 
 // 转换数据库记录为 API 响应格式
-function parseProvider(row: any) {
-  return {
+function parseProvider(row: any, includeSensitive: boolean = false) {
+  const base = {
     id: row.id,
     name: row.name,
     description: row.description,
@@ -130,7 +130,6 @@ function parseProvider(row: any) {
     enabled: row.enabled === 1,
     icon: row.icon,
     apiUrl: row.apiUrl,
-    apiKey: row.apiKey,
     method: row.method,
     headers: parseJsonField(row.headers, {}),
     params: parseJsonField(row.params, {}),
@@ -139,6 +138,19 @@ function parseProvider(row: any) {
     maxResults: row.maxResults,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt
+  }
+
+  // 敏感信息：只返回是否设置了API Key，不返回实际值
+  if (includeSensitive) {
+    return {
+      ...base,
+      apiKey: row.apiKey,  // 管理员接口可以返回
+    }
+  } else {
+    return {
+      ...base,
+      hasApiKey: !!row.apiKey,  // 只返回布尔值表示是否设置了API Key
+    }
   }
 }
 
@@ -165,39 +177,39 @@ router.get('/presets', (req: Request, res: Response) => {
   }
 })
 
-// 获取所有壁纸源配置（管理员）
+// 获取所有壁纸源配置（管理员）- 包含敏感信息
 router.get('/', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   try {
     const providers = queryAll('SELECT * FROM wallpaper_providers ORDER BY createdAt DESC')
-    return successResponse(res, providers.map(parseProvider))
+    return successResponse(res, providers.map(row => parseProvider(row, true)))
   } catch (error) {
     console.error('获取壁纸源列表失败:', error)
     return errorResponse(res, '获取壁纸源列表失败')
   }
 })
 
-// 获取启用的壁纸源（公开接口）
+// 获取启用的壁纸源（公开接口）- 不包含敏感信息
 router.get('/enabled', (req: Request, res: Response) => {
   try {
     const providers = queryAll('SELECT * FROM wallpaper_providers WHERE enabled = 1 ORDER BY name')
-    return successResponse(res, providers.map(parseProvider))
+    return successResponse(res, providers.map(row => parseProvider(row, false)))
   } catch (error) {
     console.error('获取壁纸源列表失败:', error)
     return errorResponse(res, '获取壁纸源列表失败')
   }
 })
 
-// 获取单个壁纸源配置
+// 获取单个壁纸源配置（管理员）- 包含敏感信息
 router.get('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   try {
     const { id } = req.params
     const provider = queryOne('SELECT * FROM wallpaper_providers WHERE id = ?', [id])
-    
+
     if (!provider) {
       return errorResponse(res, '壁纸源不存在', 404)
     }
-    
-    return successResponse(res, parseProvider(provider))
+
+    return successResponse(res, parseProvider(provider, true))
   } catch (error) {
     console.error('获取壁纸源失败:', error)
     return errorResponse(res, '获取壁纸源失败')
@@ -245,7 +257,7 @@ router.post('/', authMiddleware, adminMiddleware, (req: Request, res: Response) 
     )
 
     const provider = queryOne('SELECT * FROM wallpaper_providers WHERE id = ?', [id])
-    return successResponse(res, parseProvider(provider), 201)
+    return successResponse(res, parseProvider(provider, true), 201)
   } catch (error) {
     console.error('创建壁纸源失败:', error)
     return errorResponse(res, '创建壁纸源失败')
@@ -305,7 +317,7 @@ router.put('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response
     )
 
     const updated = queryOne('SELECT * FROM wallpaper_providers WHERE id = ?', [id])
-    return successResponse(res, parseProvider(updated))
+    return successResponse(res, parseProvider(updated, true))
   } catch (error) {
     console.error('更新壁纸源失败:', error)
     return errorResponse(res, '更新壁纸源失败')
@@ -372,7 +384,7 @@ router.post('/from-preset/:presetId', authMiddleware, adminMiddleware, (req: Req
     )
 
     const provider = queryOne('SELECT * FROM wallpaper_providers WHERE id = ?', [id])
-    return successResponse(res, parseProvider(provider), 201)
+    return successResponse(res, parseProvider(provider, true), 201)
   } catch (error) {
     console.error('从预设创建壁纸源失败:', error)
     return errorResponse(res, '创建失败')

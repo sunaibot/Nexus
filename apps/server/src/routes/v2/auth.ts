@@ -322,4 +322,113 @@ router.post('/logout', authMiddleware, (req: Request, res: Response) => {
   }
 })
 
+// ========== 密码重置 ==========
+
+import { userService } from '../../services/UserService.js'
+import { publicApiLimiter } from '../../middleware/index.js'
+
+// 请求密码重置 - 发送重置邮件
+router.post('/forgot-password', publicApiLimiter, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body
+    const clientIp = req.ip || 'unknown'
+
+    if (!email) {
+      return res.status(400).json({ success: false, error: '邮箱不能为空' })
+    }
+
+    // 创建密码重置令牌
+    const result = await userService.createPasswordResetToken(email)
+
+    if (!result.success) {
+      // 为了安全，即使邮箱不存在也返回成功，但这里返回错误信息用于调试
+      return res.status(404).json({ success: false, error: result.error })
+    }
+
+    // 记录审计日志
+    logAudit({
+      userId: 'unknown',
+      username: email,
+      action: 'PASSWORD_RESET_REQUEST',
+      resourceType: 'auth',
+      details: { token: result.token },
+      ip: clientIp,
+      userAgent: req.headers['user-agent'] || ''
+    })
+
+    // TODO: 发送邮件（需要配置邮件服务）
+    // 暂时返回令牌用于测试，生产环境应该发送邮件
+    res.json({
+      success: true,
+      message: '密码重置请求已提交，请检查您的邮箱',
+      token: process.env.NODE_ENV === 'development' ? result.token : undefined
+    })
+  } catch (error) {
+    console.error('Forgot password error:', error)
+    res.status(500).json({ success: false, error: '请求失败' })
+  }
+})
+
+// 验证密码重置令牌
+router.get('/verify-reset-token', async (req: Request, res: Response) => {
+  try {
+    const { token } = req.query
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ success: false, error: '令牌不能为空' })
+    }
+
+    const result = await userService.verifyResetToken(token)
+
+    if (!result.success) {
+      return res.status(400).json({ success: false, error: result.error })
+    }
+
+    res.json({
+      success: true,
+      user: result.user
+    })
+  } catch (error) {
+    console.error('Verify reset token error:', error)
+    res.status(500).json({ success: false, error: '验证失败' })
+  }
+})
+
+// 重置密码
+router.post('/reset-password', publicApiLimiter, async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body
+    const clientIp = req.ip || 'unknown'
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, error: '令牌和新密码不能为空' })
+    }
+
+    const result = await userService.resetPasswordByToken(token, newPassword)
+
+    if (!result.success) {
+      return res.status(400).json({ success: false, error: result.error })
+    }
+
+    // 记录审计日志
+    logAudit({
+      userId: 'unknown',
+      username: 'unknown',
+      action: 'PASSWORD_RESET_SUCCESS',
+      resourceType: 'auth',
+      details: { method: 'token' },
+      ip: clientIp,
+      userAgent: req.headers['user-agent'] || ''
+    })
+
+    res.json({
+      success: true,
+      message: '密码重置成功，请使用新密码登录'
+    })
+  } catch (error) {
+    console.error('Reset password error:', error)
+    res.status(500).json({ success: false, error: '重置失败' })
+  }
+})
+
 export default router

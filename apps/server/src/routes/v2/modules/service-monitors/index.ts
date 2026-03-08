@@ -6,6 +6,7 @@
 import { Router, Request, Response } from 'express'
 import { authMiddleware, adminMiddleware } from '../../../../middleware/index.js'
 import { successResponse, errorResponse } from '../../../utils/routeHelpers.js'
+import { validateMonitorUrl } from '../../../../utils/ssrfProtection.js'
 import {
   createServiceMonitor,
   getServiceMonitorsByUser,
@@ -34,6 +35,15 @@ router.post('/', authMiddleware, adminMiddleware, (req: Request, res: Response) 
   try {
     const user = (req as any).user
     const { name, url, method, expectedStatus, checkInterval, timeout } = req.body
+
+    // SSRF防护：验证监控URL
+    if (url) {
+      const validation = validateMonitorUrl(url)
+      if (!validation.valid) {
+        console.warn(`[Security] Monitor SSRF attempt blocked: ${url}, reason: ${validation.error}`)
+        return errorResponse(res, `URL验证失败: ${validation.error}`, 400)
+      }
+    }
 
     const id = createServiceMonitor(
       user.id,
@@ -83,6 +93,15 @@ router.patch('/:id', authMiddleware, adminMiddleware, (req: Request, res: Respon
     const existing = getServiceMonitorById(id)
     if (!existing) {
       return errorResponse(res, '监控服务不存在', 404)
+    }
+
+    // SSRF防护：验证监控URL
+    if (url) {
+      const validation = validateMonitorUrl(url)
+      if (!validation.valid) {
+        console.warn(`[Security] Monitor SSRF attempt blocked: ${url}, reason: ${validation.error}`)
+        return errorResponse(res, `URL验证失败: ${validation.error}`, 400)
+      }
     }
 
     const updates: Partial<ServiceMonitor> = {}

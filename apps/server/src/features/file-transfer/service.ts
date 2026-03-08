@@ -80,10 +80,14 @@ export class FileTransferService {
         return { success: false, error: '不支持的文件类型' }
       }
       
-      // 安全检查：文件名防止路径穿越
-      if (request.fileName.includes('/') || request.fileName.includes('\\') || request.fileName.includes('..')) {
+      // 安全检查：文件名防止路径穿越 - 使用 path.basename 提取纯文件名
+      const pathModule = await import('path')
+      const sanitizedFileName = pathModule.basename(request.fileName).replace(/[\/\\]/g, '')
+      if (!sanitizedFileName || sanitizedFileName.startsWith('.') || sanitizedFileName.trim() === '') {
         return { success: false, error: '非法文件名' }
       }
+      // 使用安全的文件名替换原始文件名
+      request.fileName = sanitizedFileName
 
       // 检查用户配额
       if (userId) {
@@ -117,20 +121,15 @@ export class FileTransferService {
       // 保存文件到磁盘
       const fs = await import('fs')
       const path = await import('path')
-      
+
       // 使用设置中的存储路径，默认为 ./uploads
       const storagePath = settings.uploadPath || './uploads'
-      const uploadsDir = storagePath.startsWith('/') 
-        ? storagePath 
+      const uploadsDir = storagePath.startsWith('/')
+        ? storagePath
         : path.join(process.cwd(), storagePath)
-      
-      console.log('[Upload Debug] Storage path:', storagePath)
-      console.log('[Upload Debug] Uploads dir:', uploadsDir)
-      console.log('[Upload Debug] CWD:', process.cwd())
       
       // 确保上传目录存在
       if (!fs.existsSync(uploadsDir)) {
-        console.log('[Upload Debug] Creating uploads directory:', uploadsDir)
         fs.mkdirSync(uploadsDir, { recursive: true })
       }
       
@@ -138,15 +137,10 @@ export class FileTransferService {
       const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExt || 'bin'}`
       const fileFullPath = path.join(uploadsDir, uniqueFileName)
       
-      console.log('[Upload Debug] File name:', uniqueFileName)
-      console.log('[Upload Debug] Full path:', fileFullPath)
-      
       // 解码Base64并保存文件
       const base64Data = request.fileData.replace(/^data:.*;base64,/, '')
       const fileBuffer = Buffer.from(base64Data, 'base64')
       fs.writeFileSync(fileFullPath, fileBuffer)
-      
-      console.log('[Upload Debug] File saved successfully:', fs.existsSync(fileFullPath))
       
       const result = await this.repository.create(
         userId,
