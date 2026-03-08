@@ -77,7 +77,18 @@ function canAccessPlugin(plugin: any, user: any): boolean {
  */
 function mergeBuiltinInfo(plugin: any) {
   const builtin = BUILTIN_PLUGINS.find(p => p.id === plugin.id)
-  if (!builtin) return plugin
+  
+  if (!builtin) {
+    // 非内置插件，明确设置 isBuiltin: false
+    return {
+      ...plugin,
+      isBuiltin: false,
+      hasBackend: false,
+      hasFrontend: false,
+      defaultSlot: null,
+      config: {}
+    }
+  }
 
   return {
     ...plugin,
