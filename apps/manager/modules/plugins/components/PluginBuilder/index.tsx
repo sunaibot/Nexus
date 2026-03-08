@@ -27,6 +27,13 @@ import {
   Group,
   X,
   Box,
+  Code,
+  Rocket,
+  Play,
+  HelpCircle,
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/admin/Toast'
@@ -38,6 +45,7 @@ import type {
 } from '../../types/builder'
 import { DEFAULT_NEW_PLUGIN } from '../../types/builder'
 import { saveBuildingPlugin } from '@/lib/api-client/custom-plugins'
+import { generatePluginCode, deployPlugin, previewPlugin } from '../../api-unified'
 
 // 示例零件库
 const SAMPLE_PARTS: ComponentPart[] = [
@@ -241,6 +249,420 @@ const SAMPLE_PARTS: ComponentPart[] = [
     updatedAt: new Date().toISOString()
   },
   {
+    id: 'part_switch_1',
+    name: '开关',
+    description: '开关切换组件',
+    version: '1.0.0',
+    author: 'System',
+    icon: '🔘',
+    category: 'interactive',
+    tags: ['switch', 'toggle', 'boolean'],
+    visual: {
+      base: {
+        width: '50px',
+        height: '26px',
+        backgroundColor: '#d1d5db',
+        borderRadius: '13px',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s'
+      },
+      states: {
+        default: {},
+        checked: {
+          backgroundColor: '#3b82f6'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '切换', description: '开关状态变化时触发' }
+      ],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'checked', type: 'boolean', description: '是否选中' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'checked', label: '默认开启', type: 'boolean', defaultValue: false },
+      { name: 'label', label: '标签文字', type: 'string', defaultValue: '开关', placeholder: '开关标签' }
+    ],
+    stats: { downloads: 680, likes: 52, usage: 195 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_select_1',
+    name: '下拉选择',
+    description: '下拉选择框',
+    version: '1.0.0',
+    author: 'System',
+    icon: '📋',
+    category: 'interactive',
+    tags: ['select', 'dropdown', 'options'],
+    visual: {
+      base: {
+        padding: '10px 14px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #d1d5db',
+        borderRadius: '6px',
+        fontSize: '14px',
+        color: '#374151',
+        width: '100%',
+        cursor: 'pointer'
+      },
+      states: {
+        default: {},
+        focus: {
+          borderColor: '#3b82f6',
+          boxShadow: '0 0 0 3px rgba(59,130,246,0.1)'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '选择', description: '选项变化时触发' }
+      ],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'value', type: 'string', description: '选中值' },
+          { name: 'options', type: 'array', description: '选项列表' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'placeholder', label: '占位符', type: 'string', defaultValue: '请选择...', placeholder: '提示文字' },
+      { name: 'options', label: '选项', type: 'string', defaultValue: '选项1,选项2,选项3', placeholder: '用逗号分隔选项' }
+    ],
+    stats: { downloads: 620, likes: 48, usage: 175 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_checkbox_1',
+    name: '复选框',
+    description: '多选复选框',
+    version: '1.0.0',
+    author: 'System',
+    icon: '☑️',
+    category: 'interactive',
+    tags: ['checkbox', 'check', 'multi'],
+    visual: {
+      base: {
+        width: '18px',
+        height: '18px',
+        backgroundColor: '#ffffff',
+        border: '2px solid #d1d5db',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      states: {
+        default: {},
+        checked: {
+          backgroundColor: '#3b82f6',
+          borderColor: '#3b82f6'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '变化', description: '选中状态变化时触发' }
+      ],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'checked', type: 'boolean', description: '是否选中' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'label', label: '标签', type: 'string', defaultValue: '选项', placeholder: '复选框标签' },
+      { name: 'checked', label: '默认选中', type: 'boolean', defaultValue: false }
+    ],
+    stats: { downloads: 580, likes: 45, usage: 160 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_data_card_1',
+    name: '数据卡片',
+    description: '展示数据的卡片',
+    version: '1.0.0',
+    author: 'System',
+    icon: '📊',
+    category: 'data',
+    tags: ['data', 'card', 'stats', 'metric'],
+    visual: {
+      base: {
+        padding: '20px',
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        border: '1px solid #e5e7eb',
+        minWidth: '200px'
+      },
+      states: {
+        default: {}
+      }
+    },
+    behavior: {
+      events: [{ name: 'click', label: '点击', description: '点击卡片时触发' }],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'title', type: 'string', description: '标题' },
+          { name: 'value', type: 'string', description: '数值' },
+          { name: 'trend', type: 'string', description: '趋势' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'title', label: '标题', type: 'string', defaultValue: '总访问量', placeholder: '数据标题' },
+      { name: 'value', label: '数值', type: 'string', defaultValue: '12,345', placeholder: '显示数值' },
+      { name: 'trend', label: '趋势', type: 'string', defaultValue: '+12%', placeholder: '如: +12%' },
+      { name: 'color', label: '主题色', type: 'select', defaultValue: 'blue', options: [
+        { label: '蓝色', value: 'blue' },
+        { label: '绿色', value: 'green' },
+        { label: '橙色', value: 'orange' },
+        { label: '紫色', value: 'purple' }
+      ]}
+    ],
+    stats: { downloads: 890, likes: 72, usage: 310 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_list_1',
+    name: '列表',
+    description: '数据列表展示',
+    version: '1.0.0',
+    author: 'System',
+    icon: '📃',
+    category: 'data',
+    tags: ['list', 'data', 'items'],
+    visual: {
+      base: {
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb',
+        overflow: 'hidden'
+      },
+      states: {
+        default: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'itemClick', label: '点击项', description: '点击列表项时触发' }
+      ],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'items', type: 'array', description: '列表数据' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'items', label: '列表项', type: 'string', defaultValue: '项目1,项目2,项目3', placeholder: '用逗号分隔' },
+      { name: 'showIcon', label: '显示图标', type: 'boolean', defaultValue: true },
+      { name: 'striped', label: '斑马纹', type: 'boolean', defaultValue: false }
+    ],
+    stats: { downloads: 540, likes: 42, usage: 145 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_tabs_1',
+    name: '标签页',
+    description: '标签切换组件',
+    version: '1.0.0',
+    author: 'System',
+    icon: '📑',
+    category: 'layout',
+    tags: ['tabs', 'navigation', 'switch'],
+    visual: {
+      base: {
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb'
+      },
+      states: {
+        default: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'tabChange', label: '切换标签', description: '切换标签时触发' }
+      ],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'activeTab', type: 'string', description: '当前标签' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'tabs', label: '标签', type: 'string', defaultValue: '标签1,标签2,标签3', placeholder: '用逗号分隔标签' },
+      { name: 'activeTab', label: '默认标签', type: 'string', defaultValue: '0', placeholder: '默认激活的标签索引' }
+    ],
+    stats: { downloads: 480, likes: 38, usage: 125 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_progress_1',
+    name: '进度条',
+    description: '进度展示组件',
+    version: '1.0.0',
+    author: 'System',
+    icon: '📈',
+    category: 'data',
+    tags: ['progress', 'bar', 'percent'],
+    visual: {
+      base: {
+        width: '100%',
+        height: '8px',
+        backgroundColor: '#e5e7eb',
+        borderRadius: '4px',
+        overflow: 'hidden'
+      },
+      states: {
+        default: {}
+      }
+    },
+    behavior: {
+      events: [],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'percent', type: 'number', description: '进度百分比' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'percent', label: '进度(%)', type: 'number', defaultValue: 50 },
+      { name: 'showText', label: '显示文字', type: 'boolean', defaultValue: true },
+      { name: 'color', label: '颜色', type: 'select', defaultValue: 'blue', options: [
+        { label: '蓝色', value: 'blue' },
+        { label: '绿色', value: 'green' },
+        { label: '橙色', value: 'orange' },
+        { label: '红色', value: 'red' }
+      ]}
+    ],
+    stats: { downloads: 420, likes: 35, usage: 110 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_badge_1',
+    name: '徽标',
+    description: '数字徽标标记',
+    version: '1.0.0',
+    author: 'System',
+    icon: '🏷️',
+    category: 'basic',
+    tags: ['badge', 'tag', 'label'],
+    visual: {
+      base: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2px 8px',
+        backgroundColor: '#ef4444',
+        color: '#ffffff',
+        borderRadius: '10px',
+        fontSize: '12px',
+        fontWeight: '600',
+        minWidth: '20px',
+        height: '20px'
+      },
+      states: {
+        default: {}
+      }
+    },
+    behavior: {
+      events: [],
+      dataBinding: {
+        supported: true,
+        properties: [
+          { name: 'count', type: 'number', description: '徽标数字' }
+        ]
+      }
+    },
+    properties: [
+      { name: 'count', label: '数字', type: 'number', defaultValue: 5 },
+      { name: 'max', label: '最大值', type: 'number', defaultValue: 99 },
+      { name: 'color', label: '颜色', type: 'select', defaultValue: 'red', options: [
+        { label: '红色', value: 'red' },
+        { label: '蓝色', value: 'blue' },
+        { label: '绿色', value: 'green' },
+        { label: '橙色', value: 'orange' }
+      ]}
+    ],
+    stats: { downloads: 380, likes: 32, usage: 95 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'part_divider_1',
+    name: '分割线',
+    description: '内容分隔线',
+    version: '1.0.0',
+    author: 'System',
+    icon: '➖',
+    category: 'layout',
+    tags: ['divider', 'line', 'separator'],
+    visual: {
+      base: {
+        width: '100%',
+        height: '1px',
+        backgroundColor: '#e5e7eb',
+        margin: '16px 0'
+      },
+      states: {
+        default: {}
+      }
+    },
+    behavior: {
+      events: [],
+      dataBinding: { supported: false, properties: [] }
+    },
+    properties: [
+      { name: 'text', label: '文字', type: 'string', defaultValue: '', placeholder: '分割线文字(可选)' },
+      { name: 'type', label: '类型', type: 'select', defaultValue: 'horizontal', options: [
+        { label: '水平', value: 'horizontal' },
+        { label: '垂直', value: 'vertical' }
+      ]}
+    ],
+    stats: { downloads: 320, likes: 28, usage: 80 },
+    isBuiltin: true,
+    isPublic: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
     id: 'part_image_1',
     name: '图片',
     description: '图片展示组件',
@@ -288,10 +710,30 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
   const { showToast } = useToast()
   const canvasRef = useRef<HTMLDivElement>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [isDeploying, setIsDeploying] = useState(false)
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null)
+  const [showCodeModal, setShowCodeModal] = useState(false)
   
   // 插件状态
   const [plugin, setPlugin] = useState<BuildingPlugin>(() => {
-    if (initialPlugin) return initialPlugin
+    if (initialPlugin) {
+      // 确保所有必需字段都存在
+      return {
+        ...DEFAULT_NEW_PLUGIN,
+        ...initialPlugin,
+        // 确保嵌套对象也有默认值
+        canvas: {
+          ...DEFAULT_NEW_PLUGIN.canvas,
+          ...initialPlugin.canvas
+        },
+        components: initialPlugin.components || [],
+        selectedComponentIds: initialPlugin.selectedComponentIds || [],
+        history: initialPlugin.history || { past: [], future: [] },
+        dataFlow: initialPlugin.dataFlow || [],
+        eventBindings: initialPlugin.eventBindings || []
+      } as BuildingPlugin
+    }
     return {
       ...DEFAULT_NEW_PLUGIN,
       id: `plugin_${Date.now()}`,
@@ -305,6 +747,84 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
   const [showGrid, setShowGrid] = useState(true)
   const [previewMode, setPreviewMode] = useState(false)
   const [activePanel, setActivePanel] = useState<'parts' | 'layers' | 'props'>('parts')
+  
+  // 新手引导状态
+  const [showGuide, setShowGuide] = useState(() => {
+    // 检查本地存储，是否首次使用
+    if (typeof window !== 'undefined') {
+      return !localStorage.getItem('plugin-builder-guide-shown')
+    }
+    return false
+  })
+  const [guideStep, setGuideStep] = useState(0)
+  
+  // 引导步骤配置
+  const guideSteps = [
+    {
+      title: '欢迎使用零件工坊！',
+      description: '像搭积木一样，拖拽零件就能创建插件。让我们用 5 步学会使用！',
+      target: null,
+      position: 'center'
+    },
+    {
+      title: '第一步：零件库',
+      description: '这里是零件库，有各种可用的组件。点击分类可以筛选不同类型的零件。',
+      target: 'parts-panel',
+      position: 'right'
+    },
+    {
+      title: '第二步：拖拽零件',
+      description: '按住零件拖拽到右侧画布中，就像搭积木一样简单！',
+      target: 'parts-list',
+      position: 'right'
+    },
+    {
+      title: '第三步：画布区域',
+      description: '这是你的工作区，可以放置和排列零件。点击选中，拖拽移动。',
+      target: 'canvas-area',
+      position: 'center'
+    },
+    {
+      title: '第四步：属性面板',
+      description: '选中零件后，在这里可以修改颜色、大小、文字等属性。',
+      target: 'props-panel',
+      position: 'left'
+    },
+    {
+      title: '第五步：保存和生成',
+      description: '完成插件后，点击保存，然后生成代码就能使用了！',
+      target: 'toolbar-save',
+      position: 'bottom'
+    },
+    {
+      title: '开始创造吧！',
+      description: '现在你已经学会了基本操作。试着创建一个简单的插件吧！🎉',
+      target: null,
+      position: 'center'
+    }
+  ]
+  
+  // 完成引导
+  const completeGuide = () => {
+    setShowGuide(false)
+    localStorage.setItem('plugin-builder-guide-shown', 'true')
+  }
+  
+  // 下一步引导
+  const nextGuideStep = () => {
+    if (guideStep < guideSteps.length - 1) {
+      setGuideStep(guideStep + 1)
+    } else {
+      completeGuide()
+    }
+  }
+  
+  // 上一步引导
+  const prevGuideStep = () => {
+    if (guideStep > 0) {
+      setGuideStep(guideStep - 1)
+    }
+  }
   
   // 拖拽状态
   const [dragState, setDragState] = useState<DragState>({
@@ -368,12 +888,12 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
         ...acc,
         [prop.name]: prop.defaultValue
       }), {}),
-      zIndex: plugin.components.length,
+      zIndex: (plugin.components || []).length,
       visible: true,
       locked: false
     }
     
-    const newComponents = [...plugin.components, newComponent]
+    const newComponents = [...(plugin.components || []), newComponent]
     setPlugin(prev => ({
       ...prev,
       components: newComponents,
@@ -385,7 +905,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
 
   // 更新组件
   const updateComponent = useCallback((id: string, updates: Partial<CanvasComponent>) => {
-    const newComponents = plugin.components.map(comp =>
+    const newComponents = (plugin.components || []).map(comp =>
       comp.id === id ? { ...comp, ...updates } : comp
     )
     setPlugin(prev => ({ ...prev, components: newComponents }))
@@ -393,11 +913,11 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
 
   // 删除组件
   const deleteComponent = useCallback((id: string) => {
-    const newComponents = plugin.components.filter(comp => comp.id !== id)
+    const newComponents = (plugin.components || []).filter(comp => comp.id !== id)
     setPlugin(prev => ({
       ...prev,
       components: newComponents,
-      selectedComponentIds: prev.selectedComponentIds.filter(i => i !== id)
+      selectedComponentIds: (prev.selectedComponentIds || []).filter(i => i !== id)
     }))
     saveHistory(newComponents)
     showToast('success', '已删除组件')
@@ -408,9 +928,9 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     if (multi) {
       setPlugin(prev => ({
         ...prev,
-        selectedComponentIds: prev.selectedComponentIds.includes(id)
-          ? prev.selectedComponentIds.filter(i => i !== id)
-          : [...prev.selectedComponentIds, id]
+        selectedComponentIds: (prev.selectedComponentIds || []).includes(id)
+          ? (prev.selectedComponentIds || []).filter(i => i !== id)
+          : [...(prev.selectedComponentIds || []), id]
       }))
     } else {
       setPlugin(prev => ({ ...prev, selectedComponentIds: [id] }))
@@ -450,7 +970,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
       return
     }
     
-    if (plugin.components.length === 0) {
+    if ((plugin.components || []).length === 0) {
       showToast('error', '插件至少需要包含一个组件')
       return
     }
@@ -480,6 +1000,57 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     }
   }, [plugin, onSave, onSaved, showToast])
 
+  // 生成代码
+  const handleGenerate = useCallback(async () => {
+    if (!plugin.id) {
+      showToast('error', '请先保存插件')
+      return
+    }
+    
+    setIsGenerating(true)
+    try {
+      const result = await generatePluginCode(plugin.id)
+      showToast('success', `代码生成成功！${result.hasBackend ? '包含后端代码' : '纯前端插件'}`)
+    } catch (error) {
+      console.error('生成代码失败:', error)
+      showToast('error', '生成代码失败，请重试')
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [plugin.id, showToast])
+
+  // 部署插件
+  const handleDeploy = useCallback(async () => {
+    if (!plugin.id) {
+      showToast('error', '请先保存插件')
+      return
+    }
+    
+    setIsDeploying(true)
+    try {
+      const result = await deployPlugin(plugin.id, 'content-sidebar')
+      showToast('success', `插件部署成功！已添加到 ${result.slot} 插槽`)
+      onSaved?.()
+    } catch (error) {
+      console.error('部署失败:', error)
+      showToast('error', '部署失败，请先生成代码')
+    } finally {
+      setIsDeploying(false)
+    }
+  }, [plugin.id, onSaved, showToast])
+
+  // 预览代码
+  const handlePreviewCode = useCallback(async () => {
+    try {
+      const result = await previewPlugin(plugin)
+      setGeneratedCode(result.code)
+      setShowCodeModal(true)
+    } catch (error) {
+      console.error('预览代码失败:', error)
+      showToast('error', '预览代码失败')
+    }
+  }, [plugin, showToast])
+
   // 键盘快捷键
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -499,8 +1070,8 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
             break
         }
       }
-      if (e.key === 'Delete' && plugin.selectedComponentIds.length > 0) {
-        plugin.selectedComponentIds.forEach(id => deleteComponent(id))
+      if (e.key === 'Delete' && (plugin.selectedComponentIds || []).length > 0) {
+        (plugin.selectedComponentIds || []).forEach(id => deleteComponent(id))
       }
     }
     
@@ -509,13 +1080,13 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
   }, [undo, redo, handleSave, plugin, deleteComponent])
 
   // 过滤零件
-  const filteredParts = SAMPLE_PARTS.filter(part =>
+  const filteredParts = SAMPLE_PARTS?.filter(part =>
     selectedCategory === 'all' || part.category === selectedCategory
-  )
+  ) || []
 
   // 选中的组件
-  const selectedComponents = plugin.components.filter(comp =>
-    plugin.selectedComponentIds.includes(comp.id)
+  const selectedComponents = (plugin.components || []).filter(comp =>
+    (plugin.selectedComponentIds || []).includes(comp.id)
   )
 
   // 调整大小状态
@@ -563,7 +1134,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = (e.clientX - resizing.startX) / zoom
       const deltaY = (e.clientY - resizing.startY) / zoom
-      const gridSize = plugin.canvas.gridSize
+      const gridSize = plugin.canvas?.gridSize || 20
       
       let newWidth = resizing.startWidth
       let newHeight = resizing.startHeight
@@ -615,25 +1186,28 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
       newTop = Math.round(newTop / gridSize) * gridSize
       
       // 更新组件
-      updateComponent(resizing.compId, {
-        position: { x: newLeft, y: newTop },
-        part: {
-          ...plugin.components.find(c => c.id === resizing.compId)!.part,
-          visual: {
-            ...plugin.components.find(c => c.id === resizing.compId)!.part.visual,
-            base: {
-              ...plugin.components.find(c => c.id === resizing.compId)!.part.visual.base,
-              width: `${newWidth}px`,
-              height: `${newHeight}px`
+      const comp = (plugin.components || []).find(c => c.id === resizing.compId)
+      if (comp) {
+        updateComponent(resizing.compId, {
+          position: { x: newLeft, y: newTop },
+          part: {
+            ...comp.part,
+            visual: {
+              ...comp.part.visual,
+              base: {
+                ...comp.part.visual.base,
+                width: `${newWidth}px`,
+                height: `${newHeight}px`
+              }
             }
           }
-        }
-      })
+        })
+      }
     }
     
     const handleMouseUp = () => {
       if (resizing) {
-        saveHistory(plugin.components)
+        saveHistory(plugin.components || [])
       }
       setResizing(null)
     }
@@ -645,7 +1219,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [resizing, zoom, plugin.canvas.gridSize, plugin.components, updateComponent, saveHistory])
+  }, [resizing, zoom, plugin.canvas?.gridSize, plugin.components, updateComponent, saveHistory])
 
   // 调整大小手柄组件
   const ResizeHandle = ({ comp, position }: { comp: CanvasComponent; position: string }) => {
@@ -689,24 +1263,24 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     const newY = comp.position.y + info.offset.y / zoom
     
     // 吸附到网格
-    const gridSize = plugin.canvas.gridSize
+    const gridSize = plugin.canvas?.gridSize || 20
     const snappedX = Math.round(newX / gridSize) * gridSize
     const snappedY = Math.round(newY / gridSize) * gridSize
     
     updateComponent(comp.id, {
       position: { x: snappedX, y: snappedY }
     })
-    saveHistory(plugin.components.map(c => 
+    saveHistory((plugin.components || []).map(c => 
       c.id === comp.id ? { ...c, position: { x: snappedX, y: snappedY } } : c
     ))
-  }, [zoom, plugin.canvas.gridSize, plugin.components, updateComponent, saveHistory, previewMode])
+  }, [zoom, plugin.canvas?.gridSize, plugin.components, updateComponent, saveHistory, previewMode])
 
   // 对齐组件
   const alignComponents = useCallback((align: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
     if (selectedComponents.length < 2) return
     
-    const gridSize = plugin.canvas.gridSize
-    let newComponents = [...plugin.components]
+    const gridSize = plugin.canvas?.gridSize || 20
+    let newComponents = [...(plugin.components || [])]
     
     // 计算边界框
     const bounds = selectedComponents.reduce((acc, comp) => {
@@ -724,7 +1298,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     const centerY = (bounds.top + bounds.bottom) / 2
     
     newComponents = newComponents.map(comp => {
-      if (!plugin.selectedComponentIds.includes(comp.id)) return comp
+      if (!(plugin.selectedComponentIds || []).includes(comp.id)) return comp
       
       const width = parseInt(comp.part.visual.base.width as string) || 200
       const height = parseInt(comp.part.visual.base.height as string) || 100
@@ -762,7 +1336,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     setPlugin(prev => ({ ...prev, components: newComponents }))
     saveHistory(newComponents)
     showToast('success', `已${align === 'left' ? '左' : align === 'center' ? '水平居中' : align === 'right' ? '右' : align === 'top' ? '顶部' : align === 'middle' ? '垂直居中' : '底部'}对齐`)
-  }, [selectedComponents, plugin.components, plugin.selectedComponentIds, plugin.canvas.gridSize, saveHistory, showToast])
+  }, [selectedComponents, plugin.components, plugin.selectedComponentIds, plugin.canvas?.gridSize, saveHistory, showToast])
 
   // 分布组件
   const distributeComponents = useCallback((direction: 'horizontal' | 'vertical') => {
@@ -771,7 +1345,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
       return
     }
     
-    const gridSize = plugin.canvas.gridSize
+    const gridSize = plugin.canvas?.gridSize || 20
     const sorted = [...selectedComponents].sort((a, b) => 
       direction === 'horizontal' ? a.position.x - b.position.x : a.position.y - b.position.y
     )
@@ -796,7 +1370,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     ), 0)
     const gap = (totalSpace - totalSize) / (sorted.length - 1)
     
-    let newComponents = [...plugin.components]
+    let newComponents = [...(plugin.components || [])]
     let currentPos = start
     
     sorted.forEach((comp, index) => {
@@ -822,7 +1396,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
     setPlugin(prev => ({ ...prev, components: newComponents }))
     saveHistory(newComponents)
     showToast('success', `已${direction === 'horizontal' ? '水平' : '垂直'}分布`)
-  }, [selectedComponents, plugin.components, plugin.canvas.gridSize, saveHistory, showToast])
+  }, [selectedComponents, plugin.components, plugin.canvas?.gridSize, saveHistory, showToast])
 
   // 组合组件（简单版：创建组标记）
   const groupComponents = useCallback(() => {
@@ -834,7 +1408,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
 
   // 渲染组件
   const renderComponent = (comp: CanvasComponent) => {
-    const isSelected = plugin.selectedComponentIds.includes(comp.id)
+    const isSelected = (plugin.selectedComponentIds || []).includes(comp.id)
     const baseStyles = comp.part.visual.base
     const defaultStyles = comp.part.visual.states.default
 
@@ -1054,12 +1628,39 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
           </button>
 
           <button
+            onClick={handlePreviewCode}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors"
+            title="查看生成的代码"
+          >
+            <Code className="w-4 h-4" />
+            看代码
+          </button>
+
+          <button
             onClick={handleSave}
             disabled={isSaving}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className={cn("w-4 h-4", isSaving && "animate-spin")} />
             {isSaving ? '保存中...' : '保存'}
+          </button>
+
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || !plugin.id}
+            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Play className={cn("w-4 h-4", isGenerating && "animate-spin")} />
+            {isGenerating ? '生成中...' : '生成代码'}
+          </button>
+
+          <button
+            onClick={handleDeploy}
+            disabled={isDeploying || !plugin.id}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Rocket className={cn("w-4 h-4", isDeploying && "animate-spin")} />
+            {isDeploying ? '部署中...' : '部署'}
           </button>
         </div>
       </div>
@@ -1242,13 +1843,13 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
 
             {activePanel === 'layers' && (
               <div className="space-y-1">
-                {plugin.components.slice().reverse().map((comp, index) => (
+                {(plugin.components || []).slice().reverse().map((comp, index) => (
                   <div
                     key={comp.id}
                     onClick={() => selectComponent(comp.id)}
                     className={cn(
                       'flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors',
-                      plugin.selectedComponentIds.includes(comp.id)
+                      (plugin.selectedComponentIds || []).includes(comp.id)
                         ? 'bg-blue-50 text-blue-600'
                         : 'hover:bg-gray-100'
                     )}
@@ -1261,7 +1862,7 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
                     </div>
                   </div>
                 ))}
-                {plugin.components.length === 0 && (
+                {(plugin.components || []).length === 0 && (
                   <div className="text-center py-8 text-gray-400 text-sm">
                     <Layers className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     暂无组件
@@ -1400,21 +2001,21 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
             onClick={() => setPlugin(prev => ({ ...prev, selectedComponentIds: [] }))}
             className="relative mx-auto bg-white shadow-lg"
             style={{
-              width: plugin.canvas.width,
-              height: plugin.canvas.height,
+              width: plugin.canvas?.width || 1200,
+              height: plugin.canvas?.height || 800,
               transform: `scale(${zoom})`,
               transformOrigin: 'top left',
               backgroundImage: showGrid
                 ? 'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)'
                 : 'none',
-              backgroundSize: showGrid ? `${plugin.canvas.gridSize}px ${plugin.canvas.gridSize}px` : 'auto'
+              backgroundSize: showGrid ? `${plugin.canvas?.gridSize || 20}px ${plugin.canvas?.gridSize || 20}px` : 'auto'
             }}
           >
             {/* 渲染所有组件 */}
-            {plugin.components.map(renderComponent)}
+            {(plugin.components || []).map(renderComponent)}
 
             {/* 空状态提示 */}
-            {plugin.components.length === 0 && (
+            {(plugin.components || []).length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-gray-400">
                   <Box className="w-16 h-16 mx-auto mb-4 opacity-30" />
@@ -1426,6 +2027,155 @@ export default function PluginBuilder({ initialPlugin, onSave, onCancel, onSaved
           </div>
         </div>
       </div>
+
+      {/* 代码预览模态框 */}
+      {showCodeModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold">生成的代码预览</h3>
+              <button
+                onClick={() => setShowCodeModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto">
+                <code>{generatedCode}</code>
+              </pre>
+            </div>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedCode || '')
+                  showToast('success', '代码已复制到剪贴板')
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                复制代码
+              </button>
+              <button
+                onClick={() => setShowCodeModal(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 新手引导 */}
+      {showGuide && (
+        <div className="fixed inset-0 z-50">
+          {/* 遮罩层 */}
+          <div className="absolute inset-0 bg-black/40" onClick={completeGuide} />
+          
+          {/* 引导卡片 */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={cn(
+              'absolute bg-white rounded-2xl shadow-2xl p-6 max-w-md',
+              guideSteps[guideStep].position === 'center' && 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2',
+              guideSteps[guideStep].position === 'right' && 'top-1/2 left-80 -translate-y-1/2',
+              guideSteps[guideStep].position === 'left' && 'top-1/2 right-4 -translate-y-1/2',
+              guideSteps[guideStep].position === 'bottom' && 'top-20 left-1/2 -translate-x-1/2'
+            )}
+          >
+            {/* 步骤指示器 */}
+            <div className="flex items-center justify-center gap-1 mb-4">
+              {guideSteps.map((_, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    'w-2 h-2 rounded-full transition-colors',
+                    index === guideStep ? 'bg-blue-500 w-4' : 'bg-gray-300'
+                  )}
+                />
+              ))}
+            </div>
+            
+            {/* 图标 */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center">
+                {guideStep === 0 ? (
+                  <Sparkles className="w-8 h-8 text-white" />
+                ) : guideStep === guideSteps.length - 1 ? (
+                  <span className="text-3xl">🎉</span>
+                ) : (
+                  <span className="text-2xl font-bold text-white">{guideStep}</span>
+                )}
+              </div>
+            </div>
+            
+            {/* 标题和内容 */}
+            <h3 className="text-xl font-bold text-center text-gray-900 mb-2">
+              {guideSteps[guideStep].title}
+            </h3>
+            <p className="text-gray-600 text-center mb-6 leading-relaxed">
+              {guideSteps[guideStep].description}
+            </p>
+            
+            {/* 按钮 */}
+            <div className="flex items-center justify-between gap-3">
+              <button
+                onClick={prevGuideStep}
+                disabled={guideStep === 0}
+                className={cn(
+                  'flex items-center gap-1 px-4 py-2 rounded-lg font-medium transition-colors',
+                  guideStep === 0
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : 'text-gray-600 hover:bg-gray-100'
+                )}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                上一步
+              </button>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={completeGuide}
+                  className="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium"
+                >
+                  跳过
+                </button>
+                <button
+                  onClick={nextGuideStep}
+                  className="flex items-center gap-1 px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                >
+                  {guideStep === guideSteps.length - 1 ? '开始创作' : '下一步'}
+                  {guideStep < guideSteps.length - 1 && <ChevronRight className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+          
+          {/* 高亮框 */}
+          {guideSteps[guideStep].target && (
+            <div
+              className="absolute border-4 border-blue-400 rounded-lg pointer-events-none"
+              style={{
+                boxShadow: '0 0 0 9999px rgba(0,0,0,0.4), 0 0 20px rgba(59,130,246,0.5)'
+              }}
+            />
+          )}
+        </div>
+      )}
+      
+      {/* 帮助按钮 */}
+      <button
+        onClick={() => {
+          setShowGuide(true)
+          setGuideStep(0)
+        }}
+        className="fixed bottom-6 right-6 w-12 h-12 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center z-40"
+        title="查看引导"
+      >
+        <HelpCircle className="w-6 h-6" />
+      </button>
     </div>
   )
 }

@@ -125,9 +125,11 @@ router.get('/', authMiddleware, adminMiddleware, (req: Request, res: Response) =
     else if (isCustom === 'false') {
       filteredPlugins = plugins.filter((p: any) => !p.isCustom)
     }
-    // 默认只返回已启用的插件
+    // 管理后台默认返回所有插件（包括禁用的），方便管理
+    // 只有明确指定只返回启用插件时才过滤
     else if (all !== 'true' && includeUninstalled !== 'true') {
-      filteredPlugins = plugins.filter((p: any) => p.isEnabled)
+      // 管理后台需要看到所有插件，包括禁用的
+      filteredPlugins = plugins
     }
 
     // 合并内置插件信息
@@ -538,6 +540,209 @@ router.get('/:id/content', (req: Request, res: Response) => {
   } catch (error) {
     console.error('获取插件内容失败:', error)
     return errorResponse(res, '获取插件内容失败')
+  }
+})
+
+/**
+ * 生成插件代码
+ * POST /api/v2/plugins/:id/generate
+ * 将可视化构建数据生成真实可用的代码
+ */
+router.post('/:id/generate', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string
+    
+    // 获取插件数据
+    const plugin = queryOne(
+      `SELECT * FROM plugins WHERE id = ? AND isCustom = 1`,
+      [id]
+    )
+    
+    if (!plugin) {
+      return errorResponse(res, '自定义插件不存在', 404)
+    }
+    
+    if (!plugin.builderData) {
+      return errorResponse(res, '插件没有构建数据', 400)
+    }
+    
+    // 动态导入生成器
+    const { generatePluginCode, saveGeneratedPlugin } = await import('../../../../utils/plugin-generator.js')
+    
+    // 解析构建数据
+    const buildingPlugin = JSON.parse(plugin.builderData)
+    
+    // 生成代码
+    const generated = generatePluginCode(buildingPlugin)
+    
+    // 保存到文件系统
+    const generatedPluginsPath = process.env.GENERATED_PLUGINS_PATH || './generated-plugins'
+    saveGeneratedPlugin(generated, generatedPluginsPath)
+    
+    // 更新插件状态
+    run(
+      `UPDATE plugins SET 
+        config = json_set(COALESCE(config, '{}'), '$.generated', true),
+        config = json_set(COALESCE(config, '{}'), '$.generatedAt', ?),
+        config = json_set(COALESCE(config, '{}'), '$.hasBackend', ?),
+        updatedAt = ?
+      WHERE id = ?`,
+      [new Date().toISOString(), generated.config.hasBackend ? 1 : 0, new Date().toISOString(), id]
+    )
+    
+    return successResponse(res, {
+      message: '插件代码生成成功',
+      pluginId: generated.id,
+      hasBackend: generated.config.hasBackend,
+      files: {
+        frontend: [
+          'frontend/index.tsx',
+          'frontend/styles.css',
+          'frontend/types.ts'
+        ],
+        backend: generated.config.hasBackend ? [
+          'backend/routes.ts',
+          'backend/database.sql',
+          'backend/types.ts'
+        ] : []
+      }
+    })
+  } catch (error) {
+    console.error('生成插件代码失败:', error)
+    return errorResponse(res, '生成插件代码失败: ' + (error as Error).message)
+  }
+})
+
+/**
+ * 部署插件
+ * POST /api/v2/plugins/:id/deploy
+ * 将生成的代码部署到系统中
+ */
+router.post('/:id/deploy', authMiddleware, adminMiddleware, async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string
+    const { slot = 'content-sidebar' } = req.body
+    
+    // 获取插件数据
+    const plugin = queryOne(
+      `SELECT * FROM plugins WHERE id = ? AND isCustom = 1`,
+      [id]
+    )
+    
+    if (!plugin) {
+      return errorResponse(res, '自定义插件不存在', 404)
+    }
+    
+    // 解析配置
+    const config = plugin.config ? JSON.parse(plugin.config) : {}
+    
+    if (!config.generated) {
+      return errorResponse(res, '插件尚未生成代码，请先调用生成接口', 400)
+    }
+    
+    // 更新插件配置，标记为已部署
+    const newConfig = {
+      ...config,
+      deployed: true,
+      deployedAt: new Date().toISOString(),
+      slot,
+      hasBackend: config.hasBackend || false,
+      hasFrontend: true
+    }
+    
+    run(
+      `UPDATE plugins SET 
+        config = ?,
+        isEnabled = 1,
+        updatedAt = ?
+      WHERE id = ?`,
+      [JSON.stringify(newConfig), new Date().toISOString(), id]
+    )
+    
+    // 如果有后端，创建数据库表
+    if (config.hasBackend) {
+      const fs = require('fs')
+      const path = require('path')
+      const generatedPluginsPath = process.env.GENERATED_PLUGINS_PATH || './generated-plugins'
+      const sqlPath = path.join(generatedPluginsPath, id, 'backend', 'database.sql')
+      
+      if (fs.existsSync(sqlPath)) {
+        const sql = fs.readFileSync(sqlPath, 'utf-8')
+        // 执行SQL创建表
+        const statements = sql.split(';').filter((s: string) => s.trim())
+        for (const statement of statements) {
+          try {
+            run(statement)
+          } catch (e) {
+            console.log('SQL执行（可能已存在）:', e)
+          }
+        }
+      }
+    }
+    
+    // 插入或更新插槽配置
+    const existingSlot = queryOne(
+      'SELECT id FROM plugin_slot_configs WHERE pluginId = ?',
+      [id]
+    )
+    
+    if (existingSlot) {
+      run(
+        `UPDATE plugin_slot_configs SET 
+          slot = ?,
+          isEnabled = 1,
+          updatedAt = ?
+        WHERE pluginId = ?`,
+        [slot, new Date().toISOString(), id]
+      )
+    } else {
+      const slotId = generateId()
+      run(
+        `INSERT INTO plugin_slot_configs (id, pluginId, slot, orderIndex, isEnabled, createdAt, updatedAt)
+         VALUES (?, ?, ?, 0, 1, ?, ?)`,
+        [slotId, id, slot, new Date().toISOString(), new Date().toISOString()]
+      )
+    }
+    
+    return successResponse(res, {
+      message: '插件部署成功',
+      pluginId: id,
+      slot,
+      isEnabled: true
+    })
+  } catch (error) {
+    console.error('部署插件失败:', error)
+    return errorResponse(res, '部署插件失败: ' + (error as Error).message)
+  }
+})
+
+/**
+ * 预览插件
+ * POST /api/v2/plugins/preview
+ * 临时预览构建中的插件（不保存）
+ */
+router.post('/preview', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { builderData } = req.body
+    
+    if (!builderData) {
+      return errorResponse(res, '缺少构建数据', 400)
+    }
+    
+    // 动态导入生成器
+    const { generatePluginCode } = await import('../../../../utils/plugin-generator.js')
+    
+    // 生成代码（不保存）
+    const generated = generatePluginCode(builderData)
+    
+    return successResponse(res, {
+      code: generated.frontend.component,
+      styles: generated.frontend.styles,
+      hasBackend: generated.config.hasBackend
+    })
+  } catch (error) {
+    console.error('预览插件失败:', error)
+    return errorResponse(res, '预览插件失败: ' + (error as Error).message)
   }
 })
 

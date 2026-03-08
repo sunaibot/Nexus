@@ -146,6 +146,7 @@ export interface ComponentPart {
       focus?: PartStyles
       disabled?: PartStyles
       loading?: PartStyles
+      checked?: PartStyles
     }
 
     // 动画

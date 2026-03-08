@@ -176,6 +176,598 @@ const SAMPLE_PARTS: ComponentPart[] = [
     stats: { downloads: 890, likes: 234, usage: 567 },
     createdAt: '2024-01-01',
     updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_4',
+    name: '主按钮',
+    description: '主要操作按钮，支持多种尺寸',
+    version: '1.0.0',
+    author: '系统',
+    icon: '🔘',
+    category: 'basic',
+    tags: ['按钮', '主要', '操作'],
+    visual: {
+      base: {
+        padding: '12px 24px',
+        backgroundColor: '#3b82f6',
+        color: '#ffffff',
+        borderRadius: '8px',
+        fontSize: '16px',
+        fontWeight: '500',
+        textAlign: 'center',
+        cursor: 'pointer',
+        border: 'none',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      },
+      states: {
+        default: {},
+        hover: {
+          backgroundColor: '#2563eb',
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
+        },
+        active: {
+          backgroundColor: '#1d4ed8',
+          transform: 'translateY(0)'
+        },
+        focus: {},
+        disabled: {
+          backgroundColor: '#9ca3af',
+          cursor: 'not-allowed'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'click', label: '点击', description: '点击按钮时触发', actions: [] },
+        { name: 'hover', label: '悬停', description: '鼠标悬停时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'text', label: '文字', type: 'string', defaultValue: '按钮' },
+      { name: 'size', label: '尺寸', type: 'select', defaultValue: 'medium', options: [
+        { label: '小', value: 'small' },
+        { label: '中', value: 'medium' },
+        { label: '大', value: 'large' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 1200, likes: 89, usage: 450 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_5',
+    name: '卡片容器',
+    description: '带阴影的卡片容器',
+    version: '1.0.0',
+    author: '系统',
+    icon: '🃏',
+    category: 'layout',
+    tags: ['卡片', '容器', '布局'],
+    visual: {
+      base: {
+        padding: '24px',
+        backgroundColor: '#ffffff',
+        borderRadius: '12px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+        border: '1px solid #e5e7eb'
+      },
+      states: {
+        default: {},
+        hover: {
+          boxShadow: '0 8px 16px rgba(0,0,0,0.15)',
+          transform: 'translateY(-2px)'
+        },
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'click', label: '点击', description: '点击卡片时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'padding', label: '内边距', type: 'select', defaultValue: '24px', options: [
+        { label: '小', value: '16px' },
+        { label: '中', value: '24px' },
+        { label: '大', value: '32px' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 980, likes: 76, usage: 320 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_6',
+    name: '标题文本',
+    description: '大标题文本组件',
+    version: '1.0.0',
+    author: '系统',
+    icon: '📝',
+    category: 'basic',
+    tags: ['文本', '标题', '文字'],
+    visual: {
+      base: {
+        fontSize: '24px',
+        fontWeight: '600',
+        color: '#1f2937',
+        lineHeight: '1.4'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: []
+    },
+    properties: [
+      { name: 'content', label: '内容', type: 'string', defaultValue: '标题文字' },
+      { name: 'align', label: '对齐', type: 'select', defaultValue: 'left', options: [
+        { label: '左对齐', value: 'left' },
+        { label: '居中', value: 'center' },
+        { label: '右对齐', value: 'right' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 850, likes: 65, usage: 280 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_7',
+    name: '输入框',
+    description: '表单输入框，支持多种类型',
+    version: '1.0.0',
+    author: '系统',
+    icon: '📥',
+    category: 'interactive',
+    tags: ['输入', '表单', '文本'],
+    visual: {
+      base: {
+        padding: '10px 14px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #d1d5db',
+        borderRadius: '6px',
+        fontSize: '14px',
+        color: '#374151',
+        width: '100%'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {
+          borderColor: '#3b82f6',
+          boxShadow: '0 0 0 3px rgba(59,130,246,0.1)'
+        },
+        disabled: {
+          backgroundColor: '#f3f4f6',
+          cursor: 'not-allowed'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '变化', description: '内容变化时触发', actions: [] },
+        { name: 'focus', label: '聚焦', description: '获得焦点时触发', actions: [] },
+        { name: 'blur', label: '失焦', description: '失去焦点时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'placeholder', label: '占位符', type: 'string', defaultValue: '请输入...' },
+      { name: 'type', label: '类型', type: 'select', defaultValue: 'text', options: [
+        { label: '文本', value: 'text' },
+        { label: '密码', value: 'password' },
+        { label: '数字', value: 'number' },
+        { label: '邮箱', value: 'email' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 720, likes: 54, usage: 210 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_8',
+    name: '开关',
+    description: '开关切换组件',
+    version: '1.0.0',
+    author: '系统',
+    icon: '🔛',
+    category: 'interactive',
+    tags: ['开关', '切换', '布尔'],
+    visual: {
+      base: {
+        width: '50px',
+        height: '26px',
+        backgroundColor: '#d1d5db',
+        borderRadius: '13px',
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {},
+        checked: {
+          backgroundColor: '#3b82f6'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '切换', description: '开关状态变化时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'checked', label: '默认开启', type: 'boolean', defaultValue: false },
+      { name: 'label', label: '标签文字', type: 'string', defaultValue: '开关' }
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 680, likes: 52, usage: 195 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_9',
+    name: '下拉选择',
+    description: '下拉选择框',
+    version: '1.0.0',
+    author: '系统',
+    icon: '📋',
+    category: 'interactive',
+    tags: ['选择', '下拉', '选项'],
+    visual: {
+      base: {
+        padding: '10px 14px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #d1d5db',
+        borderRadius: '6px',
+        fontSize: '14px',
+        color: '#374151',
+        width: '100%',
+        cursor: 'pointer'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {
+          borderColor: '#3b82f6',
+          boxShadow: '0 0 0 3px rgba(59,130,246,0.1)'
+        },
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '选择', description: '选项变化时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'placeholder', label: '占位符', type: 'string', defaultValue: '请选择...' },
+      { name: 'options', label: '选项', type: 'string', defaultValue: '选项1,选项2,选项3' }
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 620, likes: 48, usage: 175 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_10',
+    name: '复选框',
+    description: '多选复选框',
+    version: '1.0.0',
+    author: '系统',
+    icon: '☑️',
+    category: 'interactive',
+    tags: ['复选', '多选', '勾选'],
+    visual: {
+      base: {
+        width: '18px',
+        height: '18px',
+        backgroundColor: '#ffffff',
+        border: '2px solid #d1d5db',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {},
+        checked: {
+          backgroundColor: '#3b82f6',
+          borderColor: '#3b82f6'
+        }
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'change', label: '变化', description: '选中状态变化时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'label', label: '标签', type: 'string', defaultValue: '选项' },
+      { name: 'checked', label: '默认选中', type: 'boolean', defaultValue: false }
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 580, likes: 45, usage: 160 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_11',
+    name: '图片',
+    description: '图片展示组件',
+    version: '1.0.0',
+    author: '系统',
+    icon: '🖼️',
+    category: 'media',
+    tags: ['图片', '媒体', '照片'],
+    visual: {
+      base: {
+        width: '100%',
+        height: 'auto',
+        borderRadius: '8px',
+        objectFit: 'cover'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'click', label: '点击', description: '点击图片时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'src', label: '图片地址', type: 'string', defaultValue: '' },
+      { name: 'alt', label: '替代文字', type: 'string', defaultValue: '图片' }
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 650, likes: 48, usage: 180 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_12',
+    name: '列表',
+    description: '数据列表展示',
+    version: '1.0.0',
+    author: '系统',
+    icon: '📃',
+    category: 'data',
+    tags: ['列表', '数据', '项'],
+    visual: {
+      base: {
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb',
+        overflow: 'hidden'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'itemClick', label: '点击项', description: '点击列表项时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'items', label: '列表项', type: 'string', defaultValue: '项目1,项目2,项目3' },
+      { name: 'showIcon', label: '显示图标', type: 'boolean', defaultValue: true },
+      { name: 'striped', label: '斑马纹', type: 'boolean', defaultValue: false }
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 540, likes: 42, usage: 145 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_13',
+    name: '标签页',
+    description: '标签切换组件',
+    version: '1.0.0',
+    author: '系统',
+    icon: '📑',
+    category: 'layout',
+    tags: ['标签', '切换', '导航'],
+    visual: {
+      base: {
+        backgroundColor: '#ffffff',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: [
+        { name: 'tabChange', label: '切换标签', description: '切换标签时触发', actions: [] }
+      ]
+    },
+    properties: [
+      { name: 'tabs', label: '标签', type: 'string', defaultValue: '标签1,标签2,标签3' },
+      { name: 'activeTab', label: '默认标签', type: 'string', defaultValue: '0' }
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 480, likes: 38, usage: 125 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_14',
+    name: '进度条',
+    description: '进度展示组件',
+    version: '1.0.0',
+    author: '系统',
+    icon: '📈',
+    category: 'data',
+    tags: ['进度', '百分比', '条'],
+    visual: {
+      base: {
+        width: '100%',
+        height: '8px',
+        backgroundColor: '#e5e7eb',
+        borderRadius: '4px',
+        overflow: 'hidden'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: []
+    },
+    properties: [
+      { name: 'percent', label: '进度(%)', type: 'number', defaultValue: 50 },
+      { name: 'showText', label: '显示文字', type: 'boolean', defaultValue: true },
+      { name: 'color', label: '颜色', type: 'select', defaultValue: 'blue', options: [
+        { label: '蓝色', value: 'blue' },
+        { label: '绿色', value: 'green' },
+        { label: '橙色', value: 'orange' },
+        { label: '红色', value: 'red' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 420, likes: 35, usage: 110 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_15',
+    name: '徽标',
+    description: '数字徽标标记',
+    version: '1.0.0',
+    author: '系统',
+    icon: '🏷️',
+    category: 'basic',
+    tags: ['徽标', '数字', '标记'],
+    visual: {
+      base: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2px 8px',
+        backgroundColor: '#ef4444',
+        color: '#ffffff',
+        borderRadius: '10px',
+        fontSize: '12px',
+        fontWeight: '600',
+        minWidth: '20px',
+        height: '20px'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: []
+    },
+    properties: [
+      { name: 'count', label: '数字', type: 'number', defaultValue: 5 },
+      { name: 'max', label: '最大值', type: 'number', defaultValue: 99 },
+      { name: 'color', label: '颜色', type: 'select', defaultValue: 'red', options: [
+        { label: '红色', value: 'red' },
+        { label: '蓝色', value: 'blue' },
+        { label: '绿色', value: 'green' },
+        { label: '橙色', value: 'orange' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 380, likes: 32, usage: 95 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
+  },
+  {
+    id: 'part_16',
+    name: '分割线',
+    description: '内容分隔线',
+    version: '1.0.0',
+    author: '系统',
+    icon: '➖',
+    category: 'layout',
+    tags: ['分割', '线条', '分隔'],
+    visual: {
+      base: {
+        width: '100%',
+        height: '1px',
+        backgroundColor: '#e5e7eb',
+        margin: '16px 0'
+      },
+      states: {
+        default: {},
+        hover: {},
+        active: {},
+        focus: {},
+        disabled: {}
+      }
+    },
+    behavior: {
+      events: []
+    },
+    properties: [
+      { name: 'text', label: '文字', type: 'string', defaultValue: '' },
+      { name: 'type', label: '类型', type: 'select', defaultValue: 'horizontal', options: [
+        { label: '水平', value: 'horizontal' },
+        { label: '垂直', value: 'vertical' }
+      ]}
+    ],
+    isBuiltin: true,
+    isPublic: true,
+    stats: { downloads: 320, likes: 28, usage: 80 },
+    createdAt: '2024-01-01',
+    updatedAt: '2024-01-01'
   }
 ]
 

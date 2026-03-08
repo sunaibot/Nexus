@@ -292,18 +292,19 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
       ) : (
         <>
           {activeTab === 'list' ? (
-            <div className="space-y-6">
+            <div className="space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
               {/* 内置插件 */}
               <div>
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-2" style={{ color: 'var(--color-text-muted)' }}>
                   <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
                   内置插件 ({builtinPlugins.length})
                 </h3>
-                <div className="grid gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {builtinPlugins.map(plugin => (
                     <PluginCard
                       key={plugin.id}
                       plugin={plugin}
+                      compact
                       onToggle={() => handleToggleEnable(plugin)}
                       onDelete={() => handleDelete(plugin)}
                       onConfigure={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
@@ -324,11 +325,12 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
                     <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>暂无自定义插件</p>
                   </div>
                 ) : (
-                  <div className="grid gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {customPlugins.map(plugin => (
                       <PluginCard
                         key={plugin.id}
                         plugin={plugin}
+                        compact
                         onToggle={() => handleToggleEnable(plugin)}
                         onDelete={() => handleDelete(plugin)}
                         onConfigure={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
@@ -419,7 +421,109 @@ function PluginIcon({ iconName, className, style }: { iconName?: string; classNa
   }
 }
 
-function PluginCard({ plugin, onToggle, onDelete, onConfigure, onManageData }: PluginCardProps) {
+function PluginCard({ plugin, onToggle, onDelete, onConfigure, onManageData, compact = false }: PluginCardProps & { compact?: boolean }) {
+  if (compact) {
+    // 紧凑模式 - 用于网格布局
+    return (
+      <div 
+        className="flex flex-col p-4 rounded-xl border transition-all hover:shadow-lg"
+        style={{ 
+          background: 'var(--color-glass)',
+          borderColor: 'var(--color-glass-border)'
+        }}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ background: plugin.isEnabled ? 'var(--color-primary-bg)' : 'var(--color-glass-hover)' }}
+          >
+            <PluginIcon 
+              iconName={plugin.icon} 
+              className="w-6 h-6"
+              style={{ color: 'var(--color-primary)' }}
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            {plugin.isBuiltin && (
+              <span 
+                className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                style={{ background: 'var(--color-success-bg)', color: 'var(--color-success)' }}
+              >
+                内置
+              </span>
+            )}
+          </div>
+        </div>
+        
+        <h4 className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
+          {plugin.name}
+        </h4>
+        <p className="text-sm line-clamp-2 mb-3 flex-1" style={{ color: 'var(--color-text-muted)' }}>
+          {plugin.description}
+        </p>
+        
+        <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: 'var(--color-glass-border)' }}>
+          <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+            v{plugin.version}
+          </span>
+          <div className="flex items-center gap-1">
+            {onManageData && (
+              <button
+                onClick={onManageData}
+                className="px-2 py-1.5 rounded-lg transition-colors text-xs font-medium"
+                style={{ 
+                  background: 'var(--color-primary-bg)', 
+                  color: 'var(--color-primary)'
+                }}
+                title="管理数据"
+              >
+                管理
+              </button>
+            )}
+            <button
+              onClick={onToggle}
+              className="p-1.5 rounded-lg transition-colors"
+              style={{
+                background: plugin.isEnabled ? 'var(--color-success-bg)' : 'var(--color-glass-hover)',
+                color: plugin.isEnabled ? 'var(--color-success)' : 'var(--color-text-muted)'
+              }}
+              title={plugin.isEnabled ? '禁用' : '启用'}
+            >
+              {plugin.isEnabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            </button>
+            {onConfigure && (
+              <button
+                onClick={onConfigure}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{
+                  background: 'var(--color-glass-hover)',
+                  color: 'var(--color-text-muted)'
+                }}
+                title="配置"
+              >
+                <Settings className="w-3.5 h-3.5" />
+              </button>
+            )}
+            {!plugin.isBuiltin && (
+              <button
+                onClick={onDelete}
+                className="p-1.5 rounded-lg transition-colors"
+                style={{
+                  background: 'var(--color-glass-hover)',
+                  color: 'var(--color-text-muted)'
+                }}
+                title="删除"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 列表模式 - 用于自定义插件
   return (
     <div 
       className="flex items-center justify-between p-4 rounded-lg border transition-colors"

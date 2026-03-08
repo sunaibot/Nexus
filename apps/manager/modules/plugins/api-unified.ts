@@ -142,3 +142,87 @@ export async function updatePluginSlotConfig(id: string, data: SlotConfigRequest
 export async function togglePlugin(id: string, enabled: boolean): Promise<void> {
   await updatePlugin(id, { isEnabled: enabled })
 }
+
+/**
+ * 生成插件代码
+ * 将可视化构建数据转换为真实可用的代码
+ */
+export async function generatePluginCode(id: string): Promise<{
+  message: string
+  pluginId: string
+  hasBackend: boolean
+  files: {
+    frontend: string[]
+    backend: string[]
+  }
+}> {
+  const response = await request<{
+    success: boolean
+    data: {
+      message: string
+      pluginId: string
+      hasBackend: boolean
+      files: {
+        frontend: string[]
+        backend: string[]
+      }
+    }
+  }>(`${API_BASE}/${id}/generate`, {
+    method: 'POST',
+    requireAuth: true,
+  })
+  return response.data!
+}
+
+/**
+ * 部署插件
+ * 将生成的代码部署到系统中
+ */
+export async function deployPlugin(
+  id: string,
+  slot: string = 'content-sidebar'
+): Promise<{
+  message: string
+  pluginId: string
+  slot: string
+  isEnabled: boolean
+}> {
+  const response = await request<{
+    success: boolean
+    data: {
+      message: string
+      pluginId: string
+      slot: string
+      isEnabled: boolean
+    }
+  }>(`${API_BASE}/${id}/deploy`, {
+    method: 'POST',
+    body: JSON.stringify({ slot }),
+    requireAuth: true,
+  })
+  return response.data!
+}
+
+/**
+ * 预览插件代码
+ * 临时生成代码用于预览（不保存）
+ */
+export async function previewPlugin(builderData: any): Promise<{
+  code: string
+  styles: string
+  hasBackend: boolean
+}> {
+  const response = await request<{
+    success: boolean
+    data: {
+      code: string
+      styles: string
+      hasBackend: boolean
+    }
+  }>(`${API_BASE}/preview`, {
+    method: 'POST',
+    body: JSON.stringify({ builderData }),
+    requireAuth: true,
+  })
+  return response.data!
+}

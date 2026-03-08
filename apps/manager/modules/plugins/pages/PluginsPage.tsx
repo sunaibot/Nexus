@@ -15,7 +15,8 @@ import {
   Trash2,
   Play,
   MoreVertical,
-  Power
+  Power,
+  Wand2
 } from 'lucide-react'
 import { cn } from '../../../lib/utils'
 import { useToast } from '../../../components/admin/Toast'
@@ -33,6 +34,7 @@ import PluginDisplayConfigManager from '../components/PluginDisplayConfigManager
 import { UnifiedPluginManager } from '../components/UnifiedPluginManager'
 import PartWorkshop from '../components/PartWorkshop'
 import PluginBuilder from '../components/PluginBuilder'
+import PluginWizard from '../components/PluginWizard'
 import { 
   getCustomPlugins, 
   deleteCustomPlugin, 
@@ -54,6 +56,9 @@ export default function PluginsPage() {
   
   // 主页面状态 - 必须放在所有条件逻辑之前
   const [mainTab, setMainTab] = useState<'plugins' | 'market' | 'workshop' | 'custom'>('plugins')
+  
+  // 向导状态
+  const [showWizard, setShowWizard] = useState(false)
   
   // 加载自定义插件列表
   const loadCustomPlugins = useCallback(async () => {
@@ -475,13 +480,22 @@ export default function PluginsPage() {
                     通过可视化构建器创建的插件
                   </p>
                 </div>
-                <button
-                  onClick={handleCreatePlugin}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  新建插件
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowWizard(true)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 transition-all shadow-lg shadow-indigo-200"
+                  >
+                    <Wand2 className="w-4 h-4" />
+                    插件向导
+                  </button>
+                  <button
+                    onClick={handleCreatePlugin}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                    新建插件
+                  </button>
+                </div>
               </div>
 
               {isLoadingCustom ? (
@@ -602,6 +616,17 @@ export default function PluginsPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* 插件向导 */}
+      {showWizard && (
+        <PluginWizard
+          onComplete={() => {
+            setShowWizard(false)
+            loadCustomPlugins()
+          }}
+          onCancel={() => setShowWizard(false)}
+        />
+      )}
     </div>
   )
 }
