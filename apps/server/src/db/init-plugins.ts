@@ -156,6 +156,55 @@ export const BUILTIN_PLUGINS: PluginDefinition[] = [
       path: '/analytics',
       order: 75
     }
+  },
+  {
+    id: 'webdav',
+    name: 'WebDAV同步',
+    description: 'WebDAV同步插件，支持书签数据同步到WebDAV服务器',
+    version: '1.0.0',
+    author: 'Nexus Team',
+    icon: 'Cloud',
+    isEnabled: 1,
+    isInstalled: 1,
+    visibility: 'admin',
+    orderIndex: 6,
+    hasBackend: true,
+    hasFrontend: false,
+    config: {
+      serverUrl: '',
+      username: '',
+      password: '',
+      syncInterval: 3600000,
+      autoSync: false
+    },
+    menuConfig: {
+      label: 'WebDAV同步',
+      path: '/webdav',
+      order: 95
+    }
+  },
+  {
+    id: 'notifications',
+    name: '通知中心',
+    description: '通知中心插件，提供系统通知和公告管理功能',
+    version: '1.0.0',
+    author: 'Nexus Team',
+    icon: 'Bell',
+    isEnabled: 1,
+    isInstalled: 1,
+    visibility: 'admin',
+    orderIndex: 7,
+    hasBackend: true,
+    hasFrontend: false,
+    config: {
+      maxNotifications: 50,
+      retentionDays: 30
+    },
+    menuConfig: {
+      label: '通知中心',
+      path: '/notifications',
+      order: 96
+    }
   }
 ]
 

@@ -290,15 +290,9 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
       {loading ? (
         <div className="text-center py-12" style={{ color: 'var(--color-text-muted)' }}>加载中...</div>
       ) : (
-        <AnimatePresence mode="wait">
+        <>
           {activeTab === 'list' ? (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
+            <div className="space-y-6">
               {/* 内置插件 */}
               <div>
                 <h3 className="text-sm font-medium mb-3 flex items-center gap-2" style={{ color: 'var(--color-text-muted)' }}>
@@ -333,26 +327,20 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
                   <div className="grid gap-3">
                     {customPlugins.map(plugin => (
                       <PluginCard
-                      key={plugin.id}
-                      plugin={plugin}
-                      onToggle={() => handleToggleEnable(plugin)}
-                      onDelete={() => handleDelete(plugin)}
-                      onConfigure={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
-                      onManageData={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
-                    />
+                        key={plugin.id}
+                        plugin={plugin}
+                        onToggle={() => handleToggleEnable(plugin)}
+                        onDelete={() => handleDelete(plugin)}
+                        onConfigure={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
+                        onManageData={onManagePlugin ? () => onManagePlugin(plugin) : undefined}
+                      />
                     ))}
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div
-              key="slots"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               {SLOT_OPTIONS.map(slot => {
                 const slotPlugins = plugins.filter(
                   p => p.isEnabled && p.defaultSlot === slot.value
@@ -402,9 +390,9 @@ export function UnifiedPluginManager({ onManagePlugin }: UnifiedPluginManagerPro
                   </div>
                 )
               })}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </>
       )}
     </div>
   )
@@ -425,6 +413,8 @@ function PluginIcon({ iconName, className, style }: { iconName?: string; classNa
     case 'Rss': return <Rss className={className} style={style} />
     case 'StickyNote': return <StickyNote className={className} style={style} />
     case 'BarChart': return <BarChart className={className} style={style} />
+    case 'Cloud': return <Cloud className={className} style={style} />
+    case 'Bell': return <Bell className={className} style={style} />
     default: return <Puzzle className={className} style={style} />
   }
 }
