@@ -2,19 +2,10 @@ import { Request, Response, NextFunction } from 'express'
 import crypto from 'crypto'
 import { getDatabase, saveDatabase, forceSaveDatabase } from '../db/index.js'
 import { getSecurityConfig } from '../core/config/index.js'
+import { getJwtSecret } from '../utils/keyGenerator.js'
 
-// JWT 密钥配置（从环境变量读取，确保生产环境安全）
-let JWT_SECRET: string
-
-if (process.env.JWT_SECRET) {
-  JWT_SECRET = process.env.JWT_SECRET
-} else if (process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET must be set in production environment')
-} else {
-  // 开发环境：生成随机密钥并缓存
-  JWT_SECRET = crypto.randomBytes(64).toString('hex')
-  console.warn('[Security] Generated random JWT_SECRET for development. Set JWT_SECRET env var for persistent sessions.')
-}
+// JWT 密钥配置（使用 keyGenerator 自动生成或从环境变量读取）
+const JWT_SECRET: string = getJwtSecret()
 
 // 检查密钥强度
 if (JWT_SECRET.length < 32) {

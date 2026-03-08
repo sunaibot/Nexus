@@ -11,9 +11,13 @@ import v2Router from './routes/v2/index.js'
 
 import { ipFilterMiddleware } from './middleware/ipFilter.js'
 import { validateEnv, getEnv } from './utils/envValidator.js'
+import { getJwtSecret, getSessionSecret, checkPasswordConfig } from './utils/keyGenerator.js'
 import fs from 'fs'
 import https from 'https'
 import path from 'path'
+
+// ========== 检查密码配置 ==========
+checkPasswordConfig()
 
 const app = express()
 
@@ -124,11 +128,8 @@ if (!isDevEnv && !process.env.SESSION_SECRET) {
   process.exit(1)
 }
 
-// 生成或获取 session secret
-const sessionSecret = process.env.SESSION_SECRET || (() => {
-  console.warn('⚠️  WARNING: Using default session secret for development only')
-  return 'nowen-session-secret-dev-only-' + Date.now()
-})()
+// 使用 keyGenerator 生成或获取 session secret
+const sessionSecret = getSessionSecret()
 
 app.use(session({
   secret: sessionSecret,
