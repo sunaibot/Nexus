@@ -188,7 +188,7 @@ class CacheManager {
     // 检查是否有进行中的请求
     const pending = this.pendingRequests.get(key)
     if (pending) {
-      console.log(`[Cache] Reusing pending request for: ${key}`)
+      // console.log(`[Cache] Reusing pending request for: ${key}`)
       return pending as Promise<T>
     }
 
@@ -221,7 +221,7 @@ class CacheManager {
     if (!options?.skipCache) {
       const cached = this.get<T>(key)
       if (cached !== null) {
-        console.log(`[Cache] Hit: ${key}`)
+        // console.log(`[Cache] Hit: ${key}`)
         return cached
       }
     }
@@ -277,7 +277,7 @@ class CacheManager {
     }
 
     if (cleaned > 0) {
-      console.log(`[Cache] Cleaned up ${cleaned} expired items`)
+      // console.log(`[Cache] Cleaned up ${cleaned} expired items`)
     }
   }
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Settings, Home, Code, Bot, BookOpen, Wrench, BookMarked } from 'lucide-react'
+import { Plus, Home, Code, Bot, BookOpen, Wrench, BookMarked } from 'lucide-react'
 import { Tab } from '../types/tab'
 import { cn } from '../lib/utils'
 import { IconRenderer } from './IconRenderer'
@@ -10,7 +10,6 @@ interface TabSidebarProps {
   activeTabId: string | null
   onTabChange: (tabId: string) => void
   onAddTab?: () => void
-  onManageTabs?: () => void
   isEditMode?: boolean
   readLaterCount?: number
 }
@@ -29,7 +28,6 @@ export function TabSidebar({
   activeTabId,
   onTabChange,
   onAddTab,
-  onManageTabs,
   isEditMode = false,
   readLaterCount = 0,
 }: TabSidebarProps) {
@@ -223,36 +221,9 @@ export function TabSidebar({
         )}
       </div>
 
-      {/* 底部操作区 */}
+      {/* 底部操作区 - 已移除管理 Tab 按钮，统一在管理后台管理 */}
       <div className="w-full py-4 px-2 flex flex-col gap-1">
-        {/* 管理 Tabs 按钮 */}
-        <motion.button
-          onClick={onManageTabs}
-          className={cn(
-            'w-full flex items-center gap-3 px-3 py-3 rounded-xl',
-            'text-[var(--text-muted)]',
-            'hover:bg-[var(--hover)] hover:text-[var(--text-secondary)]',
-            'transition-all duration-200'
-          )}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center">
-            <Settings className="w-5 h-5" />
-          </div>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                className="text-sm font-medium whitespace-nowrap overflow-hidden"
-              >
-                管理 Tab
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
+        {/* 预留空间或添加其他快捷操作 */}
       </div>
     </motion.div>
   )

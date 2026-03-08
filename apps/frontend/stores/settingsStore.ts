@@ -60,23 +60,23 @@ export const useSettingsStore = create<SettingsState>()(
       isLoaded: false,
 
       fetchSettings: async (force = false) => {
-        console.log('[SettingsStore] fetchSettings called, force:', force, 'isLoaded:', get().isLoaded, 'lastSyncTime:', get().lastSyncTime)
+        // console.log('[SettingsStore] fetchSettings called, force:', force, 'isLoaded:', get().isLoaded, 'lastSyncTime:', get().lastSyncTime)
         
         // 如果不是强制刷新，且已经加载过，则跳过
         if (!force && get().isLoaded && get().lastSyncTime > 0) {
-          console.log('[SettingsStore] Skipping fetch, using cached data')
+          // console.log('[SettingsStore] Skipping fetch, using cached data')
           return
         }
         
         set({ isLoading: true, error: null })
         try {
-          console.log('[SettingsStore] Fetching settings from API...')
+          // console.log('[SettingsStore] Fetching settings from API...')
  // 加载设置和语录
         const [settings, quotes] = await Promise.all([
           fetchSettingsFromApi(),
           fetchQuotesSettings().catch(() => null),
         ])
-          console.log('[SettingsStore] Settings fetched:', settings)
+          // console.log('[SettingsStore] Settings fetched:', settings)
 
           // 应用站点设置
           if (settings.siteTitle) {

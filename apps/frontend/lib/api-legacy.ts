@@ -112,6 +112,7 @@ export {
 // 书签卡片样式 API
 export {
   fetchCurrentBookmarkCardStyle,
+  fetchGlobalBookmarkCardStyle,
   styleToCSS,
   getHoverStyle,
   getTitleStyle,

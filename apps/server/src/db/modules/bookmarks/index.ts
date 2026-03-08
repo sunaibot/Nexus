@@ -297,9 +297,16 @@ export function updateBookmark(
         category = ?, orderIndex = ?, updatedAt = ?
       WHERE id = ?
     `, [
-      updates.category, updates.orderIndex, now, id
+      updates.category ?? null, 
+      updates.orderIndex ?? null, 
+      now, 
+      id
     ])
   } else {
+    // 获取当前书签数据，用于填充未提供的字段
+    const current = getBookmarkById(id, userId)
+    if (!current) return null
+
     run(`
       UPDATE bookmarks SET
         url = ?, internalUrl = ?, title = ?, description = ?, favicon = ?, ogImage = ?, icon = ?, iconUrl = ?,
@@ -307,9 +314,25 @@ export function updateBookmark(
         isReadLater = ?, isRead = ?, visibility = ?, updatedAt = ?
       WHERE id = ? AND userId = ?
     `, [
-      updates.url, updates.internalUrl || null, updates.title, updates.description, updates.favicon, updates.ogImage, updates.icon, updates.iconUrl,
-      updates.category, updates.tags, updates.notes || null, updates.orderIndex, updates.isPinned ? 1 : 0,
-      updates.isReadLater ? 1 : 0, updates.isRead ? 1 : 0, updates.visibility || 'personal', now, id, userId
+      updates.url ?? current.url,
+      updates.internalUrl ?? current.internalUrl ?? null,
+      updates.title ?? current.title,
+      updates.description ?? current.description ?? null,
+      updates.favicon ?? current.favicon ?? null,
+      updates.ogImage ?? current.ogImage ?? null,
+      updates.icon ?? current.icon ?? null,
+      updates.iconUrl ?? current.iconUrl ?? null,
+      updates.category ?? current.category,
+      updates.tags ?? current.tags ?? null,
+      updates.notes ?? current.notes ?? null,
+      updates.orderIndex ?? current.orderIndex ?? 0,
+      updates.isPinned !== undefined ? (updates.isPinned ? 1 : 0) : (current.isPinned ? 1 : 0),
+      updates.isReadLater !== undefined ? (updates.isReadLater ? 1 : 0) : (current.isReadLater ? 1 : 0),
+      updates.isRead !== undefined ? (updates.isRead ? 1 : 0) : (current.isRead ? 1 : 0),
+      updates.visibility ?? current.visibility ?? 'personal',
+      now,
+      id,
+      userId
     ])
   }
 

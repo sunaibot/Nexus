@@ -69,6 +69,7 @@ export interface BookmarkCardStyle {
   circleBackgroundColor?: string
   circleBorderWidth: string
   circleBorderColor?: string
+  circleIconPosition?: 'center' | 'top'
   // 布局配置
   layoutType: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
   iconPosition: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'
@@ -144,6 +145,7 @@ export interface CreateBookmarkCardStyleData {
   circleBackgroundColor?: string
   circleBorderWidth: string
   circleBorderColor?: string
+  circleIconPosition?: 'center' | 'top'
   // 布局配置
   layoutType: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
   iconPosition: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'

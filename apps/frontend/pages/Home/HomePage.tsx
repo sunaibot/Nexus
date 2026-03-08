@@ -5,13 +5,13 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
+import { BookMarked } from 'lucide-react'
 
 import { Header } from '../../components/layout'
 import { AddBookmarkModal } from '../../components/features/bookmark'
 import { CommandPalette } from '../../components/CommandPalette'
 import { ErrorBoundary } from '../../components/ErrorBoundary'
 import { HeroSection } from '../../components/home/HeroSection'
-import { ReadLaterSection } from '../../components/home/ReadLaterSection'
 import { PluginRenderer } from '../../components/plugin-system'
 import { AdminLogin } from '../../components/AdminLogin'
 import { ForcePasswordChange } from '../../components/ForcePasswordChange'
@@ -20,7 +20,7 @@ import { TabSidebar } from '../../components/TabSidebar'
 import { PluginSlot } from '../../plugins'
 import { CustomPluginList } from '../../plugins'
 
-import { WidgetSection, ReadLaterToggle, BookmarkList, PinnedBookmark } from './components'
+import { WidgetSection, ReadLaterToggle, BookmarkList } from './components'
 
 import { useHomePage } from '../../hooks/useHomePage'
 import { cn } from '../../lib/utils'
@@ -37,7 +37,6 @@ export function HomePage() {
     filteredCategories,
     filteredBookmarks,
     readLaterBookmarks,
-    pinnedBookmark,
     isLoading,
 
     // 状态
@@ -207,10 +206,6 @@ export function HomePage() {
               // TODO: 打开添加 Tab 弹窗
               console.log('添加 Tab')
             }}
-            onManageTabs={() => {
-              // TODO: 打开管理 Tab 弹窗
-              console.log('管理 Tab')
-            }}
             isEditMode={isEditMode}
             readLaterCount={readLaterBookmarks.length}
           />
@@ -257,22 +252,30 @@ export function HomePage() {
               widgetVisibility={widgetVisibility} 
             />
 
-            {/* 稍后阅读区域 */}
-            {readLaterBookmarks.length > 0 && !showReadLaterOnly && (
-              <ReadLaterSection
-                bookmarks={readLaterBookmarks}
-                isLiteMode={isLiteMode}
-                onMarkRead={handleMarkRead}
-                onRemove={handleRemoveBookmark}
+            {/* 稍后阅读切换 - 只在非稍后阅读模式显示 */}
+            {!showReadLaterOnly && (
+              <ReadLaterToggle
+                readLaterCount={readLaterBookmarks.length}
+                showReadLaterOnly={showReadLaterOnly}
+                onToggle={() => setShowReadLaterOnly(!showReadLaterOnly)}
               />
             )}
 
-            {/* 稍后阅读切换 */}
-            <ReadLaterToggle
-              readLaterCount={readLaterBookmarks.length}
-              showReadLaterOnly={showReadLaterOnly}
-              onToggle={() => setShowReadLaterOnly(!showReadLaterOnly)}
-            />
+            {/* 稍后阅读标签页标题 */}
+            {showReadLaterOnly && (
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                  <BookMarked className="w-6 h-6 text-orange-500" />
+                  稍后阅读
+                  <span className="text-sm font-normal text-[var(--text-muted)]">
+                    ({readLaterBookmarks.length})
+                  </span>
+                </h2>
+                <p className="text-sm text-[var(--text-muted)] mt-1">
+                  您收藏的所有稍后阅读书签
+                </p>
+              </div>
+            )}
 
             {/* 书签列表 */}
             <BookmarkList
@@ -293,11 +296,6 @@ export function HomePage() {
               }}
             />
 
-            {/* 置顶稍后阅读书签卡片 - 放在页面流中 */}
-            <PinnedBookmark 
-              bookmark={pinnedBookmark} 
-              onMarkRead={handleMarkRead} 
-            />
             </div>
 
             {/* 内容侧边栏 - 插件插槽 */}

@@ -28,6 +28,7 @@ interface UseBookmarkCardStyleReturn {
   // 圆形卡片
   isCircular: boolean
   circleStyle: React.CSSProperties
+  circleIconPosition: BookmarkCardStyle['circleIconPosition']
 }
 
 export function useBookmarkCardStyle(): UseBookmarkCardStyleReturn {
@@ -42,11 +43,14 @@ export function useBookmarkCardStyle(): UseBookmarkCardStyleReturn {
       try {
         setIsLoading(true)
         setError(null)
+        // console.log('[useBookmarkCardStyle] Fetching current style...')
         const data = await fetchCurrentBookmarkCardStyle()
+        // console.log('[useBookmarkCardStyle] Fetched style:', data)
         if (mounted) {
           setStyle(data)
         }
       } catch (err) {
+        console.error('[useBookmarkCardStyle] Failed to load style:', err)
         if (mounted) {
           setError(err instanceof Error ? err : new Error('加载样式失败'))
         }
@@ -118,5 +122,6 @@ export function useBookmarkCardStyle(): UseBookmarkCardStyleReturn {
     // 圆形卡片
     isCircular: style?.isCircular || false,
     circleStyle,
+    circleIconPosition: style?.circleIconPosition || 'center',
   }
 }

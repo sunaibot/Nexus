@@ -101,6 +101,7 @@ class ApiClient {
         ...fetchOptions,
         headers,
         signal: controller.signal,
+        credentials: 'include',
       })
 
       clearTimeout(timeoutId)
@@ -221,6 +222,7 @@ export async function request<T>(
   const response = await fetch(url, {
     ...fetchOptions,
     headers,
+    credentials: 'include',
   })
 
   if (!response.ok) {

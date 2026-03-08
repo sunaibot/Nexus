@@ -26,6 +26,25 @@ export async function fetchBookmarks(): Promise<Bookmark[]> {
   return response.data || []
 }
 
+export interface MergedBookmark extends Bookmark {
+  collectCount: number
+  isCollectedByMe: boolean
+  myBookmarkId: string | null
+  collectors: Array<{
+    userId: string
+    userName: string
+    isPinned: boolean
+  }>
+}
+
+export async function fetchMergedBookmarks(): Promise<MergedBookmark[]> {
+  const response = await request<ApiResponse<MergedBookmark[]>>(
+    '/v2/bookmarks/merged',
+    { requireAuth: false }
+  )
+  return response.data || []
+}
+
 export async function fetchBookmarksPaginated(
   params: PaginationParams = {}
 ): Promise<PaginatedResponse<Bookmark>> {
@@ -71,11 +90,13 @@ export async function updateBookmark(
   id: string,
   data: UpdateBookmarkParams
 ): Promise<Bookmark> {
+  console.log('[updateBookmark] called with id:', id, 'data:', data)
   const response = await request<ApiResponse<Bookmark>>(`/v2/bookmarks/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
     requireAuth: true,
   })
+  console.log('[updateBookmark] response:', response)
   invalidateCache('bookmarks:*')
   return response.data!
 }

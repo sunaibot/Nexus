@@ -124,9 +124,9 @@ export function useHomePage() {
     return bookmarks.filter(b => b.isReadLater)
   }, [bookmarks])
 
-  // 置顶书签
+  // 置顶书签（排除稍后阅读的书签）
   const pinnedBookmark = useMemo(() => {
-    return bookmarks.find(b => b.isPinned) || null
+    return bookmarks.find(b => b.isPinned && !b.isReadLater) || null
   }, [bookmarks])
 
   // 根据当前 Tab 过滤分类
@@ -142,6 +142,11 @@ export function useHomePage() {
 
   // 过滤后的书签（根据 Tab 和稍后阅读模式）
   const filteredBookmarks = useMemo(() => {
+    // 稍后阅读模式：显示所有稍后阅读的书签（不受 Tab 限制）
+    if (showReadLaterOnly) {
+      return bookmarks.filter(b => b.isReadLater)
+    }
+    
     let result = bookmarks
     
     // 根据 Tab 过滤
@@ -159,11 +164,10 @@ export function useHomePage() {
       }
     }
     
-    if (showReadLaterOnly) {
-      return result.filter(b => b.isReadLater)
-    }
-    
+    // 正常模式：排除稍后阅读的书签（它们只在稍后阅读标签页显示）
     return result.filter(b => {
+      // 排除稍后阅读的书签
+      if (b.isReadLater) return false
       // 私密书签过滤
       const matchesPrivate = b.visibility !== 'private' || showPrivateBookmarks
       return matchesPrivate

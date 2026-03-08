@@ -335,6 +335,7 @@ const DEFAULT_STYLE: CreateBookmarkCardStyleData = {
   circleBackgroundColor: 'rgba(255, 255, 255, 0.1)',
   circleBorderWidth: '0px',
   circleBorderColor: 'rgba(255, 255, 255, 0.2)',
+  circleIconPosition: 'center',
   // 布局
   layoutType: 'standard',
   iconPosition: 'left',
@@ -758,6 +759,54 @@ function StyleEditorModal({
                             placeholder="8px"
                           />
                         </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted, #6b7280)' }}>卡片间距</label>
+                          <input
+                            type="text"
+                            value={formData.gap}
+                            onChange={(e) => updateFormField('gap', e.target.value)}
+                            className="w-full px-3 py-2 rounded-lg border bg-transparent text-sm"
+                            style={{ borderColor: 'var(--color-glass-border, rgba(255,255,255,0.1))' }}
+                            placeholder="12px"
+                          />
+                        </div>
+                      </div>
+
+                      {/* 卡片尺寸 */}
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted, #6b7280)' }}>卡片宽度</label>
+                          <input
+                            type="text"
+                            value={formData.width || ''}
+                            onChange={(e) => updateFormField('width', e.target.value || undefined)}
+                            className="w-full px-3 py-2 rounded-lg border bg-transparent text-sm"
+                            style={{ borderColor: 'var(--color-glass-border, rgba(255,255,255,0.1))' }}
+                            placeholder="auto"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted, #6b7280)' }}>卡片高度</label>
+                          <input
+                            type="text"
+                            value={formData.height || ''}
+                            onChange={(e) => updateFormField('height', e.target.value || undefined)}
+                            className="w-full px-3 py-2 rounded-lg border bg-transparent text-sm"
+                            style={{ borderColor: 'var(--color-glass-border, rgba(255,255,255,0.1))' }}
+                            placeholder="auto"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted, #6b7280)' }}>最小宽度</label>
+                          <input
+                            type="text"
+                            value={formData.minWidth || ''}
+                            onChange={(e) => updateFormField('minWidth', e.target.value || undefined)}
+                            className="w-full px-3 py-2 rounded-lg border bg-transparent text-sm"
+                            style={{ borderColor: 'var(--color-glass-border, rgba(255,255,255,0.1))' }}
+                            placeholder="200px"
+                          />
+                        </div>
                       </div>
                     </>
                   )}
@@ -926,6 +975,18 @@ function StyleEditorModal({
                                 style={{ borderColor: 'var(--color-glass-border, rgba(255,255,255,0.1))' }}
                                 placeholder="0px"
                               />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted, #6b7280)' }}>图标位置</label>
+                              <select
+                                value={formData.circleIconPosition || 'center'}
+                                onChange={(e) => updateFormField('circleIconPosition', e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg border bg-transparent text-sm"
+                                style={{ borderColor: 'var(--color-glass-border, rgba(255,255,255,0.1))' }}
+                              >
+                                <option value="center">居中</option>
+                                <option value="top">顶部对齐</option>
+                              </select>
                             </div>
                             <div>
                               <label className="block text-xs font-medium mb-2" style={{ color: 'var(--color-text-muted, #6b7280)' }}>边框颜色</label>

@@ -43,7 +43,7 @@ export function BookmarkCard({
   const descRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const { isInternal } = useNetworkEnv()
-  const { style, cardStyle, hoverStyle, titleStyle, descriptionStyle, iconStyle, isCircular, circleStyle, textAlign, showTitle, showDescription } = useBookmarkCardStyle()
+  const { style, cardStyle, hoverStyle, titleStyle, descriptionStyle, iconStyle, isCircular, circleStyle, textAlign, showTitle, showDescription, circleIconPosition } = useBookmarkCardStyle()
 
   // 清理 timeout
   useEffect(() => {
@@ -104,15 +104,53 @@ export function BookmarkCard({
   // 悬停状态
   const [isHovered, setIsHovered] = useState(false)
 
+  // 调试日志（已禁用）
+  // console.log('[BookmarkCard] isCircular:', isCircular, 'style:', style)
+
+  // 从原始 style 对象获取圆形样式值
+  const circleSize = style?.circleSize || '120px'
+  const circleBackgroundColor = style?.circleBackgroundColor || 'rgba(255,255,255,0.1)'
+  const circleBorderWidth = style?.circleBorderWidth || '2px'
+  const circleBorderColor = style?.circleBorderColor || 'rgba(255,255,255,0.2)'
+  
+  // 获取其他样式值（透明度、阴影、模糊等）
+  const circleOpacity = style?.opacity ?? 1.0
+  const circleBackdropBlur = style?.backdropBlur || '10px'
+  const circleBackdropSaturate = style?.backdropSaturate || '180%'
+  const circleShadowX = style?.shadowX || '0px'
+  const circleShadowY = style?.shadowY || '4px'
+  const circleShadowBlur = style?.shadowBlur || '10px'
+  const circleShadowSpread = style?.shadowSpread || '0px'
+  const circleShadowColor = style?.shadowColor || 'rgba(0,0,0,0.1)'
+
+  // 圆形模式下的卡片样式 - 使用圆形样式作为卡片主体
+  const circularCardStyle: React.CSSProperties = isCircular
+    ? {
+        width: circleSize,
+        height: circleSize,
+        borderRadius: '50%',
+        backgroundColor: circleBackgroundColor,
+        borderWidth: circleBorderWidth,
+        borderStyle: 'solid',
+        borderColor: circleBorderColor,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: circleOpacity,
+        backdropFilter: `blur(${circleBackdropBlur}) saturate(${circleBackdropSaturate})`,
+        boxShadow: `${circleShadowX} ${circleShadowY} ${circleShadowBlur} ${circleShadowSpread} ${circleShadowColor}`,
+      }
+    : cardStyle
+
   // 合并悬停样式
   const currentCardStyle = isHovered && (hoverStyle.background || hoverStyle.borderColor || hoverStyle.boxShadow)
     ? { 
-        ...cardStyle, 
-        background: hoverStyle.background || cardStyle.background,
-        borderColor: hoverStyle.borderColor || cardStyle.borderColor,
-        boxShadow: hoverStyle.boxShadow || cardStyle.boxShadow,
+        ...circularCardStyle, 
+        background: isCircular ? circleBackgroundColor : (hoverStyle.background || cardStyle.background),
+        borderColor: isCircular ? circleBorderColor : (hoverStyle.borderColor || cardStyle.borderColor),
+        boxShadow: isCircular ? `${circleShadowX} ${circleShadowY} ${circleShadowBlur} ${circleShadowSpread} ${circleShadowColor}` : (hoverStyle.boxShadow || cardStyle.boxShadow),
       }
-    : cardStyle
+    : circularCardStyle
 
   return (
     <motion.div
@@ -138,8 +176,9 @@ export function BookmarkCard({
       }}
       // 2. 视觉层：使用自定义样式或默认样式
       className={cn(
-        'group cursor-pointer h-full relative overflow-hidden rounded-2xl',
-        isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
+        'group cursor-pointer h-full relative overflow-hidden',
+        !isCircular && 'rounded-2xl',
+        isDragging && !isCircular && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
       style={currentCardStyle}
       onClick={handleClick}
@@ -320,10 +359,17 @@ export function BookmarkCard({
       )}
 
       {/* 4. 内容层：z-10 保证在光效之上 */}
-      <div className="relative z-10 p-5 h-full flex flex-col">
+      <div className={cn(
+        "relative z-10 h-full flex flex-col",
+        isCircular ? "p-3" : "p-5"
+      )}>
         <div className={cn(
           "flex flex-1",
-          isCircular ? "flex-col items-center justify-center gap-3" : "flex-row items-start gap-4"
+          isCircular 
+            ? (circleIconPosition === 'top' 
+                ? "flex-col items-center justify-start gap-1 pt-2" 
+                : "flex-col items-center justify-center gap-2")
+            : "flex-row items-start gap-4"
         )}>
           {/* Favicon/Icon - 图标微动：Hover 时轻轻摇晃，像是在对焦 */}
           <motion.div
@@ -331,7 +377,12 @@ export function BookmarkCard({
               'flex-shrink-0 flex items-center justify-center',
               !isCircular && !iconStyle.width && 'w-12 h-12 rounded-xl bg-white/10 p-1.5'
             )}
-            style={isCircular ? circleStyle : {
+            style={isCircular ? {
+              width: `calc(${circleSize} * 0.35)`,
+              height: `calc(${circleSize} * 0.35)`,
+              borderRadius: '50%',
+              backgroundColor: iconStyle.backgroundColor || 'rgba(255,255,255,0.15)',
+            } : {
               width: iconStyle.width,
               height: iconStyle.height,
               borderRadius: iconStyle.borderRadius,
@@ -393,12 +444,13 @@ export function BookmarkCard({
               <h3
                 className={cn(
                   "truncate flex items-center gap-2",
-                  isCircular && "justify-center"
+                  isCircular && "justify-center text-xs"
                 )}
                 style={{
                   color: titleStyle.color || 'var(--text-primary)',
-                  fontSize: titleStyle.fontSize,
+                  fontSize: isCircular ? '12px' : titleStyle.fontSize,
                   fontWeight: titleStyle.fontWeight,
+                  maxWidth: isCircular ? `calc(${circleSize} * 0.8)` : '100%',
                 }}
               >
                 {bookmark.title}
@@ -408,6 +460,20 @@ export function BookmarkCard({
                   />
                 )}
               </h3>
+            )}
+            {/* 收藏人数徽章 */}
+            {(bookmark.collectCount && bookmark.collectCount > 1) && (
+              <div className={cn(
+                "flex items-center gap-1 text-xs mt-1",
+                isCircular ? "justify-center" : ""
+              )}>
+                <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/70">
+                  {bookmark.collectCount} 人收藏
+                </span>
+                {bookmark.isCollectedByMe && (
+                  <span className="text-white/50">· 已收藏</span>
+                )}
+              </div>
             )}
             {/* 描述区域 - 固定高度保持对齐 */}
             {showDescription && !isCircular && (

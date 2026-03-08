@@ -20,6 +20,15 @@ export interface Bookmark {
   visibility?: 'public' | 'personal' | 'private'
   hasPassword?: boolean
   userId?: string
+  // 合并书签相关字段
+  collectCount?: number
+  isCollectedByMe?: boolean
+  myBookmarkId?: string | null
+  collectors?: Array<{
+    userId: string
+    userName: string
+    isPinned: boolean
+  }>
 }
 
 export interface Category {

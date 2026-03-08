@@ -26,27 +26,27 @@ export function usePluginSlots(slot: SlotPosition) {
     try {
       // 从后端获取插件配置
       const configs = await fetchPluginSlotConfigs()
-      console.log(`[usePluginSlots ${slot}] Fetched configs:`, configs)
+      // console.log(`[usePluginSlots ${slot}] Fetched configs:`, configs)
       
       // 过滤出当前插槽的插件
       const slotConfigs = configs
         .filter(c => c.slot === slot && c.isEnabled)
         .sort((a, b) => a.order - b.order)
-      console.log(`[usePluginSlots ${slot}] Filtered configs:`, slotConfigs)
+      // console.log(`[usePluginSlots ${slot}] Filtered configs:`, slotConfigs)
 
       // 加载每个插件的组件
       const loadedPlugins: LoadedPlugin[] = []
       
       for (const config of slotConfigs) {
-        console.log(`[usePluginSlots ${slot}] Loading plugin:`, config.pluginId)
+        // console.log(`[usePluginSlots ${slot}] Loading plugin:`, config.pluginId)
         const plugin = getPlugin(config.pluginId)
         if (!plugin) {
-          console.warn(`[usePluginSlots] Plugin "${config.pluginId}" not found`)
+          // console.warn(`[usePluginSlots] Plugin "${config.pluginId}" not found`)
           continue
         }
 
         const component = await loadPluginComponent(config.pluginId)
-        console.log(`[usePluginSlots ${slot}] Component loaded:`, config.pluginId, component)
+        // console.log(`[usePluginSlots ${slot}] Component loaded:`, config.pluginId, component)
         if (component) {
           loadedPlugins.push({
             config,

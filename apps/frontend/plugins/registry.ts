@@ -31,7 +31,7 @@ const pluginComponentMap: Record<string, () => Promise<any>> = {
  */
 export function registerPlugin(plugin: Plugin): void {
   builtinPlugins.set(plugin.id, plugin)
-  console.log(`[PluginRegistry] Plugin "${plugin.name}" registered`)
+  // console.log(`[PluginRegistry] Plugin "${plugin.name}" registered`)
 }
 
 /**
@@ -206,7 +206,7 @@ export function initBuiltinPlugins(): void {
     }
   })
 
-  console.log(`[PluginRegistry] ${builtinPlugins.size} builtin plugins initialized`)
+  // console.log(`[PluginRegistry] ${builtinPlugins.size} builtin plugins initialized`)
 }
 
 // 自动初始化

@@ -59,6 +59,7 @@ export interface BookmarkCardStyle {
   circleBackgroundColor?: string
   circleBorderWidth?: string
   circleBorderColor?: string
+  circleIconPosition?: 'center' | 'top'
   // 布局配置
   layoutType?: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
   iconPosition?: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'
@@ -93,7 +94,20 @@ export interface BookmarkCardStyle {
  * 获取当前用户的样式配置
  */
 export async function fetchCurrentBookmarkCardStyle(): Promise<BookmarkCardStyle> {
-  return request<BookmarkCardStyle>('/v2/bookmark-card-styles/current')
+  // console.log('[fetchCurrentBookmarkCardStyle] Calling API...')
+  const result = await request<{ success: boolean; data: BookmarkCardStyle }>('/v2/bookmark-card-styles/current')
+  // console.log('[fetchCurrentBookmarkCardStyle] API result:', result)
+  return result.data
+}
+
+/**
+ * 获取全局默认样式（用于公开书签）
+ */
+export async function fetchGlobalBookmarkCardStyle(): Promise<BookmarkCardStyle> {
+  // console.log('[fetchGlobalBookmarkCardStyle] Calling API...')
+  const result = await request<{ success: boolean; data: BookmarkCardStyle }>('/v2/bookmark-card-styles/global')
+  // console.log('[fetchGlobalBookmarkCardStyle] API result:', result)
+  return result.data
 }
 
 /**

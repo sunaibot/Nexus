@@ -76,6 +76,7 @@ export interface BookmarkCardStyle {
   circleBackgroundColor?: string
   circleBorderWidth: string
   circleBorderColor?: string
+  circleIconPosition: 'center' | 'top'
   // 布局配置
   layoutType: 'standard' | 'icon-top' | 'icon-bottom' | 'icon-bg'
   iconPosition: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'background'
@@ -157,6 +158,7 @@ function parseStyleConfig(row: any): BookmarkCardStyle {
     circleBackgroundColor: row.circleBackgroundColor,
     circleBorderWidth: row.circleBorderWidth || '0px',
     circleBorderColor: row.circleBorderColor,
+    circleIconPosition: row.circleIconPosition || 'center',
     // 布局
     layoutType: row.layoutType || 'standard',
     iconPosition: row.iconPosition || 'left',
@@ -229,6 +231,30 @@ router.get('/current', (req: Request, res: Response) => {
   } catch (error) {
     console.error('获取书签卡片样式失败:', error)
     return errorResponse(res, '获取书签卡片样式失败')
+  }
+})
+
+// 获取全局默认样式（用于公开书签）
+router.get('/global', (req: Request, res: Response) => {
+  try {
+    // 获取全局默认配置
+    const globalStyle = queryOne(
+      'SELECT * FROM bookmark_card_styles WHERE scope = ? AND isEnabled = 1 AND isDefault = 1 ORDER BY priority DESC, updatedAt DESC LIMIT 1',
+      ['global']
+    )
+    
+    let style: BookmarkCardStyle
+    if (globalStyle) {
+      style = parseStyleConfig(globalStyle)
+    } else {
+      // 返回默认配置
+      style = parseStyleConfig({ id: 'default' })
+    }
+
+    return successResponse(res, style)
+  } catch (error) {
+    console.error('获取全局书签卡片样式失败:', error)
+    return errorResponse(res, '获取全局书签卡片样式失败')
   }
 })
 
@@ -331,6 +357,7 @@ router.post('/', authMiddleware, adminMiddleware, (req: Request, res: Response) 
       circleBackgroundColor,
       circleBorderWidth,
       circleBorderColor,
+      circleIconPosition,
       layoutType,
       iconPosition,
       showTitle,
@@ -379,7 +406,7 @@ router.post('/', authMiddleware, adminMiddleware, (req: Request, res: Response) 
         opacity, backdropBlur, backdropSaturate,
         hoverBackgroundColor, hoverBorderColor, hoverShadowBlur, hoverScale, hoverTransition,
         iconSize, iconColor, iconBackgroundColor, iconBorderRadius, iconOpacity,
-        isCircular, circleSize, circleBackgroundColor, circleBorderWidth, circleBorderColor,
+        isCircular, circleSize, circleBackgroundColor, circleBorderWidth, circleBorderColor, circleIconPosition,
         layoutType, iconPosition, showTitle, showDescription, textAlign,
         imageHeight, imageBorderRadius, imageObjectFit,
         tagBackgroundColor, tagTextColor, tagBorderRadius, tagFontSize,
@@ -434,6 +461,7 @@ router.post('/', authMiddleware, adminMiddleware, (req: Request, res: Response) 
         circleBackgroundColor,
         circleBorderWidth,
         circleBorderColor,
+        circleIconPosition,
         layoutType,
         iconPosition,
         showTitle ? 1 : 0,
@@ -517,6 +545,7 @@ router.put('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response
       circleBackgroundColor,
       circleBorderWidth,
       circleBorderColor,
+      circleIconPosition,
       layoutType,
       iconPosition,
       showTitle,
@@ -593,6 +622,7 @@ router.put('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response
         circleBackgroundColor = COALESCE(?, circleBackgroundColor),
         circleBorderWidth = COALESCE(?, circleBorderWidth),
         circleBorderColor = COALESCE(?, circleBorderColor),
+        circleIconPosition = COALESCE(?, circleIconPosition),
         layoutType = COALESCE(?, layoutType),
         iconPosition = COALESCE(?, iconPosition),
         showTitle = COALESCE(?, showTitle),
@@ -660,6 +690,7 @@ router.put('/:id', authMiddleware, adminMiddleware, (req: Request, res: Response
         circleBackgroundColor ?? null,
         circleBorderWidth ?? null,
         circleBorderColor ?? null,
+        circleIconPosition ?? null,
         layoutType ?? null,
         iconPosition ?? null,
         showTitle !== undefined ? (showTitle ? 1 : 0) : null,

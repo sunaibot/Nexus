@@ -80,10 +80,17 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
           <div>
             {/* 标签 */}
             <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/15 text-orange-400 text-xs font-medium">
-                <BookOpen className="w-3 h-3" />
-                稍后阅读
-              </span>
+              {bookmark.isReadLater ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/15 text-orange-400 text-xs font-medium">
+                  <BookOpen className="w-3 h-3" />
+                  稍后阅读
+                </span>
+              ) : bookmark.isPinned ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-xs font-medium">
+                  <Sparkles className="w-3 h-3" />
+                  置顶
+                </span>
+              ) : null}
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {domain}
               </span>

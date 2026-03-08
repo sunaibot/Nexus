@@ -25,6 +25,7 @@ export {
 export {
   fetchAllBookmarks,
   fetchBookmarks,
+  fetchMergedBookmarks,
   fetchBookmarksPaginated,
   fetchBookmarkById,
   createBookmark,
@@ -36,6 +37,8 @@ export {
   bookmarksApi,
   metadataApi,
 } from './bookmarks'
+
+export type { MergedBookmark } from './bookmarks'
 
 export {
   fetchCategories,

@@ -3,6 +3,7 @@ import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { Tab } from '../types'
 import {
   fetchBookmarks,
+  fetchMergedBookmarks,
   fetchCategories,
   createBookmark,
   updateBookmark,
@@ -113,7 +114,7 @@ export function useBookmarkStore() {
 
     try {
       const [bookmarksData, categoriesData] = await Promise.all([
-        fetchBookmarks(),
+        fetchMergedBookmarks(),
         fetchCategories(),
       ])
       setBookmarks(bookmarksData)
@@ -320,15 +321,21 @@ export function useBookmarkStore() {
 
   // 切换置顶
   const togglePin = useCallback(async (id: string) => {
+    console.log('[togglePin] called with id:', id)
     const bookmark = bookmarksRef.current.find(b => b.id === id)
-    if (!bookmark) return
+    if (!bookmark) {
+      console.log('[togglePin] bookmark not found')
+      return
+    }
 
     try {
+      console.log('[togglePin] calling updateBookmark with isPinned:', !bookmark.isPinned)
       const updated = await updateBookmark(id, { isPinned: !bookmark.isPinned })
+      console.log('[togglePin] updateBookmark success:', updated)
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '操作失败'
-      console.error('切换置顶失败:', err)
+      console.error('[togglePin] 切换置顶失败:', err)
       throw new Error(errorMessage)
     }
   }, [])

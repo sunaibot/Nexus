@@ -343,30 +343,41 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
 
   // 保存笔记
   const saveNote = async () => {
-    if (!editingNote?.title?.trim() && !editingNote?.content?.trim()) return
+    // 标题不能为空（后端验证要求）
+    if (!editingNote?.title?.trim()) {
+      alert('标题不能为空')
+      return
+    }
 
     try {
       const isNew = !editingNote.id
       const url = isNew ? '/api/v2/notes' : `/api/v2/notes/${editingNote.id}`
       const method = isNew ? 'POST' : 'PATCH'
 
+      // 构建请求体，只包含后端需要的字段
+      const requestBody: any = {
+        title: editingNote.title.trim(),
+        content: editingNote.content,
+        isMarkdown: false, // 后端要求的字段
+        tags: editingNote.tags || '',
+        folderId: editingNote.folderId || undefined,
+        // 待办事项字段
+        isTodo: editingNote.isTodo || false,
+        priority: editingNote.priority || 0,
+        dueDate: editingNote.dueDate || undefined,
+        // 标签颜色
+        tagColors: editingNote.tagColors || undefined
+      }
+
+      // 更新时添加 isPinned 字段
+      if (!isNew) {
+        requestBody.isPinned = editingNote.isPinned || false
+      }
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: editingNote.title,
-          content: editingNote.content,
-          color: editingNote.color || 'yellow',
-          isPinned: editingNote.isPinned || false,
-          folderId: editingNote.folderId || null,
-          tags: editingNote.tags || '',
-          // 待办事项字段
-          isTodo: editingNote.isTodo || false,
-          priority: editingNote.priority || 0,
-          dueDate: editingNote.dueDate || null,
-          // 标签颜色
-          tagColors: editingNote.tagColors || null
-        }),
+        body: JSON.stringify(requestBody),
         credentials: 'include'
       })
 
@@ -374,9 +385,14 @@ export default function NotesPlugin({ config }: PluginComponentProps) {
         setIsEditing(false)
         setEditingNote(null)
         fetchData()
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        console.error('保存笔记失败:', errorData)
+        alert(errorData.message || '保存失败，请检查输入内容')
       }
     } catch (error) {
       console.error('保存笔记失败:', error)
+      alert('保存失败，请稍后重试')
     }
   }
 

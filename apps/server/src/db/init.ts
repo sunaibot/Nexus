@@ -772,6 +772,7 @@ function createTables(db: SqlJsDatabase): void {
       circleBackgroundColor TEXT, -- 圆形背景色
       circleBorderWidth TEXT DEFAULT '0px',
       circleBorderColor TEXT,
+      circleIconPosition TEXT DEFAULT 'center', -- center(居中), top(顶部对齐)
       
       -- 布局配置
       layoutType TEXT DEFAULT 'standard', -- standard(标准), icon-top(图标在上), icon-bottom(图标在下), icon-bg(图标背景)

@@ -59,6 +59,62 @@ router.get('/public', apiCacheMiddleware(cacheConfigs.publicBookmarks), asyncHan
   return successResponse(res, bookmarks)
 }))
 
+// 获取合并后的书签列表（按URL去重，显示收藏人数）
+router.get('/merged', optionalAuthMiddleware, asyncHandler(async (req: Request, res: Response) => {
+  const user = (req as any).user
+  const { visibility } = req.query
+
+  // 获取所有可见的书签
+  const bookmarks = getBookmarks(user, visibility as string, true)
+  
+  // 按URL合并书签
+  const urlMap = new Map<string, any>()
+  
+  bookmarks.forEach((bookmark: any) => {
+    const url = bookmark.url
+    if (urlMap.has(url)) {
+      // 已存在相同URL的书签，增加收藏人数
+      const existing = urlMap.get(url)
+      existing.collectCount = (existing.collectCount || 1) + 1
+      existing.collectors = existing.collectors || []
+      existing.collectors.push({
+        userId: bookmark.userId,
+        userName: bookmark.userName,
+        isPinned: bookmark.isPinned,
+      })
+      // 如果是当前用户的，标记为已收藏
+      if (user && bookmark.userId === user.id) {
+        existing.isCollectedByMe = true
+        existing.myBookmarkId = bookmark.id
+      }
+    } else {
+      // 新的URL
+      urlMap.set(url, {
+        ...bookmark,
+        collectCount: 1,
+        isCollectedByMe: user && bookmark.userId === user.id,
+        myBookmarkId: user && bookmark.userId === user.id ? bookmark.id : null,
+        collectors: [{
+          userId: bookmark.userId,
+          userName: bookmark.userName,
+          isPinned: bookmark.isPinned,
+        }],
+      })
+    }
+  })
+  
+  // 转换为数组并按收藏人数排序
+  const mergedBookmarks = Array.from(urlMap.values()).sort((a: any, b: any) => {
+    // 优先显示自己的书签
+    if (a.isCollectedByMe && !b.isCollectedByMe) return -1
+    if (!a.isCollectedByMe && b.isCollectedByMe) return 1
+    // 然后按收藏人数排序
+    return (b.collectCount || 1) - (a.collectCount || 1)
+  })
+  
+  return successResponse(res, mergedBookmarks)
+}))
+
 // 获取所有书签（管理后台）
 router.get('/admin/all', authMiddleware, adminMiddleware, asyncHandler(async (req: Request, res: Response) => {
   const bookmarks = getAllBookmarks()
