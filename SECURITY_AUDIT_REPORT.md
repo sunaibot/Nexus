@@ -285,10 +285,14 @@ const token = crypto.randomBytes(32).toString('hex')
 
 ### 1. 环境变量配置
 ```bash
-# 必须设置
-JWT_SECRET=your-strong-random-secret-here
-SESSION_SECRET=another-strong-secret
+# 必须设置（至少8位密码，系统会自动生成安全密钥）
+YOUR_PASSWORD=your-strong-password-here
+
+# 可选配置（使用默认值可省略）
 NODE_ENV=production
+SERVER_PORT=8787
+FRONTEND_PORT=5173
+MANAGER_PORT=5174
 
 # CORS 配置（根据实际域名）
 ALLOWED_ORIGINS=https://your-nas-domain.com
@@ -296,6 +300,8 @@ ALLOWED_ORIGINS=https://your-nas-domain.com
 # 禁用开发功能
 ENABLE_SWAGGER=false
 ```
+
+**安全提示**：使用 `YOUR_PASSWORD` 代替直接设置 `JWT_SECRET` 和 `SESSION_SECRET`，系统会自动基于密码生成强密钥。
 
 ### 2. 文件权限
 ```bash

@@ -114,26 +114,36 @@ export function sanitizeFilename(filename: string): string {
 
 **修复位置**:
 - `apps/server/src/middleware/auth.ts`
+- `apps/server/src/utils/envValidator.ts`
 - `.env.example` 配置模板
 
 **修复内容**:
-- 生产环境强制要求设置 `JWT_SECRET`
-- 提供 `YOUR_PASSWORD` 机制，系统自动生成强密钥
-- 密钥长度验证（最少32字符）
+- 使用 `YOUR_PASSWORD` 机制，系统自动生成强密钥
+- 无需直接设置 `JWT_SECRET` 和 `SESSION_SECRET`
+- 密码长度验证（最少8字符）
+- 系统基于密码自动生成32位以上强密钥
 
 ```typescript
-const JWT_SECRET = process.env.JWT_SECRET;
+// 从 YOUR_PASSWORD 自动生成密钥
+const YOUR_PASSWORD = process.env.YOUR_PASSWORD;
 
-if (!JWT_SECRET) {
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production environment');
-  }
+if (!YOUR_PASSWORD || YOUR_PASSWORD.length < 8) {
+  throw new Error('YOUR_PASSWORD must be at least 8 characters long');
 }
 
-// 检查密钥强度
-if (JWT_SECRET.length < 32) {
-  throw new Error('JWT_SECRET must be at least 32 characters long');
-}
+// 自动生成 JWT_SECRET 和 SESSION_SECRET
+const JWT_SECRET = generateKeyFromPassword(YOUR_PASSWORD, 'jwt');
+const SESSION_SECRET = generateKeyFromPassword(YOUR_PASSWORD, 'session');
+```
+
+**配置示例**:
+```bash
+# 只需设置你的密码（至少8位）
+YOUR_PASSWORD=your-strong-password-here
+
+# 系统会自动生成以下密钥（无需手动设置）
+# JWT_SECRET=xxx（自动生成）
+# SESSION_SECRET=xxx（自动生成）
 ```
 
 ---
