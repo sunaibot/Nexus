@@ -15,6 +15,25 @@ import { getJwtSecret, getSessionSecret, checkPasswordConfig } from './utils/key
 import fs from 'fs'
 import https from 'https'
 import path from 'path'
+import { fileURLToPath } from 'url'
+
+// ========== 检查 .env 文件是否存在 ==========
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const envFilePath = path.resolve(__dirname, '..', '.env')
+const envFileExists = fs.existsSync(envFilePath)
+
+if (!envFileExists) {
+  console.log(`
+⚠️  未检测到 .env 文件，将使用默认配置启动
+   默认端口：8787（后端）、5173（前端）、5174（管理后台）
+   
+   💡 提示：如需自定义配置，可创建 .env 文件：
+      cp .env.example .env
+      
+   🔐 安全提示：生产环境建议设置 YOUR_PASSWORD 以增强安全性
+`)
+}
 
 // ========== 检查密码配置 ==========
 checkPasswordConfig()
@@ -36,6 +55,7 @@ console.log(`
   Environment: ${NODE_ENV}
   Port: ${PORT}
   Debug Mode: ${isDev ? 'ON' : 'OFF'}
+  Config Source: ${envFileExists ? '.env file' : 'default values'}
 ========================================
   Security Config:
   - Filter Sensitive Info: ${env.FILTER_SENSITIVE_INFO ? 'ON' : 'OFF'}
