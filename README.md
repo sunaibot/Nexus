@@ -935,14 +935,18 @@ Docker Compose 部署需要以下配置文件：
 |------|------|------|
 | `docker-compose.yml` | Docker Compose 主配置文件 | ✅ |
 | `docker-compose.fnos.yml` | 飞牛 NAS 专用配置（推荐飞牛用户使用） | ✅ |
-| `.env` | 环境变量配置文件 | ✅ |
+| `.env` | 环境变量配置文件（可选） | ❌ |
 | `Dockerfile` (各应用) | 应用构建文件 (已包含在项目中) | ✅ |
 
 **快速配置步骤：**
-1. 复制项目中的 `docker-compose.yml`（或 `docker-compose.fnos.yml`）和 `.env.example`
-2. 将 `.env.example` 重命名为 `.env`
-3. 修改 `.env` 中的配置（端口、密钥、数据路径）
-4. 执行 `docker-compose up -d` 启动服务
+1. 复制项目中的 `docker-compose.yml`（或 `docker-compose.fnos.yml`）
+2. （可选）复制 `.env.example` 为 `.env` 并修改配置
+3. 执行 `docker-compose up -d` 启动服务
+
+> 💡 **零配置启动**：不创建 `.env` 文件也能启动，将使用默认配置
+> - 后端端口：8787
+> - 前端端口：5173
+> - 管理后台端口：5174
 
 ---
 
@@ -976,13 +980,12 @@ mkdir -p /path/to/nexus && cd /path/to/nexus
 # 2. 克隆项目
 git clone https://github.com/sunaibot/Nexus.git .
 
-# 3. 复制环境变量文件
-cp .env.example .env
+# 3. （可选）配置环境变量
+# 如需自定义端口或密钥，复制并编辑 .env 文件：
+# cp .env.example .env
+# 不配置则使用默认值启动
 
-# 4. 编辑 .env 文件，修改 JWT_SECRET 和 SESSION_SECRET
-# 生成密钥：openssl rand -base64 32
-
-# 5. 启动服务
+# 4. 启动服务
 docker-compose up -d
 ```
 
