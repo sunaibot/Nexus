@@ -15,7 +15,7 @@ services:
   # 后端服务（API）
   # ============================================
   nexus-server:
-    image: ghcr.io/sunaibot/nexus-server:latest
+    image: sunaibot/nexus-server:latest
     pull_policy: always
     container_name: nexus-server
     restart: ${RESTART_POLICY:-unless-stopped}
@@ -59,7 +59,7 @@ services:
   # 前端服务（用户页面）
   # ============================================
   nexus-frontend:
-    image: ghcr.io/sunaibot/nexus-frontend:latest
+    image: sunaibot/nexus-frontend:latest
     pull_policy: always
     container_name: nexus-frontend
     restart: ${RESTART_POLICY:-unless-stopped}
@@ -83,7 +83,7 @@ services:
   # 如不需要可删除或注释掉此服务
   # ============================================
   nexus-manager:
-    image: ghcr.io/sunaibot/nexus-manager:latest
+    image: sunaibot/nexus-manager:latest
     pull_policy: always
     container_name: nexus-manager
     restart: ${RESTART_POLICY:-unless-stopped}
