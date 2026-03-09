@@ -13,7 +13,7 @@ RUN npm ci
 COPY apps/frontend/index.html ./
 COPY apps/frontend/vite.config.ts ./
 COPY apps/frontend/tsconfig.json ./
-COPY apps/frontend/tsconfig.node.json ./
+# COPY apps/frontend/tsconfig.node.json ./  # 文件不存在
 COPY apps/frontend/tailwind.config.js ./
 COPY apps/frontend/postcss.config.js ./
 COPY apps/frontend/vite-env.d.ts ./

@@ -13,7 +13,7 @@ RUN npm ci
 COPY apps/manager/index.html ./
 COPY apps/manager/vite.config.ts ./
 COPY apps/manager/tsconfig.json ./
-COPY apps/manager/tsconfig.node.json ./
+# COPY apps/manager/tsconfig.node.json ./  # 文件不存在
 COPY apps/manager/tailwind.config.js ./
 COPY apps/manager/postcss.config.js ./
 COPY apps/manager/vite-env.d.ts ./
