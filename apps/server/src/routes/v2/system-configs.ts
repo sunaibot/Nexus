@@ -13,12 +13,18 @@ import {
   getNotificationConfig,
   getHealthCheckConfig,
   getRateLimitConfig,
+  getSiteConfig,
+  getLogConfig,
+  getCorsConfig,
   updateSecurityConfig,
   updateFileTransferConfig,
   updateUploadConfig,
   updateNotificationConfig,
   updateHealthCheckConfig,
   updateRateLimitConfig,
+  updateSiteConfig,
+  updateLogConfig,
+  updateCorsConfig,
   DEFAULT_SYSTEM_CONFIG,
   type SystemConfig
 } from '../../core/config/index.js'
@@ -357,6 +363,169 @@ router.put(
 )
 
 /**
+ * 获取站点配置
+ * GET /api/v2/system-configs/site
+ * 需要管理员权限
+ */
+router.get(
+  '/site',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const config = getSiteConfig()
+    return successResponse(res, config)
+  })
+)
+
+/**
+ * 更新站点配置
+ * PUT /api/v2/system-configs/site
+ * 需要管理员权限
+ */
+router.put(
+  '/site',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const user = (req as any).user
+    const updates = req.body
+
+    // 验证输入
+    if (updates.title !== undefined && updates.title.length > 100) {
+      return errorResponse(res, '站点标题不能超过100个字符', 400)
+    }
+    if (updates.description !== undefined && updates.description.length > 500) {
+      return errorResponse(res, '站点描述不能超过500个字符', 400)
+    }
+
+    const success = updateSiteConfig(updates)
+    if (success) {
+      logAudit({
+        userId: user.id,
+        username: user.username,
+        action: 'UPDATE_SITE_CONFIG',
+        resourceType: 'system_config',
+        details: updates,
+        ip: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || ''
+      })
+      return successResponse(res, getSiteConfig())
+    }
+    return errorResponse(res, '更新站点配置失败', 500)
+  })
+)
+
+/**
+ * 获取日志配置
+ * GET /api/v2/system-configs/log
+ * 需要管理员权限
+ */
+router.get(
+  '/log',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const config = getLogConfig()
+    return successResponse(res, config)
+  })
+)
+
+/**
+ * 更新日志配置
+ * PUT /api/v2/system-configs/log
+ * 需要管理员权限
+ */
+router.put(
+  '/log',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const user = (req as any).user
+    const updates = req.body
+
+    // 验证输入
+    const validLevels = ['debug', 'info', 'warn', 'error']
+    if (updates.level !== undefined && !validLevels.includes(updates.level)) {
+      return errorResponse(res, '无效的日志级别', 400)
+    }
+    if (updates.maxFileSizeMB !== undefined && (updates.maxFileSizeMB < 1 || updates.maxFileSizeMB > 100)) {
+      return errorResponse(res, '最大文件大小必须在 1-100 MB 之间', 400)
+    }
+    if (updates.maxFiles !== undefined && (updates.maxFiles < 1 || updates.maxFiles > 20)) {
+      return errorResponse(res, '最大文件数必须在 1-20 之间', 400)
+    }
+
+    const success = updateLogConfig(updates)
+    if (success) {
+      logAudit({
+        userId: user.id,
+        username: user.username,
+        action: 'UPDATE_LOG_CONFIG',
+        resourceType: 'system_config',
+        details: updates,
+        ip: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || ''
+      })
+      return successResponse(res, getLogConfig())
+    }
+    return errorResponse(res, '更新日志配置失败', 500)
+  })
+)
+
+/**
+ * 获取跨域配置
+ * GET /api/v2/system-configs/cors
+ * 需要管理员权限
+ */
+router.get(
+  '/cors',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const config = getCorsConfig()
+    return successResponse(res, config)
+  })
+)
+
+/**
+ * 更新跨域配置
+ * PUT /api/v2/system-configs/cors
+ * 需要管理员权限
+ */
+router.put(
+  '/cors',
+  authMiddleware,
+  adminMiddleware,
+  asyncHandler(async (req, res) => {
+    const user = (req as any).user
+    const updates = req.body
+
+    // 验证输入
+    if (updates.allowedOrigins !== undefined && !Array.isArray(updates.allowedOrigins)) {
+      return errorResponse(res, '允许的域名必须是数组', 400)
+    }
+    if (updates.maxAge !== undefined && (updates.maxAge < 0 || updates.maxAge > 86400 * 7)) {
+      return errorResponse(res, '缓存时间必须在 0-604800 秒之间', 400)
+    }
+
+    const success = updateCorsConfig(updates)
+    if (success) {
+      logAudit({
+        userId: user.id,
+        username: user.username,
+        action: 'UPDATE_CORS_CONFIG',
+        resourceType: 'system_config',
+        details: updates,
+        ip: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] || ''
+      })
+      return successResponse(res, getCorsConfig())
+    }
+    return errorResponse(res, '更新跨域配置失败', 500)
+  })
+)
+
+/**
  * 批量更新配置
  * PUT /api/v2/system-configs/batch
  * 需要管理员权限
@@ -416,6 +585,12 @@ router.post(
       success = updateHealthCheckConfig(DEFAULT_SYSTEM_CONFIG.healthCheck)
     } else if (type === 'rateLimit') {
       success = updateRateLimitConfig(DEFAULT_SYSTEM_CONFIG.rateLimit)
+    } else if (type === 'site') {
+      success = updateSiteConfig(DEFAULT_SYSTEM_CONFIG.site)
+    } else if (type === 'log') {
+      success = updateLogConfig(DEFAULT_SYSTEM_CONFIG.log)
+    } else if (type === 'cors') {
+      success = updateCorsConfig(DEFAULT_SYSTEM_CONFIG.cors)
     } else if (type === 'all' || !type) {
       success = configManager.resetToDefaults()
     }

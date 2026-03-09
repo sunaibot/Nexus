@@ -65,6 +65,35 @@ export interface RateLimitConfig {
   skipSuccessfulRequests: boolean
 }
 
+export interface SiteConfig {
+  title: string
+  description: string
+  favicon: string
+  logo: string
+  footerText: string
+  enableRegistration: boolean
+  enableGuestAccess: boolean
+  maintenanceMode: boolean
+  maintenanceMessage: string
+}
+
+export interface LogConfig {
+  level: 'debug' | 'info' | 'warn' | 'error'
+  enableConsole: boolean
+  enableFile: boolean
+  maxFileSizeMB: number
+  maxFiles: number
+  logDir: string
+}
+
+export interface CorsConfig {
+  allowedOrigins: string[]
+  allowCredentials: boolean
+  allowMethods: string[]
+  allowHeaders: string[]
+  maxAge: number
+}
+
 export interface SystemConfig {
   security: SecurityConfig
   fileTransfer: FileTransferConfig
@@ -72,6 +101,9 @@ export interface SystemConfig {
   notification: NotificationConfig
   healthCheck: HealthCheckConfig
   rateLimit: RateLimitConfig
+  site: SiteConfig
+  log: LogConfig
+  cors: CorsConfig
 }
 
 // ========== 默认配置 ==========
@@ -144,13 +176,45 @@ const DEFAULT_RATE_LIMIT_CONFIG: RateLimitConfig = {
   skipSuccessfulRequests: false
 }
 
+const DEFAULT_SITE_CONFIG: SiteConfig = {
+  title: 'Nexus',
+  description: '智能书签管理系统',
+  favicon: '/favicon.ico',
+  logo: '/logo.png',
+  footerText: '© 2024 Nexus. All rights reserved.',
+  enableRegistration: true,
+  enableGuestAccess: true,
+  maintenanceMode: false,
+  maintenanceMessage: '系统维护中，请稍后再试'
+}
+
+const DEFAULT_LOG_CONFIG: LogConfig = {
+  level: 'info',
+  enableConsole: true,
+  enableFile: true,
+  maxFileSizeMB: 10,
+  maxFiles: 5,
+  logDir: './logs'
+}
+
+const DEFAULT_CORS_CONFIG: CorsConfig = {
+  allowedOrigins: [],
+  allowCredentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+  maxAge: 86400
+}
+
 const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   security: DEFAULT_SECURITY_CONFIG,
   fileTransfer: DEFAULT_FILE_TRANSFER_CONFIG,
   upload: DEFAULT_UPLOAD_CONFIG,
   notification: DEFAULT_NOTIFICATION_CONFIG,
   healthCheck: DEFAULT_HEALTH_CHECK_CONFIG,
-  rateLimit: DEFAULT_RATE_LIMIT_CONFIG
+  rateLimit: DEFAULT_RATE_LIMIT_CONFIG,
+  site: DEFAULT_SITE_CONFIG,
+  log: DEFAULT_LOG_CONFIG,
+  cors: DEFAULT_CORS_CONFIG
 }
 
 // ========== 配置管理类 ==========
@@ -253,7 +317,10 @@ class ConfigManager {
       upload: this.get<UploadConfig>('upload', DEFAULT_UPLOAD_CONFIG),
       notification: this.get<NotificationConfig>('notification', DEFAULT_NOTIFICATION_CONFIG),
       healthCheck: this.get<HealthCheckConfig>('healthCheck', DEFAULT_HEALTH_CHECK_CONFIG),
-      rateLimit: this.get<RateLimitConfig>('rateLimit', DEFAULT_RATE_LIMIT_CONFIG)
+      rateLimit: this.get<RateLimitConfig>('rateLimit', DEFAULT_RATE_LIMIT_CONFIG),
+      site: this.get<SiteConfig>('site', DEFAULT_SITE_CONFIG),
+      log: this.get<LogConfig>('log', DEFAULT_LOG_CONFIG),
+      cors: this.get<CorsConfig>('cors', DEFAULT_CORS_CONFIG)
     }
   }
 
@@ -267,7 +334,10 @@ class ConfigManager {
       upload: DEFAULT_UPLOAD_CONFIG,
       notification: DEFAULT_NOTIFICATION_CONFIG,
       healthCheck: DEFAULT_HEALTH_CHECK_CONFIG,
-      rateLimit: DEFAULT_RATE_LIMIT_CONFIG
+      rateLimit: DEFAULT_RATE_LIMIT_CONFIG,
+      site: DEFAULT_SITE_CONFIG,
+      log: DEFAULT_LOG_CONFIG,
+      cors: DEFAULT_CORS_CONFIG
     })
   }
 
@@ -363,6 +433,33 @@ export function updateRateLimitConfig(config: Partial<RateLimitConfig>): boolean
   return configManager.set('rateLimit', { ...current, ...config })
 }
 
+export function getSiteConfig(): SiteConfig {
+  return configManager.get<SiteConfig>('site', DEFAULT_SITE_CONFIG)
+}
+
+export function updateSiteConfig(config: Partial<SiteConfig>): boolean {
+  const current = getSiteConfig()
+  return configManager.set('site', { ...current, ...config })
+}
+
+export function getLogConfig(): LogConfig {
+  return configManager.get<LogConfig>('log', DEFAULT_LOG_CONFIG)
+}
+
+export function updateLogConfig(config: Partial<LogConfig>): boolean {
+  const current = getLogConfig()
+  return configManager.set('log', { ...current, ...config })
+}
+
+export function getCorsConfig(): CorsConfig {
+  return configManager.get<CorsConfig>('cors', DEFAULT_CORS_CONFIG)
+}
+
+export function updateCorsConfig(config: Partial<CorsConfig>): boolean {
+  const current = getCorsConfig()
+  return configManager.set('cors', { ...current, ...config })
+}
+
 // ========== 导出默认值（用于参考） ==========
 
 export {
@@ -372,5 +469,8 @@ export {
   DEFAULT_NOTIFICATION_CONFIG,
   DEFAULT_HEALTH_CHECK_CONFIG,
   DEFAULT_RATE_LIMIT_CONFIG,
+  DEFAULT_SITE_CONFIG,
+  DEFAULT_LOG_CONFIG,
+  DEFAULT_CORS_CONFIG,
   DEFAULT_SYSTEM_CONFIG
 }

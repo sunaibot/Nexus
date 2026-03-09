@@ -54,6 +54,38 @@ export interface RateLimitConfig {
   maxRequests: number
 }
 
+// 站点配置
+export interface SiteConfig {
+  title: string
+  description: string
+  favicon: string
+  logo: string
+  footerText: string
+  enableRegistration: boolean
+  enableGuestAccess: boolean
+  maintenanceMode: boolean
+  maintenanceMessage: string
+}
+
+// 日志配置
+export interface LogConfig {
+  level: 'debug' | 'info' | 'warn' | 'error'
+  enableConsole: boolean
+  enableFile: boolean
+  maxFileSizeMB: number
+  maxFiles: number
+  logDir: string
+}
+
+// 跨域配置
+export interface CorsConfig {
+  allowedOrigins: string[]
+  allowCredentials: boolean
+  allowMethods: string[]
+  allowHeaders: string[]
+  maxAge: number
+}
+
 // 所有配置
 export interface SystemConfigs {
   security: SecurityConfig
@@ -62,6 +94,9 @@ export interface SystemConfigs {
   notification: NotificationConfig
   healthCheck: HealthCheckConfig
   rateLimit: RateLimitConfig
+  site: SiteConfig
+  log: LogConfig
+  cors: CorsConfig
 }
 
 // 获取所有配置
@@ -201,6 +236,75 @@ export async function getSystemConfigDefaults(): Promise<SystemConfigs> {
   return response.data
 }
 
+// 获取站点配置
+export async function getSiteSystemConfig(): Promise<SiteConfig> {
+  const response = await request<{ success: boolean; data: SiteConfig }>('/v2/system-configs/site', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取站点配置失败')
+  }
+  return response.data
+}
+
+// 更新站点配置
+export async function updateSiteSystemConfig(config: Partial<SiteConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/site', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新站点配置失败')
+  }
+}
+
+// 获取日志配置
+export async function getLogSystemConfig(): Promise<LogConfig> {
+  const response = await request<{ success: boolean; data: LogConfig }>('/v2/system-configs/log', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取日志配置失败')
+  }
+  return response.data
+}
+
+// 更新日志配置
+export async function updateLogSystemConfig(config: Partial<LogConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/log', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新日志配置失败')
+  }
+}
+
+// 获取跨域配置
+export async function getCorsSystemConfig(): Promise<CorsConfig> {
+  const response = await request<{ success: boolean; data: CorsConfig }>('/v2/system-configs/cors', {
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error('获取跨域配置失败')
+  }
+  return response.data
+}
+
+// 更新跨域配置
+export async function updateCorsSystemConfig(config: Partial<CorsConfig>): Promise<void> {
+  const response = await request<{ success: boolean; message: string }>('/v2/system-configs/cors', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true
+  })
+  if (!response.success) {
+    throw new Error(response.message || '更新跨域配置失败')
+  }
+}
+
 // API对象导出
 export const systemConfigsApi = {
   getAll: getAllSystemConfigs,
@@ -222,5 +326,17 @@ export const systemConfigsApi = {
   notification: {
     get: getNotificationSystemConfig,
     update: updateNotificationSystemConfig,
+  },
+  site: {
+    get: getSiteSystemConfig,
+    update: updateSiteSystemConfig,
+  },
+  log: {
+    get: getLogSystemConfig,
+    update: updateLogSystemConfig,
+  },
+  cors: {
+    get: getCorsSystemConfig,
+    update: updateCorsSystemConfig,
   },
 }

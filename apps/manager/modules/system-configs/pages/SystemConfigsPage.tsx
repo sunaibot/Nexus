@@ -23,6 +23,9 @@ import {
   Folder,
   Zap,
   Timer,
+  Globe,
+  FileCode,
+  Monitor,
   RotateCcw as RetryIcon
 } from 'lucide-react'
 import { useToast } from '../../../components/admin/Toast'
@@ -32,19 +35,33 @@ import {
   updateFileTransferSystemConfig,
   updateUploadSystemConfig,
   updateNotificationSystemConfig,
+  updateSiteSystemConfig,
+  updateLogSystemConfig,
+  updateCorsSystemConfig,
   resetSystemConfigsToDefaults,
   type SystemConfigs,
   type SecurityConfig,
   type FileTransferConfig,
   type UploadConfig,
-  type NotificationConfig
+  type NotificationConfig,
+  type SiteConfig,
+  type LogConfig,
+  type CorsConfig
 } from '../../../lib/api-client/system-configs'
 
 // 配置类别
- type ConfigCategory = 'security' | 'fileTransfer' | 'upload' | 'notification' | 'healthCheck' | 'rateLimit'
+ type ConfigCategory = 'security' | 'fileTransfer' | 'upload' | 'notification' | 'healthCheck' | 'rateLimit' | 'site' | 'log' | 'cors'
 
 // 类别配置
 const categories = [
+  {
+    id: 'site' as ConfigCategory,
+    title: '站点配置',
+    desc: '站点标题、描述、Logo、维护模式',
+    icon: Globe,
+    color: 'from-indigo-500 to-blue-500',
+    bgColor: 'from-indigo-500/10 to-blue-500/10'
+  },
   {
     id: 'security' as ConfigCategory,
     title: '安全配置',
@@ -52,6 +69,22 @@ const categories = [
     icon: Shield,
     color: 'from-red-500 to-orange-500',
     bgColor: 'from-red-500/10 to-orange-500/10'
+  },
+  {
+    id: 'log' as ConfigCategory,
+    title: '日志配置',
+    desc: '日志级别、存储、文件管理',
+    icon: FileCode,
+    color: 'from-emerald-500 to-green-500',
+    bgColor: 'from-emerald-500/10 to-green-500/10'
+  },
+  {
+    id: 'cors' as ConfigCategory,
+    title: '跨域配置',
+    desc: '允许域名、请求方法、请求头',
+    icon: Monitor,
+    color: 'from-cyan-500 to-teal-500',
+    bgColor: 'from-cyan-500/10 to-teal-500/10'
   },
   {
     id: 'fileTransfer' as ConfigCategory,
@@ -92,7 +125,10 @@ export default function SystemConfigsPage() {
     upload: false,
     notification: false,
     healthCheck: false,
-    rateLimit: false
+    rateLimit: false,
+    site: false,
+    log: false,
+    cors: false
   })
 
   useEffect(() => {
@@ -111,7 +147,10 @@ export default function SystemConfigsPage() {
         upload: false,
         notification: false,
         healthCheck: false,
-        rateLimit: false
+        rateLimit: false,
+        site: false,
+        log: false,
+        cors: false
       })
     } catch (error) {
       showToast('error', error instanceof Error ? error.message : '获取系统配置失败')
@@ -150,6 +189,15 @@ export default function SystemConfigsPage() {
           break
         case 'notification':
           await updateNotificationSystemConfig(configData as Partial<NotificationConfig>)
+          break
+        case 'site':
+          await updateSiteSystemConfig(configData as Partial<SiteConfig>)
+          break
+        case 'log':
+          await updateLogSystemConfig(configData as Partial<LogConfig>)
+          break
+        case 'cors':
+          await updateCorsSystemConfig(configData as Partial<CorsConfig>)
           break
       }
       
@@ -333,6 +381,24 @@ export default function SystemConfigsPage() {
                   <NotificationConfigForm 
                     config={getCurrentConfig('notification') as NotificationConfig}
                     onChange={(key, value) => handleConfigChange('notification', key, value)}
+                  />
+                )}
+                {activeCategory === 'site' && (
+                  <SiteConfigForm 
+                    config={getCurrentConfig('site') as SiteConfig}
+                    onChange={(key, value) => handleConfigChange('site', key, value)}
+                  />
+                )}
+                {activeCategory === 'log' && (
+                  <LogConfigForm 
+                    config={getCurrentConfig('log') as LogConfig}
+                    onChange={(key, value) => handleConfigChange('log', key, value)}
+                  />
+                )}
+                {activeCategory === 'cors' && (
+                  <CorsConfigForm 
+                    config={getCurrentConfig('cors') as CorsConfig}
+                    onChange={(key, value) => handleConfigChange('cors', key, value)}
                   />
                 )}
               </div>
@@ -749,6 +815,243 @@ function ConfigToggle({
         <div className="text-sm font-medium text-slate-300">{label}</div>
         <p className="text-xs text-slate-500 mt-0.5">{description}</p>
       </div>
+    </div>
+  )
+}
+
+// 站点配置表单
+function SiteConfigForm({ config, onChange }: { config: SiteConfig; onChange: (key: string, value: any) => void }) {
+  return (
+    <div className="space-y-6">
+      <ConfigSection title="基本信息" icon={Globe}>
+        <div className="space-y-4">
+          <ConfigTextInput
+            label="站点标题"
+            value={config.title}
+            onChange={(v) => onChange('title', v)}
+            placeholder="Nexus"
+            description="显示在浏览器标签页和页面顶部的站点名称"
+          />
+          <ConfigTextArea
+            label="站点描述"
+            value={config.description}
+            onChange={(v) => onChange('description', v)}
+            placeholder="智能书签管理系统"
+            description="用于 SEO 和分享的站点描述"
+          />
+          <ConfigTextInput
+            label="站点 Logo"
+            value={config.logo}
+            onChange={(v) => onChange('logo', v)}
+            placeholder="/logo.png"
+            description="站点 Logo 图片路径"
+          />
+          <ConfigTextInput
+            label="站点图标"
+            value={config.favicon}
+            onChange={(v) => onChange('favicon', v)}
+            placeholder="/favicon.ico"
+            description="浏览器标签页图标路径"
+          />
+          <ConfigTextInput
+            label="页脚文本"
+            value={config.footerText}
+            onChange={(v) => onChange('footerText', v)}
+            placeholder="© 2024 Nexus. All rights reserved."
+            description="显示在页面底部的版权信息"
+          />
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="访问控制" icon={Lock}>
+        <div className="space-y-4">
+          <ConfigToggle
+            label="允许注册"
+            checked={config.enableRegistration}
+            onChange={(v) => onChange('enableRegistration', v)}
+            description="是否允许新用户注册账号"
+          />
+          <ConfigToggle
+            label="允许访客访问"
+            checked={config.enableGuestAccess}
+            onChange={(v) => onChange('enableGuestAccess', v)}
+            description="未登录用户是否可以访问公开内容"
+          />
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="维护模式" icon={Activity}>
+        <div className="space-y-4">
+          <ConfigToggle
+            label="启用维护模式"
+            checked={config.maintenanceMode}
+            onChange={(v) => onChange('maintenanceMode', v)}
+            description="开启后，所有用户将看到维护页面"
+          />
+          <ConfigTextArea
+            label="维护提示信息"
+            value={config.maintenanceMessage}
+            onChange={(v) => onChange('maintenanceMessage', v)}
+            placeholder="系统维护中，请稍后再试"
+            description="维护模式下显示给用户的消息"
+          />
+        </div>
+      </ConfigSection>
+    </div>
+  )
+}
+
+// 日志配置表单
+function LogConfigForm({ config, onChange }: { config: LogConfig; onChange: (key: string, value: any) => void }) {
+  return (
+    <div className="space-y-6">
+      <ConfigSection title="日志级别" icon={FileCode}>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">日志级别</label>
+            <select
+              value={config.level}
+              onChange={(e) => onChange('level', e.target.value)}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200
+                       focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30
+                       transition-all"
+            >
+              <option value="debug">Debug - 调试信息</option>
+              <option value="info">Info - 一般信息</option>
+              <option value="warn">Warn - 警告信息</option>
+              <option value="error">Error - 错误信息</option>
+            </select>
+            <p className="text-xs text-slate-500">只记录该级别及以上的日志</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <ConfigToggle
+              label="输出到控制台"
+              checked={config.enableConsole}
+              onChange={(v) => onChange('enableConsole', v)}
+              description="是否在控制台输出日志"
+            />
+            <ConfigToggle
+              label="保存到文件"
+              checked={config.enableFile}
+              onChange={(v) => onChange('enableFile', v)}
+              description="是否将日志保存到文件"
+            />
+          </div>
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="文件管理" icon={Folder}>
+        <div className="grid grid-cols-2 gap-4">
+          <ConfigNumberInput
+            label="最大文件大小"
+            value={config.maxFileSizeMB}
+            onChange={(v) => onChange('maxFileSizeMB', v)}
+            min={1}
+            max={100}
+            unit="MB"
+            description="单个日志文件的最大大小"
+          />
+          <ConfigNumberInput
+            label="最大文件数"
+            value={config.maxFiles}
+            onChange={(v) => onChange('maxFiles', v)}
+            min={1}
+            max={20}
+            unit="个"
+            description="保留的日志文件数量"
+          />
+        </div>
+        <div className="mt-4">
+          <ConfigTextInput
+            label="日志目录"
+            value={config.logDir}
+            onChange={(v) => onChange('logDir', v)}
+            placeholder="./logs"
+            description="日志文件存储路径"
+          />
+        </div>
+      </ConfigSection>
+    </div>
+  )
+}
+
+// 跨域配置表单
+function CorsConfigForm({ config, onChange }: { config: CorsConfig; onChange: (key: string, value: any) => void }) {
+  const [newOrigin, setNewOrigin] = useState('')
+
+  const addOrigin = () => {
+    if (newOrigin && !config.allowedOrigins.includes(newOrigin)) {
+      onChange('allowedOrigins', [...config.allowedOrigins, newOrigin])
+      setNewOrigin('')
+    }
+  }
+
+  const removeOrigin = (origin: string) => {
+    onChange('allowedOrigins', config.allowedOrigins.filter(o => o !== origin))
+  }
+
+  return (
+    <div className="space-y-6">
+      <ConfigSection title="允许域名" icon={Globe}>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newOrigin}
+              onChange={(e) => setNewOrigin(e.target.value)}
+              placeholder="https://example.com"
+              className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200
+                       focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30
+                       transition-all"
+              onKeyDown={(e) => e.key === 'Enter' && addOrigin()}
+            />
+            <button
+              onClick={addOrigin}
+              className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors"
+            >
+              添加
+            </button>
+          </div>
+          <p className="text-xs text-slate-500">留空表示允许所有域名访问（开发环境）</p>
+          
+          <div className="space-y-2">
+            {config.allowedOrigins.length === 0 && (
+              <div className="text-sm text-slate-500 italic">暂无允许的域名</div>
+            )}
+            {config.allowedOrigins.map((origin) => (
+              <div key={origin} className="flex items-center justify-between p-2 bg-slate-800 rounded-lg">
+                <span className="text-sm text-slate-300">{origin}</span>
+                <button
+                  onClick={() => removeOrigin(origin)}
+                  className="text-red-400 hover:text-red-300 text-sm"
+                >
+                  删除
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ConfigSection>
+
+      <ConfigSection title="请求设置" icon={Settings}>
+        <div className="space-y-4">
+          <ConfigToggle
+            label="允许携带凭证"
+            checked={config.allowCredentials}
+            onChange={(v) => onChange('allowCredentials', v)}
+            description="是否允许跨域请求携带 Cookie 等凭证"
+          />
+          <ConfigNumberInput
+            label="预检缓存时间"
+            value={config.maxAge}
+            onChange={(v) => onChange('maxAge', v)}
+            min={0}
+            max={604800}
+            unit="秒"
+            description="浏览器缓存预检请求结果的时间"
+          />
+        </div>
+      </ConfigSection>
     </div>
   )
 }
