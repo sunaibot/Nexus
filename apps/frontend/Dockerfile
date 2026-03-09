@@ -9,10 +9,19 @@ COPY apps/frontend/package.json apps/frontend/package-lock.json ./
 # 安装依赖
 RUN npm ci
 
-# 复制源代码（排除已复制的 package.json）
-COPY apps/frontend/index.html apps/frontend/vite.config.ts apps/frontend/tsconfig.json apps/frontend/tailwind.config.js apps/frontend/postcss.config.js ./
-COPY apps/frontend/src ./src
-COPY apps/frontend/public ./public
+# 复制所有源代码文件
+COPY apps/frontend/index.html ./
+COPY apps/frontend/vite.config.ts ./
+COPY apps/frontend/tsconfig.json ./
+COPY apps/frontend/tsconfig.node.json ./
+COPY apps/frontend/tailwind.config.js ./
+COPY apps/frontend/postcss.config.js ./
+COPY apps/frontend/vite-env.d.ts ./
+COPY apps/frontend/index.css ./
+COPY apps/frontend/App.tsx ./
+COPY apps/frontend/main.tsx ./
+
+# 复制目录
 COPY apps/frontend/components ./components
 COPY apps/frontend/lib ./lib
 COPY apps/frontend/hooks ./hooks
@@ -25,6 +34,7 @@ COPY apps/frontend/routes ./routes
 COPY apps/frontend/pages ./pages
 COPY apps/frontend/contexts ./contexts
 COPY apps/frontend/providers ./providers
+COPY apps/frontend/__tests__ ./__tests__
 
 # 构建
 RUN npm run build
