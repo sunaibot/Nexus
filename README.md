@@ -1161,12 +1161,17 @@ JWT_SECRET=your-random-secret-key-here-min-32-chars
 SESSION_SECRET=your-different-random-secret-key-here
 
 # ============================================
-# 端口配置（建议修改默认端口，避免冲突）
+# 端口配置（可选，使用默认值可直接启动）
 # ============================================
-# 飞牛 NAS 建议使用以下端口
-SERVER_PORT=18787
-FRONTEND_PORT=15173
-MANAGER_PORT=15174
+# 默认端口：
+# SERVER_PORT=8787    # 后端服务
+# FRONTEND_PORT=5173  # 前端服务
+# MANAGER_PORT=5174   # 管理后台
+#
+# 如需修改（例如避免端口冲突）：
+# SERVER_PORT=8788
+# FRONTEND_PORT=5175
+# MANAGER_PORT=5176
 
 # ============================================
 # 数据存储路径（必须修改为绝对路径）
