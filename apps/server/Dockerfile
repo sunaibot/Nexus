@@ -1,28 +1,20 @@
 # 构建阶段
 FROM node:20-alpine AS builder
 
-# 安装 pnpm
-RUN npm install -g pnpm
-
 WORKDIR /app
 
-# 复制 workspace 配置
-COPY pnpm-workspace.yaml package.json turbo.json ./
-
-# 复制所有 packages
-COPY packages ./packages
-
-# 复制 server 应用
-COPY apps/server ./apps/server
+# 复制 package.json 和 package-lock.json
+COPY apps/server/package.json apps/server/package-lock.json ./
 
 # 安装依赖
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
-# 构建共享包
-RUN pnpm --filter @nowen/shared-types build
+# 复制源代码
+COPY apps/server/src ./src
+COPY apps/server/tsconfig.json ./
 
-# 构建 server
-RUN pnpm --filter @nowen/server build
+# 构建
+RUN npm run build
 
 # 生产阶段
 FROM node:20-alpine AS production
@@ -30,8 +22,8 @@ FROM node:20-alpine AS production
 WORKDIR /app
 
 # 复制构建产物
-COPY --from=builder /app/apps/server/dist ./dist
-COPY --from=builder /app/apps/server/package.json ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # 创建数据目录

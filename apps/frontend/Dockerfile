@@ -1,34 +1,25 @@
 # 构建阶段
 FROM node:20-alpine AS builder
 
-# 安装 pnpm
-RUN npm install -g pnpm
-
 WORKDIR /app
 
-# 复制 workspace 配置
-COPY pnpm-workspace.yaml package.json turbo.json ./
-
-# 复制所有 packages
-COPY packages ./packages
-
-# 复制 frontend 应用
-COPY apps/frontend ./apps/frontend
+# 复制 package.json 和 package-lock.json
+COPY apps/frontend/package.json apps/frontend/package-lock.json ./
 
 # 安装依赖
-RUN pnpm install --frozen-lockfile
+RUN npm ci
 
-# 构建共享包
-RUN pnpm --filter @nowen/shared-types build
+# 复制源代码
+COPY apps/frontend ./
 
-# 构建 frontend
-RUN pnpm --filter @nowen/frontend build
+# 构建
+RUN npm run build
 
 # 生产阶段 - 使用 nginx 托管
 FROM nginx:alpine AS production
 
 # 复制构建产物
-COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # 复制 nginx 配置
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
