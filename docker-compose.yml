@@ -15,7 +15,7 @@ services:
   # 后端服务（API）
   # ============================================
   nexus-server:
-    image: nexus/server:latest
+    image: song13521/nexus-server:latest
     pull_policy: always
     container_name: nexus-server
     restart: ${RESTART_POLICY:-unless-stopped}
@@ -83,7 +83,7 @@ services:
   # 如不需要可删除或注释掉此服务
   # ============================================
   nexus-manager:
-    image: nexus/manager:latest
+    image: song13521/nexus-manager:latest
     pull_policy: always
     container_name: nexus-manager
     restart: ${RESTART_POLICY:-unless-stopped}

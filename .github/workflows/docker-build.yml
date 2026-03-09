@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_PREFIX: nexus
+  IMAGE_PREFIX: song13521
 
 jobs:
   build-and-push:
