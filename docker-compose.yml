@@ -23,9 +23,9 @@ services:
       - "${SERVER_PORT:-8787}:8787"
     volumes:
       # 数据持久化路径
-      # 通用：./data
-      # 飞牛 NAS：/vol1/1000/docker/nexus/data
-      - "${DATA_PATH:-./data}:/data"
+      # 飞牛 NAS 默认：/vol1/1000/docker/nexus/data
+      # 其他平台：修改为 ./data 或其他路径
+      - "${DATA_PATH:-/vol1/1000/docker/nexus/data}:/data"
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=8787
