@@ -35,6 +35,7 @@ COPY apps/frontend/pages ./pages
 COPY apps/frontend/contexts ./contexts
 COPY apps/frontend/providers ./providers
 COPY apps/frontend/__tests__ ./__tests__
+COPY apps/frontend/data ./data
 
 # 构建
 RUN npm run build

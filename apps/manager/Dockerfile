@@ -34,6 +34,7 @@ COPY apps/manager/modules ./modules
 COPY apps/manager/pages ./pages
 COPY apps/manager/public ./public
 COPY apps/manager/__tests__ ./__tests__
+COPY apps/manager/data ./data
 
 # 构建
 RUN npm run build
