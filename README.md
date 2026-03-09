@@ -857,7 +857,6 @@ nexus-project/
 │   └── nexus.db                      # SQLite 数据库文件
 │
 ├── 📄 docker-compose.yml             # Docker Compose 配置
-├── 📄 docker-compose.fnos.yml        # 飞牛 NAS 专用配置
 ├── 📄 .env.example                   # 环境变量示例
 ├── 📄 .gitignore                     # Git 忽略规则
 ├── 📄 package.json                   # 根项目配置
@@ -933,13 +932,12 @@ Docker Compose 部署需要以下配置文件：
 
 | 文件 | 说明 | 必需 |
 |------|------|------|
-| `docker-compose.yml` | Docker Compose 主配置文件 | ✅ |
-| `docker-compose.fnos.yml` | 飞牛 NAS 专用配置（推荐飞牛用户使用） | ✅ |
+| `docker-compose.yml` | Docker Compose 配置文件 | ✅ |
 | `.env` | 环境变量配置文件（可选） | ❌ |
 | `Dockerfile` (各应用) | 应用构建文件 (已包含在项目中) | ✅ |
 
 **快速配置步骤：**
-1. 复制项目中的 `docker-compose.yml`（或 `docker-compose.fnos.yml`）
+1. 复制项目中的 `docker-compose.yml`
 2. （可选）复制 `.env.example` 为 `.env` 并修改配置
 3. 执行 `docker-compose up -d` 启动服务
 
@@ -961,14 +959,13 @@ mkdir -p /vol1/docker/nexus && cd /vol1/docker/nexus
 # 2. 克隆项目
 git clone https://github.com/sunaibot/Nexus.git .
 
-# 3. 生成安全密钥（运行两次，分别用于 JWT_SECRET 和 SESSION_SECRET）
-openssl rand -base64 32
+# 3. （可选）配置环境变量
+# 如需自定义端口或密钥，复制并编辑 .env 文件：
+# cp .env.example .env
+# 不配置则使用默认值启动
 
-# 4. 编辑 docker-compose.fnos.yml，填入上面生成的两个密钥
-# 修改 JWT_SECRET 和 SESSION_SECRET 的值
-
-# 5. 启动服务
-docker-compose -f docker-compose.fnos.yml up -d
+# 4. 启动服务
+docker-compose up -d
 ```
 
 #### 其他 NAS / 通用部署
@@ -1020,41 +1017,36 @@ git clone https://github.com/sunaibot/Nexus.git .
 
 #### 步骤 3：生成安全密钥
 
+#### 步骤 4：（可选）配置环境变量
+
+如需自定义配置，编辑 `.env` 文件：
+
 ```bash
-# 运行两次，生成两个不同的密钥
-openssl rand -base64 32
+# 复制环境变量示例文件
+cp .env.example .env
+
+# 编辑 .env 文件
 ```
 
-#### 步骤 4：配置环境变量
-
-**飞牛 NAS 用户：** 编辑 `docker-compose.fnos.yml`
-
-**其他用户：** 编辑 `.env` 文件
-
-需要修改的关键配置：
+常用配置项：
 ```yaml
-# 安全密钥（必须修改！）
-JWT_SECRET=你的第一个密钥
-SESSION_SECRET=你的第二个密钥
+# 安全密钥（生产环境建议设置）
+YOUR_PASSWORD=你的密码（至少8位）
 
 # 端口（可选，建议修改避免冲突）
 SERVER_PORT=8787
 FRONTEND_PORT=5173
 MANAGER_PORT=5174
 
-# 数据路径（飞牛 NAS 建议修改）
-# 飞牛: /vol1/docker/nexus/data
-# 群晖: /volume1/docker/nexus/data
+# 数据路径（可选，默认 ./data）
 DATA_PATH=./data
 ```
+
+> 💡 **零配置启动**：不创建 `.env` 文件也能启动，将使用默认配置
 
 #### 步骤 5：启动服务
 
 ```bash
-# 飞牛 NAS
-docker-compose -f docker-compose.fnos.yml up -d
-
-# 其他
 docker-compose up -d
 ```
 
@@ -1086,9 +1078,59 @@ docker-compose up -d
 
 ---
 
-### 📖 详细教程
+### 🐮 飞牛 NAS 部署指南
 
-- **飞牛 NAS 专属指南**：[docs/deploy/fnos-docker-guide.md](docs/deploy/fnos-docker-guide.md)
+飞牛 NAS 用户请按以下步骤部署：
+
+#### 步骤 1：创建目录并下载配置
+
+```bash
+# 创建项目目录
+mkdir -p /vol1/docker/nexus
+cd /vol1/docker/nexus
+
+# 下载配置文件
+curl -O https://raw.githubusercontent.com/sunaibot/Nexus/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/sunaibot/Nexus/main/.env.example
+mv .env.example .env
+```
+
+#### 步骤 2：配置环境变量
+
+编辑 `.env` 文件：
+
+```bash
+# 设置你的密码（至少8位）
+YOUR_PASSWORD=woaini1234
+
+# 修改数据路径（飞牛 NAS 建议）
+DATA_PATH=/vol1/@docker/nexus/data
+
+# 如需修改端口（避免冲突）
+SERVER_PORT=8787
+FRONTEND_PORT=5173
+MANAGER_PORT=5174
+```
+
+#### 步骤 3：启动服务
+
+```bash
+docker-compose up -d
+```
+
+#### 飞牛 NAS 图形界面部署
+
+1. 打开飞牛 OS 的「Docker」应用
+2. 点击左侧「Compose」→「创建项目」
+3. 项目名称：`nexus`
+4. 上传 `docker-compose.yml` 文件
+5. 在「环境变量」中填写配置（或上传 `.env` 文件）
+6. 点击「创建并启动」
+
+---
+
+### 📖 更多文档
+
 - **通用部署指南**：本文档下方「详细配置说明」章节
 - **安全文档**：[SECURITY_DEEP_ANALYSIS.md](SECURITY_DEEP_ANALYSIS.md)
 
@@ -1097,7 +1139,7 @@ docker-compose up -d
 ### ❓ 常见问题
 
 **Q: 端口冲突怎么办？**  
-A: 修改 `.env` 或 `docker-compose.fnos.yml` 中的端口配置，使用其他端口。
+A: 修改 `.env` 文件中的端口配置，使用其他端口。如果没有 `.env` 文件，先创建并设置端口。
 
 **Q: 数据存储在哪里？**  
 A: 默认存储在 `./data` 目录，可通过 `DATA_PATH` 环境变量修改。
