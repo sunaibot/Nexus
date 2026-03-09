@@ -15,7 +15,7 @@ services:
   # 后端服务（API）
   # ============================================
   nexus-server:
-    image: docker.mirrors.ustc.edu.cn/sunaibot/nexus-server:latest
+    image: nexus/server:latest
     pull_policy: always
     container_name: nexus-server
     restart: ${RESTART_POLICY:-unless-stopped}
@@ -59,7 +59,7 @@ services:
   # 前端服务（用户页面）
   # ============================================
   nexus-frontend:
-    image: docker.mirrors.ustc.edu.cn/sunaibot/nexus-frontend:latest
+    image: song13521/nexus-frontend:latest
     pull_policy: always
     container_name: nexus-frontend
     restart: ${RESTART_POLICY:-unless-stopped}
@@ -83,7 +83,7 @@ services:
   # 如不需要可删除或注释掉此服务
   # ============================================
   nexus-manager:
-    image: docker.mirrors.ustc.edu.cn/sunaibot/nexus-manager:latest
+    image: nexus/manager:latest
     pull_policy: always
     container_name: nexus-manager
     restart: ${RESTART_POLICY:-unless-stopped}
