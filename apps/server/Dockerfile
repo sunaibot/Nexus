@@ -26,6 +26,10 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
+# 复制脚本和文档（如果需要）
+COPY apps/server/scripts ./scripts
+COPY apps/server/docs ./docs
+
 # 创建数据目录
 RUN mkdir -p /data
 
