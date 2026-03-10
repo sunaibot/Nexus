@@ -41,17 +41,19 @@ export function getJwtSecret(): string {
     return generatedKey
   }
 
-  // 开发环境使用默认密钥
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('⚠️  警告：开发环境使用默认 JWT_SECRET，生产环境请设置 YOUR_PASSWORD 或 JWT_SECRET')
-    return 'nexus-dev-jwt-secret-do-not-use-in-production-' + Date.now()
+  // 使用默认密码（生产环境和开发环境都使用，但生产环境会显示警告）
+  const isDev = process.env.NODE_ENV === 'development'
+  if (!isDev) {
+    console.warn('⚠️  警告：生产环境未设置 YOUR_PASSWORD，使用默认密码')
+    console.warn('   为了安全，请在 .env 文件中设置 YOUR_PASSWORD=你的密码')
+    console.warn('   密码要求：至少8位字符')
+  } else {
+    console.warn('⚠️  警告：开发环境使用默认 JWT_SECRET')
   }
-
-  // 生产环境必须设置密码
-  console.error('❌ 错误：生产环境必须设置 YOUR_PASSWORD 或 JWT_SECRET')
-  console.error('   请在 .env 文件中设置 YOUR_PASSWORD=你的密码')
-  console.error('   密码要求：至少8位字符')
-  process.exit(1)
+  // 使用默认密码生成密钥
+  const defaultPassword = 'nexus-default-password-for-zero-config'
+  const generatedKey = generateKeyFromPassword(defaultPassword, 'nexus-jwt-salt-v1')
+  return generatedKey
 }
 
 /**
@@ -75,17 +77,19 @@ export function getSessionSecret(): string {
     return generatedKey
   }
 
-  // 开发环境使用默认密钥
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('⚠️  警告：开发环境使用默认 SESSION_SECRET，生产环境请设置 YOUR_PASSWORD 或 SESSION_SECRET')
-    return 'nexus-dev-session-secret-do-not-use-in-production-' + Date.now()
+  // 使用默认密码（生产环境和开发环境都使用，但生产环境会显示警告）
+  const isDev = process.env.NODE_ENV === 'development'
+  if (!isDev) {
+    console.warn('⚠️  警告：生产环境未设置 YOUR_PASSWORD，使用默认密码')
+    console.warn('   为了安全，请在 .env 文件中设置 YOUR_PASSWORD=你的密码')
+    console.warn('   密码要求：至少8位字符')
+  } else {
+    console.warn('⚠️  警告：开发环境使用默认 SESSION_SECRET')
   }
-
-  // 生产环境必须设置密码
-  console.error('❌ 错误：生产环境必须设置 YOUR_PASSWORD 或 SESSION_SECRET')
-  console.error('   请在 .env 文件中设置 YOUR_PASSWORD=你的密码')
-  console.error('   密码要求：至少8位字符')
-  process.exit(1)
+  // 使用默认密码生成密钥
+  const defaultPassword = 'nexus-default-password-for-zero-config'
+  const generatedKey = generateKeyFromPassword(defaultPassword, 'nexus-session-salt-v1-different-from-jwt')
+  return generatedKey
 }
 
 /**
