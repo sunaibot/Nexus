@@ -141,11 +141,10 @@ app.use(sqlInjectionDetector)
 // Session 配置
 const isDevEnv = process.env.NODE_ENV === 'development'
 
-// 生产环境必须设置 SESSION_SECRET
+// 生产环境建议设置 SESSION_SECRET，但不再强制退出（支持零配置启动）
 if (!isDevEnv && !process.env.SESSION_SECRET) {
-  console.error('❌ FATAL: SESSION_SECRET environment variable is required in production')
-  console.error('   Please set a strong random string (e.g., openssl rand -base64 32)')
-  process.exit(1)
+  console.warn('⚠️  警告：生产环境未设置 SESSION_SECRET，将使用默认密钥')
+  console.warn('   为了安全，建议设置 SESSION_SECRET 或使用 YOUR_PASSWORD')
 }
 
 // 使用 keyGenerator 生成或获取 session secret
