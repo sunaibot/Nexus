@@ -35,7 +35,11 @@ pnpm-debug.log*
 *.db
 *.sqlite
 *.sqlite3
-data/
+# 注意：不要忽略 apps/*/data/，因为前端项目需要这些目录
+/data/
+*.db
+*.sqlite
+*.sqlite3
 
 # Uploads
 uploads/
