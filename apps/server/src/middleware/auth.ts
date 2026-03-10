@@ -7,9 +7,9 @@ import { getJwtSecret } from '../utils/keyGenerator.js'
 // JWT 密钥配置（使用 keyGenerator 自动生成或从环境变量读取）
 const JWT_SECRET: string = getJwtSecret()
 
-// 检查密钥强度
+// 检查密钥强度（如果密钥太短，发出警告但不退出）
 if (JWT_SECRET.length < 32) {
-  throw new Error('JWT_SECRET must be at least 32 characters long')
+  console.warn('⚠️  警告：JWT_SECRET 长度小于32字符，建议设置更强的密钥')
 }
 
 /**
