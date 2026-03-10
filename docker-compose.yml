@@ -41,10 +41,10 @@ services:
       - nexus-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8787/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
     # 资源限制（可根据配置调整）
     deploy:
       resources:
@@ -70,8 +70,7 @@ services:
     networks:
       - nexus-network
     depends_on:
-      nexus-server:
-        condition: service_healthy
+      - nexus-server
     deploy:
       resources:
         limits:
@@ -94,8 +93,7 @@ services:
     networks:
       - nexus-network
     depends_on:
-      nexus-server:
-        condition: service_healthy
+      - nexus-server
     deploy:
       resources:
         limits:
