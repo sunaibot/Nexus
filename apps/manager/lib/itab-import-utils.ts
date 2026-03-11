@@ -151,8 +151,8 @@ export function convertItabToNowen(config: ItabConfig): {
       icon: group.icon || 'Folder',
       color: '#6366f1',
       orderIndex: groupIndex,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     })
 
     // 处理分组中的项目
@@ -170,15 +170,15 @@ export function convertItabToNowen(config: ItabConfig): {
             iconUrl: item.src || '',
             category: categoryId,
             categoryId: categoryId,
-            tags: '',
+            tags: [],
             orderIndex: itemIndex,
             isPinned: false,
             isReadLater: false,
             isRead: false,
             visibility: 'public',
             visitCount: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
           })
           totalItems++
         }
