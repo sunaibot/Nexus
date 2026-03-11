@@ -101,14 +101,26 @@ app.use(cors({
     // 允许未定义的 origin（如 curl、Postman 等直接请求）
     if (!origin) return callback(null, true)
     
-    // 生产环境严格限制
+    // 生产环境：如果设置了 ALLOWED_ORIGINS 则严格限制，否则允许所有内网 IP
     if (process.env.NODE_ENV === 'production') {
-      const allowedOrigins = process.env.ALLOWED_ORIGINS 
-        ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-        : []
-      if (allowedOrigins.includes(origin)) {
+      // 允许 localhost 和 127.0.0.1
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
         return callback(null, true)
       }
+      
+      // 允许所有内网 IP (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+      if (origin.match(/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)/)) {
+        return callback(null, true)
+      }
+      
+      // 如果设置了 ALLOWED_ORIGINS，则额外允许配置的域名
+      if (process.env.ALLOWED_ORIGINS) {
+        const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true)
+        }
+      }
+      
       console.error(`[Security] CORS blocked origin: ${origin}`)
       return callback(new Error('Not allowed by CORS'))
     }
