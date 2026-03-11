@@ -155,11 +155,12 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   name: 'nowen.sid',
+  proxy: true,
   cookie: {
-    secure: !isDevEnv, // 生产环境使用 HTTPS
+    secure: false, // 允许 HTTP 访问（内网部署通常没有 HTTPS）
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24小时
-    sameSite: isDevEnv ? 'lax' : 'strict' // 生产环境使用 strict
+    sameSite: 'lax' // 使用 lax 模式，兼容更多场景
   }
 }))
 
