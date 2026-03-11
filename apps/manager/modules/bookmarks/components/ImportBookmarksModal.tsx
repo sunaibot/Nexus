@@ -1,12 +1,13 @@
 import { useState, useCallback } from 'react'
-import { X, Upload, FileJson, AlertCircle, CheckCircle, Globe, FileType, Sun } from 'lucide-react'
+import { X, Upload, FileJson, AlertCircle, CheckCircle, Globe, FileType, Sun, Grid3X3 } from 'lucide-react'
 import { importData, ImportResult } from '../../../lib/api'
 import { useToast } from '../../../components/admin/Toast'
 import { convertBrowserBookmarks, validateBookmarkFile } from '../../../lib/bookmark-import-utils'
 import { isSunPanelFormat, convertSunPanelToNowen, validateSunPanelFile, formatExportTime, SunPanelConfig } from '../../../lib/sunpanel-import-utils'
+import { isItabFormat, convertItabToNowen, validateItabFile, ItabConfig } from '../../../lib/itab-import-utils'
 import { Bookmark, Category } from '../../../types/bookmark'
 
-type ImportFormat = 'chrome' | 'firefox' | 'html' | 'sunpanel' | 'nowen' | 'unknown'
+type ImportFormat = 'chrome' | 'firefox' | 'html' | 'sunpanel' | 'itab' | 'nowen' | 'unknown'
 
 interface ImportBookmarksModalProps {
   isOpen: boolean
@@ -30,6 +31,9 @@ export function ImportBookmarksModal({
   const [sunPanelMeta, setSunPanelMeta] = useState<{ version: string; exportTime: string } | null>(null)
   const [showSunPanelConfirm, setShowSunPanelConfirm] = useState(false)
   const [pendingSunPanelConfig, setPendingSunPanelConfig] = useState<SunPanelConfig | null>(null)
+  const [itabMeta, setItabMeta] = useState<{ totalItems: number; totalGroups: number } | null>(null)
+  const [showItabConfirm, setShowItabConfirm] = useState(false)
+  const [pendingItabConfig, setPendingItabConfig] = useState<ItabConfig | null>(null)
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -41,11 +45,38 @@ export function ImportBookmarksModal({
     setSunPanelMeta(null)
     setShowSunPanelConfirm(false)
     setPendingSunPanelConfig(null)
+    setItabMeta(null)
+    setShowItabConfirm(false)
+    setPendingItabConfig(null)
 
     try {
       const content = await selectedFile.text()
 
-      // 首先检测是否为 SunPanel 格式
+      // 首先检测是否为 iTab 格式
+      if (isItabFormat(content)) {
+        const validation = validateItabFile(content)
+        
+        if (!validation.valid || !validation.config) {
+          showToast('error', validation.error || 'iTab 配置文件验证失败')
+          setIsValidating(false)
+          return
+        }
+
+        // 显示 iTab 确认弹窗
+        const converted = convertItabToNowen(validation.config)
+        setPendingItabConfig(validation.config)
+        setItabMeta({
+          totalItems: converted.meta.totalItems,
+          totalGroups: converted.meta.totalGroups,
+        })
+        setShowItabConfirm(true)
+        setFile(selectedFile)
+        setFileFormat('itab')
+        setIsValidating(false)
+        return
+      }
+
+      // 检测是否为 SunPanel 格式
       if (isSunPanelFormat(content)) {
         const validation = validateSunPanelFile(content)
         
@@ -119,6 +150,30 @@ export function ImportBookmarksModal({
     setFileFormat('unknown')
   }, [])
 
+  // 确认 iTab 导入
+  const handleConfirmItabImport = useCallback(() => {
+    if (!pendingItabConfig) return
+
+    const converted = convertItabToNowen(pendingItabConfig)
+    
+    setPreviewData({
+      bookmarks: converted.bookmarks.slice(0, 5),
+      categories: converted.categories.slice(0, 5),
+    })
+    
+    setShowItabConfirm(false)
+    showToast('success', `检测到 iTab 配置，共 ${converted.meta.totalItems} 个书签，${converted.meta.totalGroups} 个分类`)
+  }, [pendingItabConfig, showToast])
+
+  // 取消 iTab 导入
+  const handleCancelItabImport = useCallback(() => {
+    setShowItabConfirm(false)
+    setPendingItabConfig(null)
+    setItabMeta(null)
+    setFile(null)
+    setFileFormat('unknown')
+  }, [])
+
   const handleImport = useCallback(async () => {
     if (!file) {
       showToast('error', '请先选择文件')
@@ -131,8 +186,15 @@ export function ImportBookmarksModal({
       
       let importPayload: { bookmarks: Bookmark[]; categories: Category[] }
       
-      // 处理 SunPanel 格式
-      if (fileFormat === 'sunpanel' && pendingSunPanelConfig) {
+      // 处理 iTab 格式
+      if (fileFormat === 'itab' && pendingItabConfig) {
+        const converted = convertItabToNowen(pendingItabConfig)
+        importPayload = {
+          bookmarks: converted.bookmarks,
+          categories: converted.categories,
+        }
+      } else if (fileFormat === 'sunpanel' && pendingSunPanelConfig) {
+        // 处理 SunPanel 格式
         const converted = convertSunPanelToNowen(pendingSunPanelConfig)
         importPayload = {
           bookmarks: converted.bookmarks,
@@ -165,7 +227,7 @@ export function ImportBookmarksModal({
         settings: {},
         version: '2.0',
         exportedAt: new Date().toISOString(),
-        exportedBy: fileFormat === 'sunpanel' ? 'sunpanel-import' : 'browser-import',
+        exportedBy: fileFormat === 'itab' ? 'itab-import' : fileFormat === 'sunpanel' ? 'sunpanel-import' : 'browser-import',
       }
       
       const result = await importData(data, importMode)
@@ -180,7 +242,7 @@ export function ImportBookmarksModal({
     } finally {
       setIsImporting(false)
     }
-  }, [file, fileFormat, importMode, showToast, onSuccess, pendingSunPanelConfig])
+  }, [file, fileFormat, importMode, showToast, onSuccess, pendingSunPanelConfig, pendingItabConfig])
 
   const handleClose = useCallback(() => {
     setFile(null)
@@ -191,6 +253,9 @@ export function ImportBookmarksModal({
     setSunPanelMeta(null)
     setShowSunPanelConfirm(false)
     setPendingSunPanelConfig(null)
+    setItabMeta(null)
+    setShowItabConfirm(false)
+    setPendingItabConfig(null)
     onClose()
   }, [onClose])
 
@@ -235,7 +300,7 @@ export function ImportBookmarksModal({
                 className="text-sm"
                 style={{ color: 'var(--color-text-muted)' }}
               >
-                支持 Chrome、Firefox、Edge、Safari 等浏览器导出的书签文件
+                支持 Chrome、Firefox、Edge、Safari、SunPanel、iTab 等导出的书签文件
               </p>
             </div>
           </div>
@@ -282,17 +347,19 @@ export function ImportBookmarksModal({
                   <div className="flex items-center gap-2 mb-2">
                     {fileFormat === 'sunpanel' ? (
                       <Sun className="w-6 h-6" style={{ color: '#f59e0b' }} />
+                    ) : fileFormat === 'itab' ? (
+                      <Grid3X3 className="w-6 h-6" style={{ color: '#6366f1' }} />
                     ) : (
                       <Globe className="w-6 h-6" style={{ color: 'var(--color-primary)' }} />
                     )}
                     <span 
                       className="px-2 py-1 rounded text-xs font-medium"
                       style={{ 
-                        background: fileFormat === 'sunpanel' ? '#f59e0b' : 'var(--color-primary)', 
+                        background: fileFormat === 'sunpanel' ? '#f59e0b' : fileFormat === 'itab' ? '#6366f1' : 'var(--color-primary)', 
                         color: 'white' 
                       }}
                     >
-                      {fileFormat === 'sunpanel' ? 'SunPanel' : fileFormat}
+                      {fileFormat === 'sunpanel' ? 'SunPanel' : fileFormat === 'itab' ? 'iTab' : fileFormat}
                     </span>
                   </div>
                   <p style={{ color: 'var(--color-text-primary)' }} className="font-medium">
@@ -301,6 +368,11 @@ export function ImportBookmarksModal({
                   {sunPanelMeta && (
                     <p style={{ color: 'var(--color-text-muted)' }} className="text-sm mt-1">
                       版本: {sunPanelMeta.version} | 导出时间: {formatExportTime(sunPanelMeta.exportTime)}
+                    </p>
+                  )}
+                  {itabMeta && (
+                    <p style={{ color: 'var(--color-text-muted)' }} className="text-sm mt-1">
+                      {itabMeta.totalGroups} 个分组 | {itabMeta.totalItems} 个书签
                     </p>
                   )}
                   <p style={{ color: 'var(--color-text-muted)' }} className="text-sm mt-1">
@@ -317,7 +389,7 @@ export function ImportBookmarksModal({
                     点击选择书签文件
                   </p>
                   <p style={{ color: 'var(--color-text-muted)' }} className="text-sm mt-1">
-                    支持 Chrome、Firefox、Edge、SunPanel 导出的配置文件
+                    支持 Chrome、Firefox、Edge、SunPanel、iTab 导出的配置文件
                   </p>
                 </div>
               )}
@@ -576,6 +648,91 @@ export function ImportBookmarksModal({
                   className="flex-1 px-4 py-2.5 rounded-lg font-medium text-white transition-all"
                   style={{ 
                     background: 'linear-gradient(to right, #f59e0b, #d97706)',
+                  }}
+                >
+                  确认导入
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* iTab 确认弹窗 */}
+        {showItabConfirm && itabMeta && (
+          <div 
+            className="absolute inset-0 z-20 flex items-center justify-center p-6"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+          >
+            <div 
+              className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
+              style={{ 
+                background: 'var(--color-bg-secondary)',
+                border: '2px solid #6366f1',
+              }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div 
+                  className="p-3 rounded-xl"
+                  style={{ background: 'rgba(99, 102, 241, 0.2)' }}
+                >
+                  <Grid3X3 className="w-8 h-8" style={{ color: '#6366f1' }} />
+                </div>
+                <div>
+                  <h3 
+                    className="text-lg font-semibold"
+                    style={{ color: 'var(--color-text-primary)' }}
+                  >
+                    检测到 iTab 配置
+                  </h3>
+                  <p style={{ color: 'var(--color-text-muted)' }} className="text-sm">
+                    确认导入此配置文件？
+                  </p>
+                </div>
+              </div>
+
+              <div 
+                className="p-4 rounded-xl mb-4 space-y-2"
+                style={{ background: 'var(--color-glass)' }}
+              >
+                <div className="flex justify-between">
+                  <span style={{ color: 'var(--color-text-muted)' }}>应用名称</span>
+                  <span style={{ color: 'var(--color-text-primary)' }} className="font-medium">iTab 新标签页</span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: 'var(--color-text-muted)' }}>格式版本</span>
+                  <span style={{ color: '#6366f1' }} className="font-medium">v1.0</span>
+                </div>
+                <div className="border-t my-2" style={{ borderColor: 'var(--color-glass-border)' }} />
+                <div className="flex justify-between">
+                  <span style={{ color: 'var(--color-text-muted)' }}>分组数量</span>
+                  <span style={{ color: 'var(--color-text-primary)' }} className="font-medium">
+                    {itabMeta.totalGroups} 个
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span style={{ color: 'var(--color-text-muted)' }}>书签数量</span>
+                  <span style={{ color: 'var(--color-text-primary)' }} className="font-medium">
+                    {itabMeta.totalItems} 个
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelItabImport}
+                  className="flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors"
+                  style={{ 
+                    background: 'var(--color-glass)',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleConfirmItabImport}
+                  className="flex-1 px-4 py-2.5 rounded-lg font-medium text-white transition-all"
+                  style={{ 
+                    background: 'linear-gradient(to right, #6366f1, #4f46e5)',
                   }}
                 >
                   确认导入
