@@ -125,9 +125,11 @@ export function checkPasswordConfig(): void {
   if (userPassword && userPassword !== '填上你自己的密码') {
     const validation = validatePasswordStrength(userPassword)
     if (!validation.valid) {
-      console.error(`❌ 密码验证失败：${validation.message}`)
-      process.exit(1)
+      console.warn(`⚠️  密码强度不足：${validation.message}`)
+      console.warn('   建议设置更强的密码（至少8位字符）')
+      // 不再强制退出，只显示警告
+    } else {
+      console.log('✅ 密码验证通过')
     }
-    console.log('✅ 密码验证通过')
   }
 }
