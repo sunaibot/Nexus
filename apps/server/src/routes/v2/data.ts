@@ -146,19 +146,110 @@ router.get('/export', authMiddleware, adminMiddleware, (req: Request, res: Respo
 })
 
 /**
+ * 检测数据格式类型
+ */
+function detectImportFormat(data: any): 'nexus' | 'itab' | 'unknown' {
+  if (data.version && data.exportedAt && Array.isArray(data.bookmarks)) {
+    return 'nexus'
+  }
+  if (data.baseConfig && data.navConfig && Array.isArray(data.navConfig)) {
+    return 'itab'
+  }
+  return 'unknown'
+}
+
+/**
+ * 解析 iTab 格式的书签数据
+ */
+function parseItabData(data: any): { bookmarks: any[], categories: any[] } {
+  const bookmarks: any[] = []
+  const categories: any[] = []
+  
+  if (!data.navConfig || !Array.isArray(data.navConfig)) {
+    return { bookmarks, categories }
+  }
+  
+  // 遍历 iTab 的分组
+  data.navConfig.forEach((group: any, groupIndex: number) => {
+    if (!group.children || !Array.isArray(group.children)) return
+    
+    // 创建分类
+    const categoryId = `itab-${group.id || groupIndex}`
+    categories.push({
+      id: categoryId,
+      name: group.name || '未命名分组',
+      icon: group.icon || 'Folder',
+      color: '#6366f1',
+      orderIndex: groupIndex,
+    })
+    
+    // 遍历分组中的项目
+    group.children.forEach((item: any, itemIndex: number) => {
+      // 只处理图标类型的项目（书签）
+      if (item.type === 'icon' || item.type === 'text') {
+        bookmarks.push({
+          id: `itab-${item.id || `${groupIndex}-${itemIndex}`}`,
+          url: item.url || '',
+          title: item.name || '未命名书签',
+          description: '',
+          favicon: item.src || '',
+          icon: item.iconText || '',
+          category: categoryId,
+          orderIndex: itemIndex,
+          isPinned: false,
+          isReadLater: false,
+          visibility: 'public',
+        })
+      }
+    })
+  })
+  
+  return { bookmarks, categories }
+}
+
+/**
  * 导入数据（需要管理员权限）
  * POST /api/v2/data/import
  */
 router.post('/import', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
   try {
     const user = (req as any).user
-    const { data, mode = 'merge' } = req.body
+    let { data, mode = 'merge' } = req.body
     
     if (!data || typeof data !== 'object') {
       return res.status(400).json({
         success: false,
         error: '无效的数据格式',
       })
+    }
+    
+    // 检测导入格式
+    const format = detectImportFormat(data)
+    
+    if (format === 'unknown') {
+      return res.status(400).json({
+        success: false,
+        error: '不支持的数据格式',
+      })
+    }
+    
+    // 如果是 iTab 格式，转换为 Nexus 格式
+    if (format === 'itab') {
+      const parsed = parseItabData(data)
+      data = {
+        version: '2.0',
+        exportedAt: new Date().toISOString(),
+        exportedBy: user.username,
+        bookmarks: parsed.bookmarks,
+        categories: parsed.categories,
+        settings: {},
+        themes: [],
+        quotes: [],
+        tags: [],
+        widgets: [],
+        customMetrics: [],
+        serviceMonitors: [],
+      }
     }
     
     const db = getDatabase()
