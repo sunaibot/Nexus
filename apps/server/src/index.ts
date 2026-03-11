@@ -68,6 +68,9 @@ console.log(`
 
 // ========== 中间件配置 ==========
 
+// 信任代理（用于获取真实客户端 IP）
+app.set('trust proxy', 1)
+
 // Helmet 安全响应头
 app.use(helmet({
   contentSecurityPolicy: {
