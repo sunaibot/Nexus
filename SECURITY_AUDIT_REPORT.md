@@ -291,8 +291,8 @@ YOUR_PASSWORD=your-strong-password-here
 # 可选配置（使用默认值可省略）
 NODE_ENV=production
 SERVER_PORT=8787
-FRONTEND_PORT=5173
-MANAGER_PORT=5174
+FRONTEND_PORT=8785
+MANAGER_PORT=8786
 
 # CORS 配置（根据实际域名）
 ALLOWED_ORIGINS=https://your-nas-domain.com

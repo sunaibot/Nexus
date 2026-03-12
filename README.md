@@ -903,8 +903,8 @@ npm run dev:all      # 同时启动所有服务
 
 # 方式2：分别启动（需要多个终端）
 npm run dev:server   # 后端 API (端口 8787)
-npm run dev:frontend # 前端界面 (端口 5173)
-npm run dev:manager  # 管理后台 (端口 5174)
+npm run dev:frontend # 前端界面 (端口 8785)
+npm run dev:manager  # 管理后台 (端口 8786)
 ```
 
 ### 构建生产版本
@@ -943,8 +943,8 @@ Docker Compose 部署需要以下配置文件：
 
 > 💡 **零配置启动**：不创建 `.env` 文件也能启动，将使用默认配置
 > - 后端端口：8787
-> - 前端端口：5173
-> - 管理后台端口：5174
+> - 前端端口：8785
+> - 管理后台端口：8786
 
 ---
 
@@ -1054,8 +1054,8 @@ docker-compose up -d
 
 | 服务 | 访问地址 | 说明 |
 |------|----------|------|
-| **前台页面** | `http://你的NAS-IP:5173` | 用户导航主页 |
-| **管理后台** | `http://你的NAS-IP:5174` | 管理员界面 |
+| **前台页面** | `http://你的NAS-IP:8785` | 用户导航主页 |
+| **管理后台** | `http://你的NAS-IP:8786` | 管理员界面 |
 | **默认账号** | `admin` / `admin123` | 首次登录后必须修改密码 |
 
 ---
@@ -1063,7 +1063,7 @@ docker-compose up -d
 ### 🔐 首次配置（重要！）
 
 #### 1. 修改默认密码
-- 访问管理后台 `http://你的NAS-IP:5174`
+- 访问管理后台 `http://你的NAS-IP:8786`
 - 使用 `admin` / `admin123` 登录
 - 系统会强制要求修改密码
 
@@ -1108,8 +1108,8 @@ DATA_PATH=/vol1/@docker/nexus/data
 
 # 如需修改端口（避免冲突）
 SERVER_PORT=8787
-FRONTEND_PORT=5173
-MANAGER_PORT=5174
+FRONTEND_PORT=8785
+MANAGER_PORT=8786
 ```
 
 #### 步骤 3：启动服务
@@ -1270,7 +1270,7 @@ docker-compose up -d
    - 系统会自动根据密码生成安全密钥
 
 3. **修改默认端口**
-   - 避免使用默认端口（5173, 5174, 8787）
+   - 避免使用默认端口（8785, 8786, 8787）
    - 使用高位端口（15000-65000 范围）
 
 4. **配置防火墙**
@@ -1320,8 +1320,8 @@ A: 执行 `docker-compose logs -f` 查看实时日志，或 `docker-compose logs
 | 服务 | 容器名称 | 默认端口 | 资源限制 | 说明 |
 |------|----------|----------|----------|------|
 | 后端服务 | nexus-server | 8787 | CPU: 1.0, 内存: 512M | API 和数据处理 |
-| 前端界面 | nexus-frontend | 5173 | CPU: 0.5, 内存: 128M | 用户导航页 |
-| 管理后台 | nexus-manager | 5174 | CPU: 0.5, 内存: 128M | 管理员界面 |
+| 前端界面 | nexus-frontend | 8785 | CPU: 0.5, 内存: 128M | 用户导航页 |
+| 管理后台 | nexus-manager | 8786 | CPU: 0.5, 内存: 128M | 管理员界面 |
 
 ---
 
@@ -1331,24 +1331,24 @@ A: 执行 `docker-compose logs -f` 查看实时日志，或 `docker-compose logs
 ```env
 DATA_PATH=/vol1/1000/docker/nexus/data
 SERVER_PORT=18787
-FRONTEND_PORT=15173
-MANAGER_PORT=15174
+FRONTEND_PORT=18785
+MANAGER_PORT=18786
 ```
 
 #### 群晖 NAS
 ```env
 DATA_PATH=/volume1/docker/nexus/data
 SERVER_PORT=28787
-FRONTEND_PORT=25173
-MANAGER_PORT=25174
+FRONTEND_PORT=28785
+MANAGER_PORT=28786
 ```
 
 #### 威联通 NAS
 ```env
 DATA_PATH=/share/Container/nexus/data
 SERVER_PORT=38787
-FRONTEND_PORT=35173
-MANAGER_PORT=35174
+FRONTEND_PORT=38785
+MANAGER_PORT=38786
 ```
 
 ### Docker 服务说明
@@ -1356,8 +1356,8 @@ MANAGER_PORT=35174
 | 服务 | 容器名称 | 默认端口 | 资源限制 | 说明 |
 |------|----------|----------|----------|------|
 | 后端服务 | nexus-server | 8787 | CPU: 1.0, 内存: 512M | API 和数据处理 |
-| 前端界面 | nexus-frontend | 5173 | CPU: 0.5, 内存: 128M | 用户导航页 |
-| 管理后台 | nexus-manager | 5174 | CPU: 0.5, 内存: 128M | 管理员界面 |
+| 前端界面 | nexus-frontend | 8785 | CPU: 0.5, 内存: 128M | 用户导航页 |
+| 管理后台 | nexus-manager | 8786 | CPU: 0.5, 内存: 128M | 管理员界面 |
 
 ### 数据备份与恢复
 
@@ -1413,10 +1413,10 @@ A: 编辑 `.env` 文件修改端口配置，然后执行 `docker-compose up -d` 
 创建 `.env` 文件（参考 `.env.example`）：
 
 ```env
-# 前端 (端口 5173)
+# 前端 (端口 8785)
 VITE_API_BASE_URL=http://localhost:8787
 
-# 管理端 (端口 5174)
+# 管理端 (端口 8786)
 VITE_API_BASE_URL=http://localhost:8787
 
 # 后端 (端口 8787)
