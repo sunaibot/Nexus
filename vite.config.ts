@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
     },
     
     server: {
-      port: 5173,
+      port: 8785,
       host: true,
       // 开发环境代理配置
       proxy: isDev ? {

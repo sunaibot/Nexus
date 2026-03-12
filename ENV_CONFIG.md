@@ -31,8 +31,8 @@ DB_PATH=/data/zen-garden.db
 
 | 应用 | 开发端口 | Docker 端口 | 说明 |
 |------|----------|-------------|------|
-| frontend | 5173 | 7171 | 用户前台 |
-| manager | 5174 | 7272 | 管理后台 |
+| frontend | 8785 | 7171 | 用户前台 |
+| manager | 8786 | 7272 | 管理后台 |
 
 ### API 地址配置
 
@@ -60,11 +60,11 @@ pnpm install
 cd apps/server
 pnpm dev
 
-# 启动前台（端口 5173）
+# 启动前台（端口 8785）
 cd apps/frontend
 pnpm dev
 
-# 启动后台（端口 5174）
+# 启动后台（端口 8786）
 cd apps/manager
 pnpm dev
 ```

@@ -68,10 +68,10 @@ sed -i "s/SESSION_SECRET=.*/SESSION_SECRET=$SESSION_SECRET/" .env
 # 只开放必要端口
 
 # 允许前端访问
-iptables -A INPUT -p tcp --dport 5173 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8785 -j ACCEPT
 
 # 允许管理后台访问（建议限制 IP）
-iptables -A INPUT -p tcp --dport 5174 -s 192.168.1.0/24 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8786 -s 192.168.1.0/24 -j ACCEPT
 
 # 后端 API 不需要直接暴露（通过前端代理）
 # iptables -A INPUT -p tcp --dport 8787 -j DROP
@@ -97,7 +97,7 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     location / {
-        proxy_pass http://localhost:5173;
+        proxy_pass http://localhost:8785;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -118,7 +118,7 @@ server {
     ssl_certificate_key /path/to/key.pem;
 
     location / {
-        proxy_pass http://localhost:5174;
+        proxy_pass http://localhost:8786;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
