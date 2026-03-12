@@ -89,14 +89,29 @@ export function getApiBase(): string {
     return env.VITE_API_BASE;
   }
 
-  // 2. 开发环境: 使用 localhost:8787 (后端端口)
-  //    生产环境: 使用空字符串 ""，避免路径重复
-  if (typeof window !== "undefined") {
-    return env.DEV ? "http://localhost:8787" : "";
+  // 2. 开发环境: 使用 localhost:8787
+  if (env.DEV) {
+    return "http://localhost:8787";
   }
 
-  // 3. 最后的保底（比如在服务端渲染或测试环境）
-  return env.DEV ? "http://localhost:8787" : "";
+  // 3. 生产环境: 自动检测后端地址
+  // 如果当前端口是 80/443，假设后端在 8787 端口
+  // 如果当前端口已经是 8787，则使用相对路径
+  if (typeof window !== "undefined") {
+    const { protocol, hostname, port } = window.location;
+    
+    // 如果当前是 8787 端口，说明前后端在同一端口，使用相对路径
+    if (port === "8787") {
+      return "";
+    }
+    
+    // 否则假设后端在 8787 端口（NAS部署场景）
+    // 使用当前协议和主机名，但端口改为 8787
+    return `${protocol}//${hostname}:8787`;
+  }
+
+  // 4. 最后的保底
+  return "";
 }
 
 /**
