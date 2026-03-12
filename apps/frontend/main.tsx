@@ -4,11 +4,15 @@ import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ThemeProvider } from './hooks/useTheme'
 import { setupGlobalErrorHandlers } from './lib/error-handling'
+import { initSettingsListener } from './stores/settingsStore'
 import './index.css'
 import './lib/i18n' // 激活 i18n 多语言支持
 
 // 设置全局错误监听
 setupGlobalErrorHandlers()
+
+// 初始化设置监听（监听其他标签页的设置更新）
+initSettingsListener()
 
 ReactDOM.createRoot(document.getElementById('root')!)?.render(
   <React.StrictMode>

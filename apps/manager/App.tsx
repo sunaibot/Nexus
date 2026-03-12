@@ -25,6 +25,7 @@ function App() {
     currentPage, 
     adminUsername, 
     isLoggedIn, 
+    isLoading,
     handleAdminLogin, 
     handlePasswordChangeSuccess, 
     handleAdminLogout 
@@ -112,6 +113,18 @@ function App() {
     setAuthPage('login')
     // 清除URL中的token
     window.history.replaceState({}, '', window.location.pathname)
+  }
+
+  // 如果正在加载认证状态，显示加载中
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>加载中...</p>
+        </div>
+      </div>
+    )
   }
 
   // 如果强制登录或用户未登录，显示登录页面

@@ -3,6 +3,9 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { fetchSettings as fetchSettingsFromApi, updateSettings, fetchQuotesSettings, SiteSettings } from '../lib/api'
 import { setActiveQuotes } from '../data/quotes'
 
+// 设置更新事件名称
+const SETTINGS_UPDATE_EVENT = 'nexus-settings-updated'
+
 // 默认站点设置
 export const defaultSiteSettings: SiteSettings = {
   siteTitle: 'Nexus',
@@ -70,13 +73,14 @@ export const useSettingsStore = create<SettingsState>()(
         
         set({ isLoading: true, error: null })
         try {
-          // console.log('[SettingsStore] Fetching settings from API...')
- // 加载设置和语录
-        const [settings, quotes] = await Promise.all([
-          fetchSettingsFromApi(),
-          fetchQuotesSettings().catch(() => null),
-        ])
-          // console.log('[SettingsStore] Settings fetched:', settings)
+          console.log('[SettingsStore] Fetching settings from API...')
+          // 加载设置和语录
+          const [settings, quotes] = await Promise.all([
+            fetchSettingsFromApi(),
+            fetchQuotesSettings().catch(() => null),
+          ])
+          console.log('[SettingsStore] Settings fetched:', settings)
+          console.log('[SettingsStore] Wallpaper:', settings.wallpaper)
 
           // 应用站点设置
           if (settings.siteTitle) {
@@ -134,6 +138,11 @@ export const useSettingsStore = create<SettingsState>()(
               link.href = settings.siteFavicon
             }
           }
+
+          // 通知其他标签页设置已更新
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(SETTINGS_UPDATE_EVENT, Date.now().toString())
+          }
         } catch (error) {
           // 回滚
           set({
@@ -190,5 +199,33 @@ export function useSiteSettings() {
     updateSettings: store.updateSettings,
     updateSetting: store.updateSetting,
     clearError: store.clearError,
+  }
+}
+
+// 初始化设置监听（在应用启动时调用）
+export function initSettingsListener(callback?: () => void) {
+  if (typeof window === 'undefined') return
+
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === SETTINGS_UPDATE_EVENT) {
+      console.log('[SettingsStore] Settings updated in another tab, refreshing...')
+      // 强制刷新设置
+      useSettingsStore.getState().fetchSettings(true)
+      callback?.()
+    }
+  }
+
+  window.addEventListener('storage', handleStorageChange)
+
+  // 定期轮询设置（每 30 秒）
+  const pollInterval = setInterval(() => {
+    console.log('[SettingsStore] Polling settings...')
+    useSettingsStore.getState().fetchSettings(true)
+  }, 30000)
+
+  // 返回清理函数
+  return () => {
+    window.removeEventListener('storage', handleStorageChange)
+    clearInterval(pollInterval)
   }
 }

@@ -41,7 +41,7 @@ export interface WallpaperLibraryItem {
 }
 
 // 壁纸分类
-export type WallpaperCategory = 'nature' | 'abstract' | 'city' | 'minimal' | 'dark' | 'anime' | 'scenery' | 'architecture' | 'space' | 'other'
+export type WallpaperCategory = 'nature' | 'abstract' | 'city' | 'minimal' | 'dark' | 'anime' | 'scenery' | 'architecture' | 'space' | 'solar-term' | 'other'
 
 // 轮播设置
 export interface SlideshowSettings {
@@ -219,6 +219,51 @@ export interface ProviderWallpaper {
   createdAt: string
 }
 
+// 首页组件样式
+export type HomeComponentStyle = 'default' | 'card' | 'minimal' | 'glass'
+
+// 首页组件设置
+export interface HomeComponentSettings {
+  // 时间显示
+  showTime: boolean
+  timeFormat: '12h' | '24h'
+  timeStyle: 'large' | 'medium' | 'small'
+  
+  // 日期显示
+  showDate: boolean
+  showLunar: boolean
+  showFestival: boolean
+  showJieQi: boolean
+  
+  // 天气显示
+  showWeather: boolean
+  weatherStyle: 'simple' | 'detailed' | 'icon-only'
+  
+  // 整体布局
+  layout: 'vertical' | 'horizontal' | 'card'
+  cardBackground: string
+  cardOpacity: number // 0-100
+  cardBlur: number // 0-20
+  cardBorderRadius: string
+}
+
+// 24节气
+export type SolarTerm = 
+  | 'lichun' | 'yushui' | 'jingzhe' | 'chunfen' | 'qingming' | 'guyu'
+  | 'lixia' | 'xiaoman' | 'mangzhong' | 'xiazhi' | 'xiaoshu' | 'dashu'
+  | 'liqiu' | 'chushu' | 'bailu' | 'qiufen' | 'hanlu' | 'shuangjiang'
+  | 'lidong' | 'xiaoxue' | 'daxue' | 'dongzhi' | 'xiaohan' | 'dahan'
+
+// 节气背景设置
+export interface SolarTermSettings {
+  enabled: boolean
+  autoSwitch: boolean
+  wallpapers: Partial<Record<SolarTerm, string>> // 每个节气的背景图片
+  customDates?: Partial<Record<SolarTerm, string>> // 自定义节气日期 (MM-DD)
+  transition: 'fade' | 'slide' | 'zoom'
+  transitionDuration: number
+}
+
 // 壁纸设置（完整版）
 export interface WallpaperSettings {
   // 基础设置
@@ -250,6 +295,12 @@ export interface WallpaperSettings {
   daily: DailyWallpaperSettings
   effects: AdvancedEffects
   schedule: ScheduleSettings
+  
+  // 首页组件
+  homeComponent: HomeComponentSettings
+  
+  // 24节气背景
+  solarTerm: SolarTermSettings
   
   // 多屏支持
   multiScreen: {

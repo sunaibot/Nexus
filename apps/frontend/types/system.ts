@@ -23,6 +23,41 @@ export interface WallpaperSettings {
   overlay?: number
 }
 
+// 24节气
+export type SolarTerm =
+  | 'lichun' | 'yushui' | 'jingzhe' | 'chunfen' | 'qingming' | 'guyu'
+  | 'lixia' | 'xiaoman' | 'mangzhong' | 'xiazhi' | 'xiaoshu' | 'dashu'
+  | 'liqiu' | 'chushu' | 'bailu' | 'qiufen' | 'hanlu' | 'shuangjiang'
+  | 'lidong' | 'xiaoxue' | 'daxue' | 'dongzhi' | 'xiaohan' | 'dahan'
+
+// 首页组件设置
+export interface HomeComponentSettings {
+  showTime?: boolean
+  timeFormat?: '12h' | '24h'
+  timeStyle?: 'large' | 'medium' | 'small'
+  showDate?: boolean
+  showLunar?: boolean
+  showFestival?: boolean
+  showJieQi?: boolean
+  showWeather?: boolean
+  weatherStyle?: 'simple' | 'detailed' | 'icon-only'
+  layout?: 'vertical' | 'horizontal' | 'card'
+  cardBackground?: string
+  cardOpacity?: number
+  cardBlur?: number
+  cardBorderRadius?: string
+}
+
+// 节气背景设置
+export interface SolarTermSettings {
+  enabled?: boolean
+  autoSwitch?: boolean
+  wallpapers?: Partial<Record<SolarTerm, string>>
+  customDates?: Partial<Record<SolarTerm, string>>
+  transition?: 'fade' | 'slide' | 'zoom'
+  transitionDuration?: number
+}
+
 export interface ThemeColors {
   iconPrimary?: string
   iconSecondary?: string
@@ -65,6 +100,8 @@ export interface SiteSettings {
   wallpaper?: WallpaperSettings
   themeColors?: ThemeColors
   networkEnv?: NetworkEnvConfig
+  homeComponent?: HomeComponentSettings
+  solarTerm?: SolarTermSettings
 }
 
 export interface ServiceMonitor {

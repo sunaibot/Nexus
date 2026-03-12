@@ -11,8 +11,204 @@ import { queryOne, run } from '../../utils/index.js'
 
 const router = Router()
 
+// 类型定义
+interface HomeComponentSettings {
+  showTime: boolean
+  timeFormat: '12h' | '24h'
+  timeStyle: 'large' | 'medium' | 'small'
+  showDate: boolean
+  showLunar: boolean
+  showFestival: boolean
+  showJieQi: boolean
+  showWeather: boolean
+  weatherStyle: 'simple' | 'detailed' | 'icon-only'
+  layout: 'vertical' | 'horizontal' | 'card'
+  cardBackground: string
+  cardOpacity: number
+  cardBlur: number
+  cardBorderRadius: string
+}
+
+type SolarTerm =
+  | 'lichun' | 'yushui' | 'jingzhe' | 'chunfen' | 'qingming' | 'guyu'
+  | 'lixia' | 'xiaoman' | 'mangzhong' | 'xiazhi' | 'xiaoshu' | 'dashu'
+  | 'liqiu' | 'chushu' | 'bailu' | 'qiufen' | 'hanlu' | 'shuangjiang'
+  | 'lidong' | 'xiaoxue' | 'daxue' | 'dongzhi' | 'xiaohan' | 'dahan'
+
+interface SolarTermSettings {
+  enabled: boolean
+  autoSwitch: boolean
+  wallpapers: Partial<Record<SolarTerm, string>>
+  transition: 'fade' | 'slide' | 'zoom'
+  transitionDuration: number
+}
+
+interface SiteSettings {
+  siteTitle: string
+  siteFavicon: string
+  enableBeamAnimation: boolean
+  enableLiteMode: boolean
+  enableWeather: boolean
+  enableLunar: boolean
+  themeId: string
+  themeMode: string
+  widgetVisibility: {
+    systemMonitor: boolean
+    hardwareIdentity: boolean
+    vitalSigns: boolean
+    networkTelemetry: boolean
+    processMatrix: boolean
+    dockMiniMonitor: boolean
+    mobileTicker: boolean
+  }
+  menuVisibility: {
+    languageToggle: boolean
+    themeToggle: boolean
+  }
+  wallpaper: {
+    enabled: boolean
+    mode: string
+    source: string
+    imageData: string
+    imageUrl: string
+    videoUrl: string
+    gifUrl: string
+    presetId: string
+    blur: number
+    overlay: number
+    brightness: number
+    contrast: number
+    saturation: number
+    display: {
+      fit: string
+      attachment: string
+      position: string
+    }
+    slideshow: {
+      enabled: boolean
+      interval: number
+      transition: string
+      transitionDuration: number
+      shuffle: boolean
+      pauseOnHover: boolean
+      wallpapers: any[]
+    }
+    dynamic: {
+      enabled: boolean
+      muted: boolean
+      playbackSpeed: number
+    }
+    daily: {
+      enabled: boolean
+      source: string
+      category: string
+      keywords: string[]
+      updateTime: string
+      saveToLibrary: boolean
+    }
+    effects: {
+      vignette: {
+        enabled: boolean
+        intensity: number
+        size: number
+      }
+      colorFilter: {
+        enabled: boolean
+        type: string
+        intensity: number
+      }
+      gradient: {
+        enabled: boolean
+        type: string
+        angle: number
+        colors: { color: string; position: number }[]
+        opacity: number
+      }
+      particles: {
+        enabled: boolean
+        type: string
+        density: number
+        speed: number
+        color: string
+      }
+      animation: {
+        enabled: boolean
+        type: string
+        speed: number
+      }
+    }
+    schedule: {
+      enabled: boolean
+      type: string
+      interval: number
+      timeSlots: any[]
+      sunriseSunset: {
+        useCurrentLocation: boolean
+        latitude: number
+        longitude: number
+      }
+    }
+  }
+  homeComponent: HomeComponentSettings
+  solarTerm: SolarTermSettings
+  frontend: {
+    buttons: {
+      showHome: boolean
+      showSearch: boolean
+      showAddBookmark: boolean
+      showFileTransfer: boolean
+      showCalculator: boolean
+      showThemeToggle: boolean
+      showPrivateMode: boolean
+      showUserMenu: boolean
+    }
+  }
+  responsive: {
+    layoutMode: 'grid' | 'list' | 'masonry'
+    gridColumns: {
+      mobile: number
+      tablet: number
+      desktop: number
+      large: number
+    }
+    cardSize: 'small' | 'medium' | 'large'
+    sidebar: {
+      enabled: boolean
+      position: 'left' | 'right'
+      width: number
+      collapsed: boolean
+    }
+    container: {
+      maxWidth: string
+      padding: string
+    }
+  }
+  i18n: {
+    defaultLocale: string
+    fallbackLocale: string
+    supportedLocales: string[]
+    timezone: string
+    dateFormat: string
+    timeFormat: string
+  }
+  themeColors: {
+    iconPrimary: string
+    iconSecondary: string
+    iconMuted: string
+    buttonPrimaryBg: string
+    buttonPrimaryText: string
+    buttonSecondaryBg: string
+    buttonSecondaryText: string
+  }
+  networkEnv: {
+    internalSuffixes: string[]
+    internalIPs: string[]
+    localhostNames: string[]
+  }
+}
+
 // 默认站点设置
-const defaultSiteSettings = {
+const defaultSiteSettings: SiteSettings = {
   siteTitle: "Nexus",
   siteFavicon: "",
   enableBeamAnimation: true,
@@ -120,6 +316,29 @@ const defaultSiteSettings = {
         longitude: 116.4
       }
     }
+  },
+  homeComponent: {
+    showTime: true,
+    timeFormat: '24h',
+    timeStyle: 'large',
+    showDate: true,
+    showLunar: true,
+    showFestival: true,
+    showJieQi: true,
+    showWeather: true,
+    weatherStyle: 'simple',
+    layout: 'vertical',
+    cardBackground: 'rgba(0,0,0,0.3)',
+    cardOpacity: 80,
+    cardBlur: 10,
+    cardBorderRadius: '16px'
+  },
+  solarTerm: {
+    enabled: false,
+    autoSwitch: true,
+    wallpapers: {},
+    transition: 'fade',
+    transitionDuration: 1000
   },
   frontend: {
     buttons: {
@@ -240,6 +459,18 @@ function getWallpaperImageUrl(wallpaper: any): string {
   if (wallpaper.source === 'preset' && wallpaper.presetId) {
     return PRESET_WALLPAPER_URLS[wallpaper.presetId] || ''
   }
+  // 如果是 Pexels 来源，返回示例图片
+  if (wallpaper.source === 'pexels') {
+    return 'https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=1920'
+  }
+  // 如果是 Picsum 来源，返回示例图片
+  if (wallpaper.source === 'picsum') {
+    return 'https://picsum.photos/1920/1080'
+  }
+  // 如果是 Unsplash 来源，返回示例图片
+  if (wallpaper.source === 'unsplash') {
+    return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80'
+  }
   return ''
 }
 
@@ -291,6 +522,8 @@ router.get('/site', publicApiLimiter, (req, res) => {
         themeColors: parseJsonField(settings.themeColors, defaultSiteSettings.themeColors),
         widgetVisibility: parseJsonField(settings.widgetVisibility, defaultSiteSettings.widgetVisibility),
         menuVisibility: parseJsonField(settings.menuVisibility, defaultSiteSettings.menuVisibility),
+        homeComponent: parseJsonField(settings.homeComponent, defaultSiteSettings.homeComponent),
+        solarTerm: parseJsonField(settings.solarTerm, defaultSiteSettings.solarTerm),
       }
     })
   } catch (error) {
@@ -328,7 +561,7 @@ router.put('/site', authMiddleware, adminMiddleware, (req: Request, res: Respons
     
     // 处理 updates 中的 JSON 字符串字段
     const processedUpdates: any = { ...updates }
-    const jsonFields = ['widgetVisibility', 'menuVisibility', 'wallpaper', 'frontend', 'themeColors', 'responsive', 'i18n']
+    const jsonFields = ['widgetVisibility', 'menuVisibility', 'wallpaper', 'frontend', 'themeColors', 'responsive', 'i18n', 'homeComponent', 'solarTerm']
     jsonFields.forEach(field => {
       if (field in processedUpdates) {
         processedUpdates[field] = parseJsonField(processedUpdates[field])

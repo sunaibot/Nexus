@@ -17,7 +17,8 @@ import {
   Sparkles,
   Library,
   Monitor,
-  Settings2
+  Settings2,
+  Layout
 } from 'lucide-react'
 import { useWallpaper } from '../hooks/useWallpaper'
 import { WallpaperUploader } from '../components/WallpaperUploader'
@@ -31,16 +32,20 @@ import { AdvancedEffectsSettings } from '../components/AdvancedEffectsSettings'
 import { ScheduleSettings } from '../components/ScheduleSettings'
 import { WallpaperPreview } from '../components/WallpaperPreview'
 import { WallpaperProviderManager } from '../components/WallpaperProviderManager'
-import type { WallpaperSource, WallpaperMode, ProviderWallpaper } from '../types'
+import { HomeComponentSettingsPanel } from '../components/HomeComponentSettings'
+import { SolarTermSettingsPanel } from '../components/SolarTermSettings'
+import type { WallpaperSource, WallpaperMode, ProviderWallpaper, HomeComponentSettings, SolarTermSettings } from '../types'
 
 // 主标签页
-const MAIN_TABS: { id: 'source' | 'library' | 'mode' | 'display' | 'effects' | 'schedule'; label: string; icon: typeof Image }[] = [
+const MAIN_TABS: { id: 'source' | 'library' | 'mode' | 'display' | 'effects' | 'schedule' | 'home' | 'solar'; label: string; icon: typeof Image }[] = [
   { id: 'source', label: '壁纸来源', icon: Upload },
   { id: 'library', label: '壁纸库', icon: Library },
   { id: 'mode', label: '显示模式', icon: Play },
   { id: 'display', label: '显示设置', icon: Monitor },
   { id: 'effects', label: '高级效果', icon: Sparkles },
   { id: 'schedule', label: '定时切换', icon: Clock },
+  { id: 'home', label: '首页组件', icon: Layout },
+  { id: 'solar', label: '节气背景', icon: Calendar },
 ]
 
 // 来源标签
@@ -84,6 +89,8 @@ export function WallpaperPage() {
     setDaily,
     setEffects,
     setSchedule,
+    setHomeComponent,
+    setSolarTerm,
     refreshDailyWallpaper,
     toggleFavorite,
     deleteWallpaper,
@@ -474,6 +481,30 @@ export function WallpaperPage() {
                       settings={settings.schedule}
                       wallpapers={wallpapers}
                       onChange={setSchedule}
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'home' && (
+                  <div>
+                    <h3 className="font-medium mb-4" style={{ color: 'var(--color-text-primary)' }}>
+                      首页组件设置
+                    </h3>
+                    <HomeComponentSettingsPanel
+                      settings={settings.homeComponent}
+                      onChange={setHomeComponent}
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'solar' && (
+                  <div>
+                    <h3 className="font-medium mb-4" style={{ color: 'var(--color-text-primary)' }}>
+                      24节气背景设置
+                    </h3>
+                    <SolarTermSettingsPanel
+                      settings={settings.solarTerm}
+                      onChange={setSolarTerm}
                     />
                   </div>
                 )}

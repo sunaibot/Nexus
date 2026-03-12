@@ -26,9 +26,14 @@ export function WallpaperPreview({ settings, title = '壁纸预览' }: Wallpaper
         return imageUrl || null
       case 'unsplash':
         return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80'
+      case 'pexels':
+        return 'https://images.pexels.com/photos/1619317/pexels-photo-1619317.jpeg?auto=compress&cs=tinysrgb&w=800'
+      case 'picsum':
+        return 'https://picsum.photos/800/450'
       case 'preset':
         return imageUrl || null
-      case 'provider':
+      case 'video':
+      case 'gif':
         return imageUrl || null
       default:
         return null
@@ -127,7 +132,8 @@ export function WallpaperPreview({ settings, title = '壁纸预览' }: Wallpaper
                  source === 'url' ? '图片链接' : 
                  source === 'unsplash' ? 'Unsplash' : 
                  source === 'preset' ? '预设壁纸' :
-                 source === 'provider' ? '壁纸源' : '预设'}
+                 source === 'picsum' ? 'Picsum' :
+                 source === 'pexels' ? 'Pexels' : '预设'}
               </div>
             </div>
             <div className="p-2 rounded-lg text-center"

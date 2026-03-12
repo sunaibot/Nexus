@@ -86,6 +86,29 @@ const DEFAULT_SETTINGS: WallpaperSettings = {
     type: 'interval',
     interval: 60
   },
+  homeComponent: {
+    showTime: true,
+    timeFormat: '24h',
+    timeStyle: 'large',
+    showDate: true,
+    showLunar: true,
+    showFestival: true,
+    showJieQi: true,
+    showWeather: true,
+    weatherStyle: 'simple',
+    layout: 'vertical',
+    cardBackground: 'rgba(0,0,0,0.3)',
+    cardOpacity: 80,
+    cardBlur: 10,
+    cardBorderRadius: '16px'
+  },
+  solarTerm: {
+    enabled: false,
+    autoSwitch: true,
+    wallpapers: {},
+    transition: 'fade',
+    transitionDuration: 1000
+  },
   multiScreen: {
     enabled: false,
     screens: []
@@ -365,6 +388,16 @@ export function useWallpaper() {
     await saveSettings({ schedule })
   }, [saveSettings])
 
+  // 设置首页组件
+  const setHomeComponent = useCallback(async (homeComponent: WallpaperSettings['homeComponent']) => {
+    await saveSettings({ homeComponent })
+  }, [saveSettings])
+
+  // 设置节气背景
+  const setSolarTerm = useCallback(async (solarTerm: WallpaperSettings['solarTerm']) => {
+    await saveSettings({ solarTerm })
+  }, [saveSettings])
+
   // 刷新每日壁纸
   const refreshDailyWallpaper = useCallback(async (): Promise<void> => {
     try {
@@ -511,6 +544,8 @@ export function useWallpaper() {
     setDaily,
     setEffects,
     setSchedule,
+    setHomeComponent,
+    setSolarTerm,
     refreshDailyWallpaper,
     toggleFavorite,
     deleteWallpaper,

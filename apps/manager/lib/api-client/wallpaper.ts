@@ -84,8 +84,8 @@ export const wallpaperSettingsApi = {
   // 获取壁纸设置
   get: async (): Promise<WallpaperSettings | null> => {
     try {
-      const response = await request<{ wallpaper?: WallpaperSettings }>('/api/v2/settings/site')
-      return response.wallpaper || null
+      const response = await request<{ success: boolean; data: { wallpaper?: WallpaperSettings } }>('/api/v2/settings/site')
+      return response.data?.wallpaper || null
     } catch {
       return null
     }
