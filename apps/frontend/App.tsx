@@ -30,7 +30,7 @@ function ManagerRedirect() {
 
   useEffect(() => {
     if (location.pathname.includes('manager')) {
-      window.location.href = 'http://localhost:5174'
+      window.location.href = 'http://localhost:8786'
     }
   }, [location])
 

@@ -26,7 +26,7 @@ const envFileExists = fs.existsSync(envFilePath)
 if (!envFileExists) {
   console.log(`
 ⚠️  未检测到 .env 文件，将使用默认配置启动
-   默认端口：8787（后端）、5173（前端）、5174（管理后台）
+   默认端口：8787（后端）、8785（前端）、8786（管理后台）
    
    💡 提示：如需自定义配置，可创建 .env 文件：
       cp .env.example .env

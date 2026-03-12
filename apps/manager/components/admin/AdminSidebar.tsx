@@ -296,11 +296,11 @@ export function AdminSidebar({
     const startTime = Date.now()
     try {
       // 尝试通过 fetch 检测前台服务是否在线
-      // 前台服务运行在 localhost:5173，尝试获取其根路径
+      // 前台服务运行在 localhost:8785，尝试获取其根路径
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 3000)
       
-      const response = await fetch('http://localhost:5173/', {
+      const response = await fetch('http://localhost:8785/', {
         method: 'HEAD',
         mode: 'no-cors',
         signal: controller.signal

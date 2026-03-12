@@ -27,7 +27,7 @@ const getManagerUrl = (): string => {
   // 根据当前页面协议自动判断
   const protocol = window.location.protocol
   const hostname = window.location.hostname
-  return `${protocol}//${hostname}:5174`
+  return `${protocol}//${hostname}:8786`
 }
 
 export function useServiceStatus() {

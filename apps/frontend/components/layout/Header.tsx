@@ -195,7 +195,7 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode, isLoggedIn
           {/* 登录/管理后台按钮 - 未登录时显示 */}
           {!isLoggedIn && (
             <motion.a
-              href="http://localhost:5174?login=true"
+              href="http://localhost:8786?login=true"
               className={cn(
                 'p-2.5 rounded-xl',
                 'bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10',
@@ -263,7 +263,7 @@ function UserDropdown({ username, onLogout, onOpenCommand }: UserDropdownProps) 
       label: '管理后台',
       icon: LayoutDashboard,
       onClick: () => {
-        window.location.href = 'http://localhost:5174'
+        window.location.href = 'http://localhost:8786'
         setIsOpen(false)
       },
     },
